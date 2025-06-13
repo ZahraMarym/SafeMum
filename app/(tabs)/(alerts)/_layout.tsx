@@ -10,9 +10,7 @@ export default function Layout() {
       }}
       >
         <Stack.Screen name="index" options={{ headerShown: false }} />
-         <Stack.Screen name="phone-number" options={{ headerShown: false }} />
-          <Stack.Screen name="otp" options={{ headerShown: false }} />
-           <Stack.Screen name="set-password" options={{ headerShown: false }} />
+
       </Stack>
   );
 }

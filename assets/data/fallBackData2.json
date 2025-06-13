@@ -1,0 +1,33 @@
+[
+  {
+  "id": "f2414124146",
+  "title": "Talking to Your Partner About Postpartum Feelings",
+  "category": "Relationships",
+  "audience": "New Mothers",
+  "summary": "Open communication helps you both cope better.",
+  "text": "Share your emotional ups and downs with your partner. It strengthens connection and helps them support you more effectively.",
+  "imageUrl": "https://cdn.safemum.app/images/partner-talk.jpg",
+  "tags": ["communication", "relationships", "support", "postpartum"]
+},
+  {
+  "id": "f2414124145",
+  "title": "The Importance of Self-Care After Childbirth",
+  "category": "Wellbeing",
+  "audience": "New Mothers",
+  "summary": "Self-care isn’t selfish — it's necessary.",
+  "text": "Taking even 10 minutes for yourself daily can boost mental clarity and mood. Prioritize small joys like a walk, a warm bath, or journaling.",
+  "imageUrl": "https://cdn.safemum.app/images/self-care.jpg",
+  "tags": ["self-care", "wellbeing", "mental health", "postpartum"]
+},
+{
+  "id": "f2414124144",
+  "title": "Building a Support System After Birth",
+  "category": "Emotional Support",
+  "audience": "New Mothers",
+  "summary": "You don’t have to do it all alone — reach out.",
+  "text": "Whether it's family, friends, or local groups, staying connected can reduce feelings of isolation and stress during postpartum.",
+  "imageUrl": "https://cdn.safemum.app/images/support-system.jpg",
+  "tags": ["support", "community", "motherhood", "postpartum"]
+}
+
+]

@@ -25,16 +25,19 @@ export default function LoginScreen() {
   const [email, setEmail] = useState("")
 
   const changeLanguage = async (lang: string) => {
+    const rtl = lang === 'ur';
+    const rtlChanged = I18nManager.isRTL !== rtl;
+
     i18n.locale = lang;
     setLocale(lang);
 
-    const rtl = lang === 'ur';
-    if (I18nManager.isRTL !== rtl) {
+    if (rtlChanged) {
       I18nManager.forceRTL(rtl);
       I18nManager.allowRTL(rtl);
       await Updates.reloadAsync();
     }
   };
+
 
   return (
     <View style={styles.container}>
@@ -62,7 +65,8 @@ export default function LoginScreen() {
          }}
        />
 
-        <TouchableOpacity style={styles.forgotPassword}>
+        <TouchableOpacity style={styles.forgotPassword} onPress={()=>{
+            router.push("/(signin)/forgot-password")}}>
           <Text style={styles.forgotText}>{i18n.t('forgotPassword')}</Text>
         </TouchableOpacity>
       </View>
@@ -81,8 +85,9 @@ export default function LoginScreen() {
         <TouchableOpacity
           style={styles.button}
           onPress={() => {
-            changeLanguage(locale === 'en' ? 'ur' : 'en');
+            router.push("/(tabs)/(home)");
           }}
+
         >
           <TextBold style={styles.buttonText}>{i18n.t('getStarted')}</TextBold>
         </TouchableOpacity>
@@ -90,7 +95,7 @@ export default function LoginScreen() {
 
       <View style={styles.signupRow}>
         <Text style={styles.signupText}>{i18n.t('dontHaveAccount')}</Text>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={()=>{router.push("/(signup)")}}>
           <TextBold style={styles.signupLink}>{i18n.t('signUp')}</TextBold>
         </TouchableOpacity>
       </View>
@@ -139,7 +144,7 @@ input: {
   fontSize: 14,
   borderColor: '#E5E7EB',
   borderWidth: 1,
-  textAlign: isRTL ? 'right' : 'left',       // Align placeholder & input text
+  textAlign: isRTL ? 'right' : 'left',
 },
   forgotPassword: {
     marginTop: 4,

@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",
+    "@react-native-community/datetimepicker": "8.3.0",
     "@react-navigation/bottom-tabs": "^7.3.10",
     "@react-navigation/elements": "^2.3.8",
     "@react-navigation/native": "^7.1.6",
@@ -28,9 +29,11 @@
     "expo-status-bar": "~2.2.3",
     "expo-symbols": "~0.4.4",
     "expo-system-ui": "~5.0.7",
+    "expo-updates": "~0.28.14",
     "expo-web-browser": "~14.1.6",
     "i18n-js": "^4.5.1",
     "lottie-react-native": "^7.2.2",
+    "lucide-react-native": "^0.514.0",
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "react-native": "0.79.2",
@@ -40,7 +43,8 @@
     "react-native-screens": "~4.11.1",
     "react-native-web": "~0.20.0",
     "react-native-webview": "13.13.5",
-    "expo-updates": "~0.28.14"
+    "@react-native-community/netinfo": "11.4.1",
+    "expo-file-system": "~18.1.10"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
