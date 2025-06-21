@@ -5,7 +5,8 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { View, StyleSheet } from "react-native";
-
+import { Provider } from 'react-redux';
+import { store } from '@/redux/store/store';
 
 
 export default function RootLayout() {
@@ -37,6 +38,7 @@ export default function RootLayout() {
   }
 
   return (
+       <Provider store={store}>
           <View style={styles.container}>
                    <Stack
                      screenOptions={{
@@ -46,6 +48,7 @@ export default function RootLayout() {
                      <Stack.Screen name="index" options={{ headerShown: false }} />
                    </Stack>
                  </View>
+                 </Provider>
 
   );
 }

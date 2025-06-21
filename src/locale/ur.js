@@ -12,5 +12,13 @@ export default {
   forgotPassword: "پاس ورڈ بھول گئے؟",
   getStarted: "شروع کریں",
   dontHaveAccount: "اکاؤنٹ نہیں ہے؟",
-  signUp: "رجسٹر کریں"
+  signUp: "رجسٹر کریں",
+  selectLanguage:"زبان منتخب کریں",
+  firstName: "پہلا نام",
+  lastName: "آخری نام",
+  enterFirstName: "اپنا پہلا نام درج کریں",
+  enterLastName: "اپنا آخری نام درج کریں",
+  createAccount: "اکاؤنٹ بنائیں",
+  createAccountSubtitle: "اپنا اکاؤنٹ بنائیں اور اپنے سفر کی ذاتی نوعیت کا آغاز کریں۔",
+  alreadyHaveAccount: "کیا آپ کا پہلے سے اکاؤنٹ ہے؟",
 };

@@ -6,10 +6,11 @@ import {
   Dimensions,
   Platform,
   I18nManager,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Updates from 'expo-updates';
-
+import axios from 'axios';
 import { TextBold } from '@/components/TextBold';
 import { Text } from '@/components/Text';
 import { TextInput } from '@/components/TextInput';
@@ -23,6 +24,8 @@ export default function LoginScreen() {
   const router = useRouter();
   const [locale, setLocale] = useState(i18n.locale);
   const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("");
+
 
   const changeLanguage = async (lang: string) => {
     const rtl = lang === 'ur';
@@ -37,6 +40,47 @@ export default function LoginScreen() {
       await Updates.reloadAsync();
     }
   };
+
+
+
+const handleLogin = async () => {
+  if (!email || !password) {
+    Alert.alert("Error", "Email and password are required.");
+    return;
+  }
+
+  try {
+    const response = await axios.post(
+      `${process.env.url}/users/login`,
+      { email, password },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: '*/*',
+        },
+        validateStatus: () => true, // ✅ prevent Axios from throwing on non-200
+      }
+    );
+
+    if (response.status === 200 && response.data.success) {
+      console.log("Login Success:", response.data);
+      Alert.alert("Success", response.data.message);
+
+      // TODO: Store token in AsyncStorage if needed
+      // await AsyncStorage.setItem("accessToken", response.data.token);
+
+      router.push("/(tabs)/(home)");
+    } else {
+      console.log("Login Failed:", response.data);
+      Alert.alert("Login Failed", response.data.message || "Invalid credentials.");
+    }
+  } catch (error) {
+    console.error("Login Error:", error.message);
+    Alert.alert("Login Error", "Something went wrong. Please try again.");
+  }
+};
+
+
 
 
   return (
@@ -73,20 +117,21 @@ export default function LoginScreen() {
 
       <Text style={styles.label}>{i18n.t('password')}</Text>
       <View style={styles.inputContainer}>
-        <TextInput
-          placeholder={i18n.t('enterPassword')}
-          placeholderTextColor="#A3A3A3"
-          secureTextEntry
-          style={styles.input}
-        />
+       <TextInput
+         placeholder={i18n.t('enterPassword')}
+         placeholderTextColor="#A3A3A3"
+         secureTextEntry
+         value={password}
+         onChangeText={setPassword}
+         style={styles.input}
+       />
+
       </View>
 
       <View style={styles.buttonContainer}>
         <TouchableOpacity
           style={styles.button}
-          onPress={() => {
-            router.push("/(tabs)/(home)");
-          }}
+         onPress={handleLogin}
 
         >
           <TextBold style={styles.buttonText}>{i18n.t('getStarted')}</TextBold>

@@ -1,45 +1,91 @@
-import { View, Image, StyleSheet, TouchableOpacity, Dimensions, Platform } from 'react-native';
-import { useRouter } from 'expo-router';
-import assets from '@/lib/utils/assets';
-import { Ionicons } from "@expo/vector-icons";
-import { Text } from "@/components/Text";
-const { width } = Dimensions.get('window');
-const screenWidth = Dimensions.get("window").width;
-import { TextBold } from "@/components/TextBold";
+import React, { useEffect } from 'react';
+import { View, StyleSheet, TouchableOpacity, Dimensions, Platform, I18nManager, Switch } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { TextBold } from '@/components/TextBold';
+import { Text } from '@/components/Text';
+import { useDispatch, useSelector } from 'react-redux'; // Redux hooks
+import { setLanguage } from '@/redux/slice/languageSlice'; // language action
 import i18n from '@/i18n';
-import { useState } from 'react';
+import { useRouter } from 'expo-router';
 
-
+const { width } = Dimensions.get('window');
+const screenWidth = Dimensions.get('window').width;
 
 export default function WelcomeScreen() {
+  const dispatch = useDispatch();
   const router = useRouter();
-    const [locale, setLocale] = useState(i18n.locale); // state to trigger re-render
 
-    const changeLanguage = (lang: string) => {
-      i18n.locale = lang;
-      setLocale(lang); // this triggers a re-render
-    };
+  // Get the current language from Redux state
+  const language = useSelector((state) => state.language.language);
+
+  // Language change function
+  const changeLanguage = (lang) => {
+    dispatch(setLanguage(lang)); // Dispatch action to update language in Redux store
+    i18n.locale = lang; // Set the language in i18n
+    if (lang === 'ur') {
+      I18nManager.forceRTL(true); // Apply RTL for Urdu
+      I18nManager.allowRTL(true);
+    } else {
+      I18nManager.forceRTL(false); // Apply LTR for English
+      I18nManager.allowRTL(false);
+    }
+  };
+
+  // Language options for the dropdown
+  const languageOptions = [
+    { label: 'English', value: 'en' },
+    { label: 'اردو', value: 'ur' }
+  ];
+
+  // Set initial language state when the component mounts
+  useEffect(() => {
+    i18n.locale = language; // Set the locale for i18n
+    if (language === 'ur') {
+      I18nManager.forceRTL(true);
+      I18nManager.allowRTL(true);
+    } else {
+      I18nManager.forceRTL(false);
+      I18nManager.allowRTL(false);
+    }
+  }, [language]);
+
+  // Toggle language switch
+  const toggleLanguage = () => {
+    const newLanguage = language === 'en' ? 'ur' : 'en';
+    changeLanguage(newLanguage); // Toggle language
+  };
 
   return (
     <View style={styles.container}>
-      <Image source={assets.appLogo} style={styles.logo} />
-
       <TextBold style={styles.title}>{i18n.t('appName')}</TextBold>
       <Text style={styles.subtitle}>{i18n.t('subtitle')}</Text>
 
       <Text style={styles.description}>{i18n.t('description')}</Text>
 
-    <TouchableOpacity
-      style={styles.button}
-      onPress={() => {
-        changeLanguage('ur');
-        router.push('/(signin)'); // Navigate to login after language change
-      }}
-    >
-      <TextBold style={styles.buttonText}>{i18n.t('getStarted')}</TextBold>
-      <Ionicons name="arrow-forward" size={25} color="#fff" style={styles.icon} />
-    </TouchableOpacity>
+      {/* Language Toggle Switch */}
+      <View style={styles.languageContainer}>
+        <Text style={styles.label}>{i18n.t('selectLanguage')}</Text>
+        <View style={styles.switchContainer}>
+          <Text style={styles.switchText}>English</Text>
+          <Switch
+            value={language === 'ur'} // If the current language is Urdu, switch is on
+            onValueChange={toggleLanguage} // Toggle language on switch change
+            thumbColor={language === 'ur' ? '#A78BFA' : '#f4f3f4'}
+            trackColor={{ false: '#767577', true: '#81b0ff' }}
+          />
+          <Text style={styles.switchText}>اردو</Text>
+        </View>
+      </View>
 
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() => {
+          router.push('/(signin)'); // Navigate to login screen after language change
+        }}
+      >
+        <TextBold style={styles.buttonText}>{i18n.t('getStarted')}</TextBold>
+        <Ionicons name="arrow-forward" size={25} color="#fff" style={styles.icon} />
+      </TouchableOpacity>
     </View>
   );
 }
@@ -79,15 +125,35 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingHorizontal: 12,
   },
+  languageContainer: {
+    marginTop: 30,
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center', // Ensure the container is centered
+  },
+  label: {
+    fontSize: 16,
+    color: '#374151',
+    marginBottom: 8,
+  },
+  switchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  switchText: {
+    fontSize: 16,
+    color: '#374151',
+    marginHorizontal: 8,
+  },
   button: {
-       flexDirection: "row",
-          width: screenWidth * 0.6,
-    marginTop: 16,
+    flexDirection: 'row',
     width: screenWidth * 0.8,
+    marginTop: 16,
     backgroundColor: '#A78BFA',
     paddingVertical: 14,
-    justifyContent:"center",
-    alignItems:"center",
+    justifyContent: 'center',
+    alignItems: 'center',
     paddingHorizontal: 40,
     borderRadius: 14,
     shadowColor: '#A78BFA',
@@ -103,6 +169,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
   },
   icon: {
-      marginLeft: 10,
-    },
+    marginLeft: 10,
+  },
 });

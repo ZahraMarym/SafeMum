@@ -37,7 +37,7 @@ const SplashScreen = () => {
         const isConnected = state.isConnected && state.isInternetReachable;
 
         if (isConnected) {
-          router.replace("/(signin)"); // ✅ Online: go to login
+          router.replace("/(intro)"); // ✅ Online: go to login
         } else {
           router.replace("/(tabs)/(home)"); // 🚫 Offline: go to home
         }

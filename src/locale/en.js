@@ -12,5 +12,13 @@ export default {
   forgotPassword: "Forgot Password?",
   getStarted: "Get Started",
   dontHaveAccount: "Don’t have an account?",
-  signUp: "Sign Up"
+  signUp: "Sign Up",
+  selectLanguage:"Select Language",
+  firstName: "First Name",
+  lastName: "Last Name",
+  enterFirstName: "Enter your first name",
+  enterLastName: "Enter your last name",
+  createAccount: "Create Account",
+  createAccountSubtitle: "Create an account to personalize the journey.",
+  alreadyHaveAccount: "Already have an account?",
 };
