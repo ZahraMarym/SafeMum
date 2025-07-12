@@ -36,7 +36,8 @@
         }
       ],
       "expo-localization",
-      "expo-asset"
+      "expo-asset",
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true
@@ -44,7 +45,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "65775fed-73f0-4655-8d01-2fe7fedafc37"
+        "projectId": "fdd0f662-4824-4908-9291-fa241998bf24"
       }
     }
   }

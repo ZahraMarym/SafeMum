@@ -9,6 +9,10 @@ import { setLanguage } from '@/redux/slice/languageSlice'; // Import language ac
 import i18n from '@/i18n';
 import { useRouter } from 'expo-router';
 import axios from 'axios';
+const EXPO_PUBLIC_URL = process.env.EXPO_PUBLIC_URL;
+import * as SecureStore from 'expo-secure-store';
+
+
 
 const screenWidth = Dimensions.get('window').width;
 const isRTL = I18nManager.isRTL;
@@ -24,8 +28,7 @@ const CreateAccountScreen = () => {
   const [locale, setLocale] = useState(i18n.locale);
 
   const language = useSelector((state) => state.language.language); // Get the current language from Redux state
-
-const handleSignUp = async () => {
+const handleSignUp = () => {
   if (!firstName || !lastName || !email || !password) {
     Alert.alert("Error", "All fields are required.");
     return;
@@ -39,30 +42,60 @@ const handleSignUp = async () => {
     lastName,
   };
 
-  try {
-    const response = await axios.post(
-      `${process.env.url}/users/register`,
-      payload,
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: '*/*',
-        },
+  axios
+    .post(`${EXPO_PUBLIC_URL}/users/register`, payload, {
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: '*/*',
+      },
+    })
+    .then((response) => {
+      console.log('User registered:', response.data);
+      Alert.alert("Success", "Account created successfully!");
+
+      // Once registration is successful, proceed with login
+      return axios.post(
+        `${EXPO_PUBLIC_URL}/users/login`,
+        { email, password },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: '*/*',
+          },
+          validateStatus: () => true,
+        }
+      );
+    })
+    .then((response) => {
+      if (response.status === 200 && response.data.success) {
+        console.log("Login Success:", response.data);
+
+        // ✅ Save access token securely
+        SecureStore.setItemAsync("accessToken", response.data.token);
+
+        // Store user data securely (JSON.stringify the object before saving)
+        const userData = JSON.stringify(response.data); // Convert the object to string
+        SecureStore.setItemAsync("user", userData);
+        console.log("User data stored at login:", response.data);
+
+        // Optionally save refreshToken too
+        if (response.data.refreshToken) {
+          SecureStore.setItemAsync("refreshToken", response.data.refreshToken);
+        }
+
+        // Navigate to the next screen after successful login
+        router.push("/(signup)/medical-information");
+      } else {
+        throw new Error("Login failed");
       }
-    );
-
-    console.log('User registered:', response.data);
-    Alert.alert("Success", "Account created successfully!");
-
-    // Optional: Navigate to login screen
-    router.push("/(signin)");
-  } catch (error) {
-    console.error('Registration error:', error.response?.data || error.message);
-    Alert.alert(
-      "Error",
-      error.response?.data?.message || "Failed to create account."
-    );
-  }
+    })
+    .catch((error) => {
+      console.error('Error:', error.response?.data || error.message);
+      Alert.alert(
+        "Error",
+        error.response?.data?.message || "Failed to create account or login."
+      );
+    });
 };
 
 

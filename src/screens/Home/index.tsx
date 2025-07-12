@@ -1,3 +1,6 @@
+// ✅ HomeScreen that fetches from API when online
+// ✅ Falls back to asset-based JSON when offline
+
 import React, { useEffect, useState } from 'react';
 import {
   View,
@@ -16,6 +19,9 @@ import { Asset } from 'expo-asset';
 import { useRouter } from 'expo-router';
 import i18n from '@/i18n';
 import { Text } from '@/components/Text';
+import axios from 'axios';
+import * as SecureStore from 'expo-secure-store';
+const EXPO_PUBLIC_URL = process.env.EXPO_PUBLIC_URL;
 
 const isRTL = I18nManager.isRTL;
 const LOCAL_FILE_PATH = FileSystem.documentDirectory + 'app-data.json';
@@ -36,18 +42,12 @@ export default function LoginScreen() {
     }
   };
 
-  // ✅ Copy fallback JSON from asset to local file system
   const copyAssetToFileSystem = async () => {
     try {
-      const asset = Asset.fromModule(require('../../assets/fallBackData.json'));
+      const asset = Asset.fromModule(require('../../../assets/fallBackData.json'));
       await asset.downloadAsync();
-
       const sourceUri = asset.localUri || asset.uri;
-      await FileSystem.copyAsync({
-        from: sourceUri,
-        to: LOCAL_FILE_PATH,
-      });
-
+      await FileSystem.copyAsync({ from: sourceUri, to: LOCAL_FILE_PATH });
       const content = await FileSystem.readAsStringAsync(LOCAL_FILE_PATH);
       console.log('✅ Copied and loaded fallback from asset.');
       setData(JSON.parse(content));
@@ -56,49 +56,84 @@ export default function LoginScreen() {
     }
   };
 
-  const loadLocalData = async () => {
-    try {
-      const file = await FileSystem.readAsStringAsync(LOCAL_FILE_PATH);
-      const parsed = JSON.parse(file);
-      console.log('✅ Loaded from local file.');
-      setData(parsed);
-    } catch (e) {
-      console.log('❌ No local file. Copying from fallback asset...');
+const loadLocalData = async () => {
+  try {
+    const file = await FileSystem.readAsStringAsync(LOCAL_FILE_PATH);
+    const parsed = JSON.parse(file);
+    console.log('✅ Loaded from local file.', parsed);
+
+    const normalizedData = Array.isArray(parsed)
+      ? parsed
+      : parsed.data || []; // ensure it's always an array
+
+    setData(normalizedData);
+  } catch (e) {
+    console.log('❌ No local file. Copying from fallback asset...');
+    await copyAssetToFileSystem();
+  }
+};
+
+
+ const fetchFromAPI = async () => {
+   try {
+     const token = await SecureStore.getItemAsync("accessToken");
+
+     const res = await axios.get(
+       `${EXPO_PUBLIC_URL}/content/get-all-content-item?Language=en`,
+       {
+         headers: {
+           Accept: '*/*',
+           Authorization: `Bearer ${token}`,
+         },
+       }
+     );
+
+     const apiData = res.data.data || res.data;
+     console.log("apiData", res.data)
+     setData(apiData);
+
+    await FileSystem.writeAsStringAsync(
+      LOCAL_FILE_PATH,
+      JSON.stringify(apiData)
+    );
+
+
+     console.log('🌐 Data fetched from API and cached.');
+   } catch (err) {
+     console.warn('⚠️ Failed to fetch from API, loading local data.', err.message);
+     await loadLocalData();
+   }
+ };
+
+useEffect(() => {
+  const init = async () => {
+    // Load local data for instant display
+    const fileInfo = await FileSystem.getInfoAsync(LOCAL_FILE_PATH);
+    if (fileInfo.exists) {
+      await loadLocalData();
+    } else {
       await copyAssetToFileSystem();
     }
-  };
 
-  const fetchAndCacheData = async () => {
-    try {
-      // Simulate remote fetch with your existing fallbackData2
-      const json = require('../../data/fallBackData2.json');
-      await FileSystem.writeAsStringAsync(LOCAL_FILE_PATH, JSON.stringify(json));
-      setData(json);
-      console.log('📁 Cached new data to local file.');
-    } catch (e) {
-      console.warn('⚠️ Failed to write fallbackData2 to file:', e);
-      await loadLocalData();
+    // Check internet
+    const netState = await NetInfo.fetch();
+    if (netState.isConnected && netState.isInternetReachable) {
+      const token = await SecureStore.getItemAsync("accessToken");
+
+      if (token) {
+        await fetchFromAPI(); // Only fetch if authenticated
+      } else {
+        console.warn("🔐 No token found. Skipping API fetch.");
+      }
+    } else {
+      console.log("📴 Offline mode: showing cached data.");
     }
   };
 
-  useEffect(() => {
-    const init = async () => {
-      const netState = await NetInfo.fetch();
-      if (netState.isConnected && netState.isInternetReachable) {
-        await fetchAndCacheData();
-      } else {
-        const fileInfo = await FileSystem.getInfoAsync(LOCAL_FILE_PATH);
-        if (fileInfo.exists) {
-          await loadLocalData();
-        } else {
-          console.log('📦 No cache — copying fallback asset.');
-          await copyAssetToFileSystem();
-        }
-      }
-    };
+  init();
+}, []);
 
-    init();
-  }, []);
+
 
   return (
     <View style={styles.container}>
@@ -106,36 +141,39 @@ export default function LoginScreen() {
         <Ionicons name="chevron-back" size={24} color="black" />
       </TouchableOpacity>
 
-      <ScrollView contentContainerStyle={styles.cardList}>
-        {Array.isArray(data) && data.length > 0 ? (
-          data.map((item, index) => (
-            <View key={item.id || index} style={styles.card}>
-              {item.imageUrl && (
-                <Image
-                  source={{ uri: item.imageUrl }}
-                  style={styles.cardImage}
-                  resizeMode="cover"
-                />
-              )}
-              <Text style={styles.title}>{item.title}</Text>
-              <Text style={styles.summary}>{item.summary}</Text>
-              <View style={styles.metaRow}>
-                <Text style={styles.meta}>📂 {item.category}</Text>
-                <Text style={styles.meta}>👶 {item.audience}</Text>
-              </View>
-              <View style={styles.tagsContainer}>
-                {item.tags?.map((tag: string, tagIndex: number) => (
-                  <View key={tagIndex} style={styles.tag}>
-                    <Text style={styles.tagText}>#{tag}</Text>
-                  </View>
-                ))}
-              </View>
+    <ScrollView contentContainerStyle={styles.cardList}>
+      {Array.isArray(data) && data.length > 0 ? (
+        data.map((item, index) => (
+          <View key={item.id || index} style={styles.card}>
+            {item.imageUrl && (
+              <Image source={{ uri: item.imageUrl }} style={styles.cardImage} resizeMode="cover" />
+            )}
+            <Text style={styles.title}>{item.title}</Text>
+            <Text style={styles.summary}>{item.summary}</Text>
+            <Text style={styles.subsummary}>{item.text}</Text>
+            <Text style={styles.meta}>🎯 {item.audience}</Text>
+            <View style={styles.tagsContainer}>
+              {item.tags?.map((tag, idx) => (
+                <View key={idx} style={styles.tag}>
+                  <Text style={styles.tagText}>#{tag}</Text>
+                </View>
+              ))}
             </View>
-          ))
-        ) : (
-          <Text>Loading data...</Text>
-        )}
-      </ScrollView>
+          </View>
+        ))
+      ) : (
+        <Text>Loading data...</Text>
+      )}
+    <View>
+      <TouchableOpacity
+        style={styles.button}  // Optional: Add custom styles if you want to style the button
+        onPress={() => router.push("/(tabs)/(home)/pregnancy-tracker")}  // Replace "/nextScreen" with your desired route
+      >
+        <Text style={styles.buttonText}>Next</Text>
+      </TouchableOpacity>
+    </View>
+    </ScrollView>
+
     </View>
   );
 }
@@ -182,10 +220,21 @@ const styles = StyleSheet.create({
     color: '#111827',
     marginBottom: 8,
   },
+  subtitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1F2937',
+    marginBottom: 4,
+  },
   summary: {
     fontSize: 14,
     color: '#374151',
     marginBottom: 10,
+  },
+  subsummary: {
+    fontSize: 13,
+    color: '#6B7280',
+    marginBottom: 6,
   },
   metaRow: {
     flexDirection: 'row',
@@ -214,4 +263,17 @@ const styles = StyleSheet.create({
     color: '#4338CA',
     fontWeight: '500',
   },
+   button: {
+      backgroundColor: '#A78BFA', // Button background color
+      paddingVertical: 12,
+      paddingHorizontal: 30,
+      borderRadius: 8,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    buttonText: {
+      color: '#FFFFFF',
+      fontSize: 16,
+      fontWeight: '600',
+    },
 });

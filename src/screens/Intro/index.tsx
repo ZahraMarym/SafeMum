@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, StyleSheet, TouchableOpacity, Dimensions, Platform, I18nManager, Switch } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Dimensions, Platform, I18nManager, Switch, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { TextBold } from '@/components/TextBold';
 import { Text } from '@/components/Text';
@@ -7,6 +7,7 @@ import { useDispatch, useSelector } from 'react-redux'; // Redux hooks
 import { setLanguage } from '@/redux/slice/languageSlice'; // language action
 import i18n from '@/i18n';
 import { useRouter } from 'expo-router';
+import NetInfo from '@react-native-community/netinfo';
 
 const { width } = Dimensions.get('window');
 const screenWidth = Dimensions.get('window').width;
@@ -55,6 +56,28 @@ export default function WelcomeScreen() {
     changeLanguage(newLanguage); // Toggle language
   };
 
+  // Check internet connection (mobile data or Wi-Fi)
+  const checkConnection = async () => {
+    const netState = await NetInfo.fetch();
+    console.log('NetInfo state =', netState);
+
+    if (netState.isConnected) {
+      if (netState.type === 'cellular') {
+        // If connected to mobile data
+        router.push('/(signin)'); // Redirect to SignIn screen
+      } else if (netState.type === 'wifi') {
+        // If connected to Wi-Fi
+         router.push('/(signin)'); // Redirect to SignIn screen
+      } else {
+        // If no recognized network type (rare case)
+        Alert.alert('No Network', 'Please check your network connection.');
+      }
+    } else {
+      Alert.alert('No Internet Connection', 'You are not connected to the internet.');
+      router.push('/(tabs)/(home)'); // Redirect to Home screen if no internet
+    }
+  };
+
   return (
     <View style={styles.container}>
       <TextBold style={styles.title}>{i18n.t('appName')}</TextBold>
@@ -79,9 +102,7 @@ export default function WelcomeScreen() {
 
       <TouchableOpacity
         style={styles.button}
-        onPress={() => {
-          router.push('/(signin)'); // Navigate to login screen after language change
-        }}
+        onPress={checkConnection} // Call the checkMobileData function on button press
       >
         <TextBold style={styles.buttonText}>{i18n.t('getStarted')}</TextBold>
         <Ionicons name="arrow-forward" size={25} color="#fff" style={styles.icon} />

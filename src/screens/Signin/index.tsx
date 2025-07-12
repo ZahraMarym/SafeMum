@@ -16,6 +16,9 @@ import { Text } from '@/components/Text';
 import { TextInput } from '@/components/TextInput';
 import i18n from '@/i18n';
 import { useRouter } from 'expo-router';
+import * as SecureStore from 'expo-secure-store';
+const EXPO_PUBLIC_URL = process.env.EXPO_PUBLIC_URL;
+
 
 const screenWidth = Dimensions.get('window').width;
 const isRTL = I18nManager.isRTL;
@@ -41,8 +44,6 @@ export default function LoginScreen() {
     }
   };
 
-
-
 const handleLogin = async () => {
   if (!email || !password) {
     Alert.alert("Error", "Email and password are required.");
@@ -51,14 +52,14 @@ const handleLogin = async () => {
 
   try {
     const response = await axios.post(
-      `${process.env.url}/users/login`,
+      `${EXPO_PUBLIC_URL}/users/login`,
       { email, password },
       {
         headers: {
           'Content-Type': 'application/json',
           Accept: '*/*',
         },
-        validateStatus: () => true, // ✅ prevent Axios from throwing on non-200
+        validateStatus: () => true,
       }
     );
 
@@ -66,9 +67,20 @@ const handleLogin = async () => {
       console.log("Login Success:", response.data);
       Alert.alert("Success", response.data.message);
 
-      // TODO: Store token in AsyncStorage if needed
-      // await AsyncStorage.setItem("accessToken", response.data.token);
+      // ✅ Save access token securely
+      await SecureStore.setItemAsync("accessToken", response.data.token);
+      console.log("User at login:", response.data);
 
+      // Store user data securely (stringified)
+      const userData = JSON.stringify(response.data); // Convert object to string
+      await SecureStore.setItemAsync("user", userData);
+
+      // Optionally save refreshToken too
+      if (response.data.refreshToken) {
+        await SecureStore.setItemAsync("refreshToken", response.data.refreshToken);
+      }
+
+      // Navigate to the home screen
       router.push("/(tabs)/(home)");
     } else {
       console.log("Login Failed:", response.data);
@@ -134,7 +146,7 @@ const handleLogin = async () => {
          onPress={handleLogin}
 
         >
-          <TextBold style={styles.buttonText}>{i18n.t('getStarted')}</TextBold>
+          <TextBold style={styles.buttonText}>{i18n.t('login')}</TextBold>
         </TouchableOpacity>
       </View>
 
