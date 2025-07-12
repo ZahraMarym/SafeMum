@@ -1,11 +1,18 @@
-import React, { useEffect, useState } from 'react';
-import { View, FlatList, TextInput, StyleSheet, Text, TouchableOpacity, Modal, ActivityIndicator } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';import {
+  View,
+  FlatList,
+  TextInput,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  Modal,
+  ActivityIndicator,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
-
 
 export default function CommunityScreen() {
   const [modalVisible, setModalVisible] = useState(false);
@@ -13,8 +20,10 @@ export default function CommunityScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [conversations, setConversations] = useState([]);
   const router = useRouter();
 
+  // Fetch all users (for Add User modal)
   const fetchUsers = async () => {
     setLoading(true);
     try {
@@ -24,7 +33,7 @@ export default function CommunityScreen() {
         {
           headers: {
             accept: '/',
-            Authorization: `Bearer ${token}`, // 🔐 Replace with dynamic token
+            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -51,13 +60,47 @@ export default function CommunityScreen() {
   };
 
   const handleUserSelect = (user) => {
-      console.log("user at index", user)
     setModalVisible(false);
     router.push({
       pathname: '/(tabs)/(community)/chat',
-      params: { user:JSON.stringify(user) },
+      params: { user: JSON.stringify(user) },
     });
   };
+
+  // Fetch conversations
+  const fetchConversations = async () => {
+    setLoading(true);
+    try {
+      const token = await SecureStore.getItemAsync("accessToken");
+      const storedUser = await SecureStore.getItemAsync('user');
+      const currentUser = JSON.parse(storedUser);
+      const senderId = currentUser.userId;
+
+      const response = await axios.get(
+        `${process.env.EXPO_PUBLIC_URL}/communication/get-conversation-by-userid?Id=${senderId}`,
+        {
+          headers: {
+            accept: '/',
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      console.log("response of conversations", response.data);
+      setConversations(response.data);
+    } catch (err) {
+      console.error("Error fetching conversations:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+// Inside your component:
+useFocusEffect(
+  useCallback(() => {
+    fetchConversations();
+  }, [])
+);
 
   return (
     <View style={styles.container}>
@@ -99,6 +142,64 @@ export default function CommunityScreen() {
           </TouchableOpacity>
         </View>
       </Modal>
+
+      {/* Conversation List */}
+      <FlatList
+        data={conversations}
+        keyExtractor={(item) => item.userId}
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            style={styles.conversationItem}
+            onPress={async () => {
+              try {
+                const token = await SecureStore.getItemAsync("accessToken");
+
+                // Optional: Fetch full receiver details
+                const receiverRes = await axios.get(
+                  `${process.env.EXPO_PUBLIC_URL}/communication/get-user-by-id?Id=${item.userId}`,
+                  {
+                    headers: {
+                      accept: '/',
+                      Authorization: `Bearer ${token}`,
+                    },
+                  }
+                );
+
+                const receiverUser = receiverRes.data;
+
+              const chatPayload = {
+                id: item.userId,
+                name: receiverUser.name,
+                email: receiverUser.email,
+                phone: receiverUser.phoneNumber,
+              };
+
+            console.log("chat paylaod", chatPayload)
+
+                router.push({
+                  pathname: '/(tabs)/(community)/chat',
+                  params: { user: JSON.stringify(chatPayload) },
+                });
+              } catch (err) {
+                console.error("Error preparing chat:", err);
+              }
+            }}
+
+          >
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>
+                {item.userName?.split(" ").map((n) => n[0]).join("").toUpperCase()}
+              </Text>
+            </View>
+            <View style={styles.chatInfo}>
+              <Text style={styles.chatName}>{item.userName}</Text>
+              <Text style={styles.lastMessage} numberOfLines={1}>
+                {item.lastMessage || 'No messages yet'}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        )}
+      />
     </View>
   );
 }
@@ -168,5 +269,40 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#1E40AF',
     fontWeight: '600',
+  },
+  conversationItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  avatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#A78BFA',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  avatarText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  chatInfo: {
+    flex: 1,
+  },
+  chatName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111827',
+  },
+  lastMessage: {
+    fontSize: 14,
+    color: '#6B7280',
+    marginTop: 2,
   },
 });

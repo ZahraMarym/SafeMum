@@ -23,8 +23,11 @@ export default function LoginScreen() {
       console.error('Failed to parse user:', e);
     }
   }
+  console.log("parsed user", parsedUser)
 
   const receiverId = parsedUser?.id;
+    console.log("receiverId", receiverId)
+
 
   const fetchMessages = async () => {
     try {
