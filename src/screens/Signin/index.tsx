@@ -79,9 +79,15 @@ const handleLogin = async () => {
       if (response.data.refreshToken) {
         await SecureStore.setItemAsync("refreshToken", response.data.refreshToken);
       }
-
+  if (response.data.role==="Admin"){
+      router.push("/(admin-tabs)/(admin-home)");
+      }
+  else{
       // Navigate to the home screen
-      router.push("/(tabs)/(home)");
+            router.push("/(tabs)/(home)");
+      }
+
+
     } else {
       console.log("Login Failed:", response.data);
       Alert.alert("Login Failed", response.data.message || "Invalid credentials.");

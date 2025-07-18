@@ -16,6 +16,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
+      "permissions": ["CAMERA", "RECORD_AUDIO"],
       "edgeToEdgeEnabled": true,
       "package": "com.zahra28.SafeMum"
     },

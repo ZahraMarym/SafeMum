@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect , useState} from 'react';
 import { View, StyleSheet, TouchableOpacity, Dimensions, Platform, I18nManager, Switch, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { TextBold } from '@/components/TextBold';
@@ -8,13 +8,17 @@ import { setLanguage } from '@/redux/slice/languageSlice'; // language action
 import i18n from '@/i18n';
 import { useRouter } from 'expo-router';
 import NetInfo from '@react-native-community/netinfo';
-
+import Voice from '@react-native-voice/voice';
 const { width } = Dimensions.get('window');
 const screenWidth = Dimensions.get('window').width;
+import * as Speech from 'expo-speech';
+
+
 
 export default function WelcomeScreen() {
   const dispatch = useDispatch();
   const router = useRouter();
+  console.log("Voice", Voice)
 
   // Get the current language from Redux state
   const language = useSelector((state) => state.language.language);
@@ -77,6 +81,93 @@ export default function WelcomeScreen() {
       router.push('/(tabs)/(home)'); // Redirect to Home screen if no internet
     }
   };
+
+  const [isListening, setIsListening] = useState(false);
+
+    useEffect(() => {
+      // Ensure Voice is available before adding listeners and starting recognition
+      if (Voice) {
+        console.log('Voice is available.');
+        Voice.onSpeechResults = onSpeechResults;
+        Voice.onSpeechError = onSpeechError;
+        Voice.onSpeechStart = onSpeechStart;
+        Voice.onSpeechEnd = onSpeechEnd;
+
+        startListening();
+      } else {
+        console.error('Voice module is not initialized');
+      }
+
+      // Cleanup listeners on unmount
+      return () => {
+        Voice.removeAllListeners();
+        Voice.destroy();
+      };
+    }, []);
+
+    const startListening = async () => {
+      try {
+        // Ensure Voice is available before calling start
+        if (Voice) {
+          console.log('Starting voice recognition...');
+          await Voice.start('en-US'); // Start speech recognition in English
+          setIsListening(true);
+          console.log('Voice recognition started');
+        } else {
+          console.error('Voice module is not initialized');
+        }
+      } catch (error) {
+        console.error('Error starting voice recognition:', error);
+        Alert.alert('Error', 'There was an issue with starting voice recognition.');
+      }
+    };
+
+    const stopListening = async () => {
+      try {
+        if (Voice) {
+          console.log('Stopping voice recognition...');
+          await Voice.stop();
+          setIsListening(false);
+        } else {
+          console.error('Voice module is not initialized');
+        }
+      } catch (error) {
+        console.error('Error stopping voice recognition:', error);
+        Alert.alert('Error', 'There was an issue with stopping voice recognition.');
+      }
+    };
+
+    const onSpeechResults = (e) => {
+      const spokenWords = e.value;
+      const command = spokenWords[0].toLowerCase();
+      console.log('Command:', command);
+
+      if (command.includes('next') || command.includes('agy') || command.includes('aghay jao')) {
+        Alert.alert('Navigating to the next screen');
+        // Handle navigation
+      } else {
+        Alert.alert('Invalid Command', 'Please say "next" or "back" (or their Urdu equivalents).');
+      }
+
+      // Restart listening after processing the command
+      startListening();
+    };
+
+    const onSpeechError = (e) => {
+      console.error('Speech Error:', e);
+      Alert.alert('Error', 'An error occurred while recognizing speech.');
+      startListening(); // Restart listening on error
+    };
+
+    const onSpeechStart = () => {
+      console.log('Speech recognition started');
+    };
+
+    const onSpeechEnd = () => {
+      console.log('Speech recognition ended');
+      startListening(); // Restart listening after it ends
+    };
+
 
   return (
     <View style={styles.container}>
