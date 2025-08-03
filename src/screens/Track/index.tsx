@@ -104,7 +104,7 @@ export default function HomeScreen() {
         const token = await SecureStore.getItemAsync("accessToken");
 
         if (token) {
-          await fetchFromAPI(); // Only fetch if authenticated
+          await fetchFromAPI();
         }
       } else {
         console.log("📴 Offline mode: showing cached data.");
@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
   cardList: {
     paddingBottom: 80,
     backgroundColor: '#F9FAFB',
-    alignItems: 'center', // Ensure cards are centered in the list
+    alignItems: 'center',
   },
   card: {
     backgroundColor: '#FFFFFF',
@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 6,
     elevation: 5,
-    width: '90%',  // Make card take up 90% of the screen width
+    width: '90%',
     justifyContent: 'center',
     alignItems: 'center',
   },

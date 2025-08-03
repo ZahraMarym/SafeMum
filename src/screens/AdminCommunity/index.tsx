@@ -6,8 +6,8 @@ import {
   StyleSheet,
   TouchableOpacity,
   Modal,
+  Alert,
   ActivityIndicator,
-  ScrollView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import axios from "axios";
@@ -26,7 +26,11 @@ export default function CommunityScreen() {
   const [conversations, setConversations] = useState([]);
   const [groups, setGroups] = useState([]);
   const router = useRouter();
+  const [groupChatModalVisible, setGroupChatModalVisible] = useState(false);
+  const [groupName, setGroupName] = useState("");
+  const [selectedMembers, setSelectedMembers] = useState([]);
 
+  // ✅ Fetch all users (for Add User modal)
   const fetchUsers = async () => {
     setLoading(true);
     try {
@@ -62,11 +66,12 @@ export default function CommunityScreen() {
   const handleUserSelect = (user) => {
     setModalVisible(false);
     router.push({
-      pathname: "/(tabs)/(community)/chat",
+      pathname: "/(admin-tabs)/(admin-community)/chat",
       params: { user: JSON.stringify(user) },
     });
   };
 
+  // ✅ Fetch conversations
   const fetchConversations = async () => {
     setLoading(true);
     try {
@@ -81,7 +86,6 @@ export default function CommunityScreen() {
           headers: { accept: "/", Authorization: `Bearer ${token}` },
         }
       );
-  console.log("get-conversation-by-userid", response.data);
       setConversations(response.data);
     } catch (err) {
       console.error("Error fetching conversations:", err);
@@ -90,16 +94,13 @@ export default function CommunityScreen() {
     }
   };
 
+  // ✅ Fetch groups
   const fetchGroups = async () => {
     setLoading(true);
     try {
       const token = await SecureStore.getItemAsync("accessToken");
-      const storedUser = await SecureStore.getItemAsync("user");
-      const currentUser = JSON.parse(storedUser);
-      const senderId = currentUser.userId;
-
       const response = await axios.get(
-        `${process.env.EXPO_PUBLIC_URL}/communication/get-all-user-groups?Id=${senderId}`,
+        `${process.env.EXPO_PUBLIC_URL}/communication/get-all-group`,
         {
           headers: { accept: "/", Authorization: `Bearer ${token}` },
         }
@@ -119,9 +120,59 @@ export default function CommunityScreen() {
     }, [])
   );
 
+  // ✅ Handle Group Creation
+  const handleCreateGroupChat = async () => {
+    if (!groupName || selectedMembers.length < 1) {
+      Alert.alert(
+        "Error",
+        "Please provide a group name and select at least one member."
+      );
+      return;
+    }
+
+    try {
+      const token = await SecureStore.getItemAsync("accessToken");
+      const storedUser = await SecureStore.getItemAsync("user");
+      if (!storedUser || !token) {
+        Alert.alert("Error", "Please log in again.");
+        return;
+      }
+
+      const currentUser = JSON.parse(storedUser);
+      const senderId = currentUser.userId;
+
+      const response = await axios.post(
+        `${process.env.EXPO_PUBLIC_URL}/communication/create-chat-group`,
+        {
+          name: groupName,
+          adminUserId: senderId,
+          memberUserIds: selectedMembers,
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (response?.data?.groupId) {
+        Alert.alert("Success", "Group chat created successfully!");
+        setGroupChatModalVisible(false);
+        router.push({
+          pathname: "/(admin-tabs)/(admin-community)/chat",
+          params: {
+            groupId: response.data.groupId,
+            groupName: groupName,
+          },
+        });
+      } else {
+        Alert.alert("Error", "Failed to create group chat.");
+      }
+    } catch (err) {
+      console.error("Error creating group chat:", err);
+      Alert.alert("Error", "Failed to create group chat.");
+    }
+  };
+
   return (
     <View style={styles.container}>
-      {/* Add User Button */}
+      {/* ✅ Add User Button */}
       <TouchableOpacity
         style={styles.addButton}
         onPress={() => setModalVisible(true)}
@@ -130,7 +181,7 @@ export default function CommunityScreen() {
         <Text style={styles.addButtonText}>Add User</Text>
       </TouchableOpacity>
 
-      {/* Add User Modal */}
+      {/* ✅ Add User Modal */}
       <Modal visible={modalVisible} animationType="slide">
         <View style={styles.modalContainer}>
           <TextInput
@@ -164,9 +215,9 @@ export default function CommunityScreen() {
         </View>
       </Modal>
 
-      {/* Scrollable Split Screen */}
+      {/* ✅ Split Screen */}
       <View style={styles.splitContainer}>
-        {/* Top Half - Conversations */}
+        {/* Conversations (Top Half) */}
         <View style={styles.halfContainer}>
           <TextBold style={styles.sectionTitle}>Conversations</TextBold>
           <FlatList
@@ -192,7 +243,7 @@ export default function CommunityScreen() {
                       phone: receiverUser.phoneNumber,
                     };
                     router.push({
-                      pathname: "/(tabs)/(community)/chat",
+                      pathname: "/(admin-tabs)/(admin-community)/chat",
                       params: { user: JSON.stringify(chatPayload) },
                     });
                   } catch (err) {
@@ -220,7 +271,7 @@ export default function CommunityScreen() {
           />
         </View>
 
-        {/* Bottom Half - Groups */}
+        {/* Groups (Bottom Half) */}
         <View style={styles.halfContainer}>
           <TextBold style={styles.sectionTitle}>Group Chats</TextBold>
           <FlatList
@@ -231,7 +282,7 @@ export default function CommunityScreen() {
                 style={styles.groupItem}
                 onPress={() =>
                   router.push({
-                    pathname: "/(tabs)/(community)/group-chat",
+                    pathname: "/(admin-tabs)/(admin-community)/group-chat",
                     params: { user: JSON.stringify(item) },
                   })
                 }
@@ -248,6 +299,60 @@ export default function CommunityScreen() {
           />
         </View>
       </View>
+
+      {/* ✅ Group Chat Modal */}
+      <Modal visible={groupChatModalVisible} animationType="slide">
+        <View style={styles.modalContainer}>
+          <TextInput
+            placeholder="Group Name"
+            value={groupName}
+            onChangeText={setGroupName}
+            style={styles.input}
+          />
+          <FlatList
+            data={users}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={styles.userItem}
+                onPress={() => {
+                  setSelectedMembers((prev) =>
+                    prev.includes(item.id)
+                      ? prev.filter((id) => id !== item.id)
+                      : [...prev, item.id]
+                  );
+                }}
+              >
+                <Text style={styles.userText}>{item.name}</Text>
+                {selectedMembers.includes(item.id) && (
+                  <Ionicons name="checkmark-circle" size={24} color="#10BE56" />
+                )}
+              </TouchableOpacity>
+            )}
+          />
+          <TouchableOpacity
+            style={styles.createGroupButton}
+            onPress={handleCreateGroupChat}
+          >
+            <Text style={styles.createGroupText}>Create Group</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.closeBtn}
+            onPress={() => setGroupChatModalVisible(false)}
+          >
+            <Text style={styles.closeText}>Close</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
+
+      {/* ✅ Button to open Group Chat Modal */}
+      <TouchableOpacity
+        style={styles.addButton}
+        onPress={() => setGroupChatModalVisible(true)}
+      >
+        <Ionicons name="chatbox-ellipses" size={26} color="#fff" />
+        <Text style={styles.addButtonText}>Create Group</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -265,7 +370,40 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   addButtonText: { fontSize: 18, color: "#fff", fontWeight: "600" },
-  modalContainer: { flex: 1, padding: 20, backgroundColor: "#FFFFFF" },
+  splitContainer: { flex: 1 },
+  halfContainer: { flex: 0.8, marginBottom: 10 },
+  sectionTitle: { fontSize: 18, color: "#000", marginBottom: 5 },
+  conversationItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E7EB",
+  },
+  avatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "#A78BFA",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+  },
+  avatarText: { color: "#fff", fontSize: 18, fontWeight: "bold" },
+  chatInfo: { flex: 1 },
+  chatName: { fontSize: 16, fontWeight: "600", color: "#111827" },
+  lastMessage: { fontSize: 14, color: "#6B7280" },
+  groupItem: {
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E7EB",
+    backgroundColor: "#F9FAFB",
+    borderRadius: 8,
+    marginBottom: 5,
+  },
+  groupName: { fontSize: 16, fontWeight: "600", color: "#111827" },
+  lastMessageTime: { fontSize: 12, color: "#9CA3AF" },
+  modalContainer: { flex: 1, padding: 20, backgroundColor: "#fff" },
   searchBar: {
     borderWidth: 1,
     borderColor: "#D1D5DB",
@@ -295,37 +433,22 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   closeText: { fontSize: 16, color: "#1E40AF", fontWeight: "600" },
-  splitContainer: { flex: 1 },
-  halfContainer: { flex: 0.8, marginBottom: 10 },
-  sectionTitle: { color: "#000", fontSize: 18, marginBottom: 6 },
-  conversationItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
+  input: {
+    height: 50,
+    borderColor: "#b7b7b7",
+    borderWidth: 1,
+    color: "black",
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    marginBottom: 16,
+    backgroundColor: "#F3F4F6",
   },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: "#A78BFA",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 12,
-  },
-  avatarText: { color: "#fff", fontSize: 18, fontWeight: "bold" },
-  chatInfo: { flex: 1 },
-  chatName: { fontSize: 16, fontWeight: "600", color: "#111827" },
-  lastMessage: { fontSize: 14, color: "#6B7280", marginTop: 2 },
-  groupItem: {
+  createGroupButton: {
+    backgroundColor: "#10BE56",
     paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
-    backgroundColor: "#F9FAFB",
-    borderRadius: 8,
-    marginBottom: 5,
+    borderRadius: 10,
+    alignItems: "center",
+    marginTop: 16,
   },
-  groupName: { fontSize: 16, fontWeight: "600", color: "#111827" },
-  lastMessageTime: { fontSize: 12, color: "#9CA3AF" },
+  createGroupText: { color: "#fff", fontSize: 16, fontWeight: "600" },
 });

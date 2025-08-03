@@ -16,6 +16,10 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
+      "permissions": [
+        "CAMERA",
+        "RECORD_AUDIO"
+      ],
       "edgeToEdgeEnabled": true,
       "package": "com.zahra28.SafeMum"
     },
@@ -45,7 +49,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "fdd0f662-4824-4908-9291-fa241998bf24"
+        "projectId": "0c554584-e1c4-4998-9c40-8d2f5d18888a"
       }
     }
   }
