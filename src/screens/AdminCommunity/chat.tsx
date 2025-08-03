@@ -1,28 +1,18 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { useFocusEffect } from '@react-navigation/native';
-import {
-  View,
-  FlatList,
-  TextInput,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  Modal,
-  ActivityIndicator,
-  Alert,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import axios from 'axios';
-import { useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
 import * as SecureStore from 'expo-secure-store';
+import { View, FlatList, TextInput, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { TextBold } from '@/components/TextBold';
+import { Ionicons } from '@expo/vector-icons';
 import useSignalR from '@/SignalR';
+import axios from 'axios'
 
-export default function ChatScreen() {
+export default function LoginScreen() {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [fetchedMessages, setFetchedMessages] = useState([]);
   const { messages: realTimeMessages, setMessages: setRealTimeMessages, sendMessage } = useSignalR();
-  const { user, groupId, groupName, receiverId } = useLocalSearchParams();  // Extract groupId and receiverId from params
+  const { user } = useLocalSearchParams();
   const [RecUserName, setRecUserName] = useState('');
   const router = useRouter();
 
@@ -34,41 +24,35 @@ export default function ChatScreen() {
       console.error('Failed to parse user:', e);
     }
   }
+  console.log("parsed user", parsedUser)
 
-  // Check if the chat is a group chat or individual
-  const isGroupChat = !!groupId;
-  const chatReceiverId = isGroupChat ? groupId : receiverId;  // Use groupId for group chat and receiverId for individual chat
-  const receiverName = isGroupChat ? groupName : parsedUser?.name;  // Use groupName for group chat, else use individual name
+  const receiverId = parsedUser?.id;
+    console.log("receiverId", receiverId)
+
 
   const fetchMessages = async () => {
-    setLoading(true);
     try {
-      const token = await SecureStore.getItemAsync('accessToken');
+      setLoading(true);
       const storedUser = await SecureStore.getItemAsync('user');
       const currentUser = JSON.parse(storedUser);
       const senderId = currentUser.userId;
 
-      let url = '';
-      if (isGroupChat) {
-        // Fetch group messages
-        url = `${process.env.EXPO_PUBLIC_URL}/communication/get-message-by-group?SenderId=${senderId}&GroupId=${chatReceiverId}&PageNumber=1&PageSize=10`;
-      } else {
-        // Fetch individual messages
-        url = `${process.env.EXPO_PUBLIC_URL}/communication/get-message-by-user-request?SenderId=${senderId}&ReceiverId=${chatReceiverId}&PageNumber=1&PageSize=10`;
-      }
-
-      const response = await fetch(url, {
-        headers: {
-          Accept: '*/*',
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const token = await SecureStore.getItemAsync('accessToken');
+      const response = await fetch(
+        `${process.env.EXPO_PUBLIC_URL}/communication/get-message-by-user-request?SenderId=${senderId}&ReceiverId=${receiverId}&PageNumber=1&PageSize=10`,
+        {
+          headers: {
+            Accept: '*/*',
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (!response.ok) throw new Error('Failed to fetch messages');
 
       const data = await response.json();
       setFetchedMessages(data.data || []);
-      setRecUserName(receiverName);  // Set the receiver name for either individual or group chat
+      setRecUserName(parsedUser.name);
     } catch (error) {
       console.error('Error fetching messages:', error);
     } finally {
@@ -78,9 +62,8 @@ export default function ChatScreen() {
 
   useEffect(() => {
     fetchMessages();
-  }, [chatReceiverId]);
+  }, []);
 
-  // Handle sending message
   const handleSend = async () => {
     if (message.trim()) {
       try {
@@ -88,8 +71,7 @@ export default function ChatScreen() {
         const currentUser = JSON.parse(storedUser);
         const senderId = currentUser.userId;
 
-        // Send message to either group or individual
-        await sendMessage(senderId, chatReceiverId, message);
+        await sendMessage(senderId, receiverId, message);
         setMessage('');
       } catch (error) {
         console.error('Error sending message:', error);
@@ -101,15 +83,15 @@ export default function ChatScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
           <Ionicons name="chevron-back" size={25} color="white" />
         </TouchableOpacity>
-        <Text style={styles.name}>{RecUserName}</Text>
+        <TextBold style={styles.name}>
+          {RecUserName.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase())}
+        </TextBold>
       </View>
 
-      {/* Messages list */}
       <FlatList
         data={allMessages}
         keyExtractor={(item, index) => item.id?.toString() + index}
@@ -117,11 +99,11 @@ export default function ChatScreen() {
           <View
             style={[
               styles.messageItem,
-              item.senderId !== chatReceiverId ? styles.sentMessage : styles.receivedMessage,
+              item.senderId !== receiverId ? styles.sentMessage : styles.receivedMessage,
             ]}
           >
             <Text style={styles.senderName}>
-              {item.senderId !== chatReceiverId ? 'You:' : `${RecUserName}:`}
+              {item.senderId !== receiverId ? 'You:' : `${RecUserName}:`}
             </Text>
             <Text>{item.content}</Text>
             <Text style={styles.timestamp}>
@@ -131,10 +113,8 @@ export default function ChatScreen() {
         )}
       />
 
-      {/* Loading indicator */}
-      {loading && <ActivityIndicator size="large" color="#000" style={styles.loading} />}
+      {loading && <Text style={styles.loading}>Loading...</Text>}
 
-      {/* Message input */}
       <View style={styles.inputContainer}>
         <TextInput
           value={message}
@@ -168,7 +148,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     justifyContent: 'center',
     padding: 20,
-    borderRadius: 5,
+    borderRadius:5,
   },
   name: {
     marginLeft: '10%',
@@ -236,4 +216,3 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
 });
-
