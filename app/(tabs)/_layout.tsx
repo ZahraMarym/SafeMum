@@ -26,7 +26,7 @@ const Layout = () => {
         headerShown: false,
         tabBarShowLabel: false,
         tabBarStyle: {
-          height: 100,
+          height: 120,
           width: "100%",
           borderTopLeftRadius: 24,
           borderTopRightRadius: 24,

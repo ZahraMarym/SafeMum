@@ -3,6 +3,9 @@ module.exports = function (api) {
   return {
     presets: ["babel-preset-expo"],
     plugins: [
+    '@babel/plugin-proposal-optional-chaining',
+     '@babel/plugin-proposal-nullish-coalescing-operator',
+
       [
         "module-resolver",
         {
@@ -13,7 +16,7 @@ module.exports = function (api) {
           extensions: [".js", ".jsx", ".ts", ".tsx", ".json"],
         },
       ],
-      "react-native-reanimated/plugin", // put this as a separate plugin
+      "react-native-reanimated/plugin",
     ],
   };
 };

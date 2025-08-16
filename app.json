@@ -8,6 +8,12 @@
     "scheme": "safemum",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "jsEngine": "jsc",
+    "statusBar": {
+      "barStyle": "dark-content",
+      "backgroundColor": "#ffffff",
+      "translucent": false
+    },
     "ios": {
       "supportsTablet": true
     },
@@ -41,7 +47,17 @@
       ],
       "expo-localization",
       "expo-asset",
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-audio",
+      "expo-speech-recognition",
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Allow $(PRODUCT_NAME) to use the microphone.",
+          "speechRecognitionPermission": "Allow $(PRODUCT_NAME) to use speech recognition.",
+          "androidSpeechServicePackages": ["com.google.android.googlequicksearchbox"]
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

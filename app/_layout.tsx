@@ -4,10 +4,9 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, StatusBar, useColorScheme } from "react-native";
 import { Provider } from 'react-redux';
 import { store } from '@/redux/store/store';
-
 
 export default function RootLayout() {
 
@@ -22,6 +21,8 @@ export default function RootLayout() {
     'Poppins-SemiBold': require('../assets/fonts/Poppins-SemiBold.ttf'),
     'Poppins-Thin': require('../assets/fonts/Poppins-Thin.ttf'),
   });
+
+  const colorScheme = useColorScheme();
 
   useEffect(() => {
     if (loaded) {
@@ -38,25 +39,30 @@ export default function RootLayout() {
   }
 
   return (
-       <Provider store={store}>
-          <View style={styles.container}>
-                   <Stack
-                     screenOptions={{
-                       headerShown: false,
-                     }}
-                   >
-                     <Stack.Screen name="index" options={{ headerShown: false }} />
-                   </Stack>
-                 </View>
-                 </Provider>
-
+    <Provider store={store}>
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <View style={styles.container}>
+          {/* Set the StatusBar style based on the current theme */}
+          <StatusBar
+            barStyle={colorScheme === 'dark' ? 'light-content' : 'dark-content'}
+            backgroundColor={colorScheme === 'dark' ? '#000' : '#fff'}
+          />
+          <Stack
+            screenOptions={{
+              headerShown: false,
+            }}
+          >
+            <Stack.Screen name="index" options={{ headerShown: false }} />
+          </Stack>
+        </View>
+      </ThemeProvider>
+    </Provider>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 20,
-    backgroundColor:"white",
+
   },
 });

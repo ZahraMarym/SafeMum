@@ -41,4 +41,6 @@ export default {
   takesMedication: 'Takes Medication (comma separated)',
   bloodGroup: 'Blood Group',
   next: 'Next',
+  voiceCommands: "Voice Commands",
+  listening: "Listening…"
 };

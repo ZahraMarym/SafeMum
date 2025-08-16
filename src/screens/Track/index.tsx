@@ -17,6 +17,7 @@ import i18n from '@/i18n';
 import { Text } from '@/components/Text';
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
+import { TextBold } from '@/components/TextBold';
 
 const EXPO_PUBLIC_URL = process.env.EXPO_PUBLIC_URL;
 const isRTL = I18nManager.isRTL;
@@ -140,6 +141,11 @@ export default function HomeScreen() {
         ) : (
           <Text>Loading data...</Text>
         )}
+    <TouchableOpacity style={styles.nutritionButton} onPress={() => router.push("/(tabs)/(track)/nutrition-tracking")}>
+           <TextBold>
+           Track Nutrition
+           </TextBold>
+          </TouchableOpacity>
       </ScrollView>
     </View>
   );
@@ -196,4 +202,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 22,
   },
+  nutritionButton:{
+      padding:20,
+      backgroundColor:"#A78BFA",
+      flexDirection:"row",
+      color:"white",
+      justifyContent:"center",
+      alignItems:"center",}
 });
