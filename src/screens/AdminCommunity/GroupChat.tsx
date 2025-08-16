@@ -5,7 +5,9 @@ import {
   FlatList,
   TextInput,
   StyleSheet,
+  Modal,
   Text,
+  Button,
   TouchableOpacity,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -18,7 +20,9 @@ export default function GroupChatScreen() {
   const [loading, setLoading] = useState(false);
   const { user } = useLocalSearchParams();
   const router = useRouter();
-
+ const [modalVisible, setModalVisible] = useState(false);
+  const [users, setUsers] = useState([]); // To store fetched users
+  const [selectedUser, setSelectedUser] = useState(null); // Store selected user
   const [newMessage, setNewMessage] = useState("");
   const [fetchedMessages, setFetchedMessages] = useState([]);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -112,6 +116,7 @@ export default function GroupChatScreen() {
               }
             );
             const name = res.data?.name || "User";
+            console.log("users response", res)
             setUserNames((prev) => ({ ...prev, [id]: name }));
           } catch (error) {
             console.error(`❌ Failed to fetch name for ${id}`, error.message);
@@ -138,6 +143,79 @@ export default function GroupChatScreen() {
     }
   };
 
+
+    // Fetch users when button is clicked
+     const fetchUsers = async () => {
+       try {
+         const token = await SecureStore.getItemAsync("accessToken");
+         const response = await axios.get(
+           `${process.env.EXPO_PUBLIC_URL}/communication/get-all-user?PageSize=100&PageNumber=1`,
+           {
+             headers: { accept: "/", Authorization: `Bearer ${token}` },
+           }
+         );
+     console.log("user response", response.data.data)
+         setUsers(response.data.data);
+         setModalVisible(true); // Open modal after users are fetched
+       } catch (error) {
+         console.error("Error fetching users:", error);
+       }
+     };
+
+ const addUserToGroup = async (userId) => {
+   try {
+     const token = await SecureStore.getItemAsync("accessToken");
+
+     // Ensure groupId is defined and a string
+     if (!groupId || !userId) {
+       console.error("Missing groupId or userId");
+       return;
+     }
+
+     const payload = {
+       groupId: String(groupId),
+       userId: String(userId),
+     };
+
+     console.log("Payload being sent:", payload);
+     const url = `${process.env.EXPO_PUBLIC_URL}/communication/add-user-in-chat-group`
+     console.log("url", url)
+console.log("🔄 Sending request...");
+
+const response = await axios.post(
+  `${process.env.EXPO_PUBLIC_URL}/communication/add-user-in-chat-group`,
+  payload,
+  {
+    headers: {
+      Accept: "*/*",
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    timeout: 30000,
+  }
+);
+
+console.log("✅ Request complete");
+
+     console.log("✅ User added to group:", response.data);
+     setModalVisible(false);
+   } catch (error) {
+    console.error("❌ Axios error:", {
+        message: error.message,
+        code: error.code,
+        response: error.response?.data,
+        request: error.request,
+      });
+  Alert.alert(
+      "Failed to Add User",
+      error.response?.data?.error || "User might already be in the group or there was a server error."
+    );
+   }
+ };
+
+
+
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -152,6 +230,12 @@ export default function GroupChatScreen() {
             return txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase();
           })}
         </TextBold>
+        <TouchableOpacity style={styles.addButton}
+       onPress={fetchUsers}
+        >
+          <Ionicons name="add-circle-outline" size={25} color="white" />
+        </TouchableOpacity>
+
       </View>
 
       <FlatList
@@ -200,6 +284,51 @@ export default function GroupChatScreen() {
           <Text style={styles.sendButtonText}>Send</Text>
         </TouchableOpacity>
       </View>
+       {/* Modal to show users */}
+      <Modal
+        visible={modalVisible}
+        animationType="slide"
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+           <TouchableOpacity
+                  style={styles.crossButton}
+                  onPress={() => setModalVisible(false)}
+                >
+                  <Ionicons name="close" size={24} color="black" />
+                </TouchableOpacity>
+            <Text style={styles.modalTitle}>Select a User</Text>
+
+            {/* User list */}
+            <FlatList
+              data={users}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.userItem}
+                  onPress={() => setSelectedUser(item)}
+                >
+                  <Text style={styles.userItemText}>{item.name}</Text>
+                </TouchableOpacity>
+              )}
+            />
+
+            {selectedUser && (
+              <View style={styles.addButtonContainer}>
+               <TouchableOpacity
+                             style={styles.closeButton}
+                             onPress={() => addUserToGroup(selectedUser.id)}
+                           >
+                 <TextBold style={styles.closeButtonText}>{`Add ${selectedUser.name} to Group`}</TextBold>
+                </TouchableOpacity>
+              </View>
+            )}
+
+          </View>
+        </View>
+      </Modal>
+
     </View>
   );
 }
@@ -216,6 +345,16 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 5,
   },
+    addButton: { position: "absolute", top: "60%", right: "5%" },
+    header: {
+      height: "10%",
+      width: "100%",
+      backgroundColor: "#825DEF",
+      alignItems: "flex-start",
+      justifyContent: "center",
+      padding: 20,
+      borderRadius: 5,
+    },
   name: { marginLeft: "10%", color: "#fff", fontSize: 18 },
   messageItem: {
     marginBottom: 12,
@@ -262,4 +401,66 @@ const styles = StyleSheet.create({
   },
   sendButtonText: { color: "#fff", fontWeight: "bold" },
   loading: { textAlign: "center", fontSize: 16, color: "#888", marginTop: 20 },
+   // Modal Styling
+     modalOverlay: {
+       flex: 1,
+       justifyContent: "center",
+       alignItems: "center",
+       backgroundColor: "rgba(0, 0, 0, 0.5)", // Semi-transparent background
+     },
+     modalContainer: {
+       backgroundColor: "#fff",
+       width: "85%",
+       maxWidth: 400,
+       padding: 20,
+       borderRadius: 10,
+       elevation: 5, // Add shadow on Android
+       shadowColor: "#000", // Shadow on iOS
+       shadowOffset: { width: 0, height: 3 },
+       shadowOpacity: 0.2,
+       shadowRadius: 5,
+     },
+     modalTitle: {
+       fontSize: 24,
+       fontWeight: "bold",
+       marginBottom: 15,
+       color: "#333", // Dark text for better readability
+       textAlign: "center",
+     },
+     userItem: {
+       padding: 15,
+       borderBottomWidth: 1,
+       borderBottomColor: "#eee",
+       width: "100%",
+       backgroundColor: "#F9F9F9", // Light background for each user item
+       marginBottom: 10,
+       borderRadius: 8,
+     },
+     userItemText: {
+       fontSize: 16,
+       color: "#333", // Dark text for readability
+     },
+     addButtonContainer: {
+       marginTop: 20,
+       alignItems: "center",
+     },
+     closeButton: {
+       marginTop: 15,
+       backgroundColor: "#A78BFA",
+       paddingVertical: 10,
+       paddingHorizontal: 20,
+       borderRadius: 10,
+     },
+     closeButtonText: {
+       color: "#fff",
+       fontSize: 16,
+     },
+ crossButton: {
+   position: 'absolute',
+   top: 10,
+   right: 10,
+   zIndex: 1,
+   padding: 8,
+ },
+
 });

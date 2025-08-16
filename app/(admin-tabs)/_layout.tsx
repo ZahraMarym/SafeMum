@@ -62,7 +62,7 @@ const Layout = () => {
 // Define styles for the tab bar and icons
 const styles = StyleSheet.create({
   tabBarStyle: {
-    height: 100,
+    height: 120,
     width: "100%",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,

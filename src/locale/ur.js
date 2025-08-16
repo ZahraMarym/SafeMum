@@ -41,4 +41,6 @@ export default {
   takesMedication: 'ادویات لیتے ہیں (کاما سے علیحدہ کریں)',
   bloodGroup: 'خون کا گروپ',
   next: 'اگلا',
+  voiceCommands: "وائس کمانڈز",
+  listening: "سن رہا ہے…"
 };
