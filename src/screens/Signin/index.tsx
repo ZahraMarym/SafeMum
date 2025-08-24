@@ -1,24 +1,24 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import {
-  View,
-  TouchableOpacity,
-  StyleSheet,
-  Dimensions,
-  Platform,
-  I18nManager,
-  Alert,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import * as Updates from 'expo-updates';
-import axios from 'axios';
-import { TextBold } from '@/components/TextBold';
 import { Text } from '@/components/Text';
+import { TextBold } from '@/components/TextBold';
 import { TextInput } from '@/components/TextInput';
 import i18n from '@/i18n';
+import { Ionicons } from '@expo/vector-icons';
+import NetInfo from '@react-native-community/netinfo';
+import axios from 'axios';
 import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
-import NetInfo from '@react-native-community/netinfo';
 import * as Speech from 'expo-speech';
+import * as Updates from 'expo-updates';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  Alert,
+  Dimensions,
+  I18nManager,
+  Platform,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
 import {
   ExpoSpeechRecognitionModule,
@@ -45,6 +45,27 @@ const UR_CMDS = {
   forgot: ['پاسورڈ بھول گیا', 'پاسورڈ ری سیٹ']
 };
 
+// Add voice instruction dictionaries after the command dictionaries
+const EN_INSTRUCTIONS = {
+  speakEmail: "Please speak your email",
+  speakPassword: "Please speak your password",
+  emailSet: "Email has been set",
+  passwordSet: "Password has been set",
+  listening: "Listening...",
+  voiceCommands: "Voice Commands",
+  youSaid: "You said"
+};
+
+const UR_INSTRUCTIONS = {
+  speakEmail: "برائے مہربانی اپنا ای میل بولیں",
+  speakPassword: "برائے مہربانی اپنا پاسورڈ بولیں",
+  emailSet: "ای میل سیٹ کر دیا گیا ہے",
+  passwordSet: "پاسورڈ سیٹ کر دیا گیا ہے",
+  listening: "سن رہا ہے...",
+  voiceCommands: "آوازی احکامات",
+  youSaid: "آپ نے کہا"
+};
+
 const saidAny = (said: string, arr: string[]) =>
   arr.some(w => said.includes(w.toLowerCase()));
 
@@ -60,6 +81,9 @@ export default function LoginScreen() {
   const guardRef = useRef(false);
   const alertShownRef = useRef(false);
   const resultLatchRef = useRef(0);
+
+  // Add new state for field focus
+  const [activeField, setActiveField] = useState<'email' | 'password' | null>(null);
 
   // ===== TTS helpers =====
   const speakLang = useMemo(() => (locale === 'ur' ? 'ur-PK' : 'en-US'), [locale]);
@@ -163,6 +187,21 @@ export default function LoginScreen() {
 
     setHeard(said);
 
+    // Handle voice typing for active field with localized feedback
+    if (activeField && !resultLatchRef.current) {
+      if (activeField === 'email') {
+        setEmail(said.replace(/\s+/g, '').toLowerCase());
+        setActiveField(null);
+        speak(voiceInstructions.emailSet);
+        return;
+      } else if (activeField === 'password') {
+        setPassword(said.replace(/\s+/g, ''));
+        setActiveField(null);
+        speak(voiceInstructions.passwordSet);
+        return;
+      }
+    }
+
     if (resultLatchRef.current > 0) return;
 
     const dict = locale === 'ur' ? UR_CMDS : EN_CMDS;
@@ -252,9 +291,17 @@ export default function LoginScreen() {
 
   const canUseVoice = email.length > 0 && password.length > 0;
 
-  const startListening = useCallback(async () => {
-    // Block starting listening until all fields are filled
-    if (!canUseVoice) {
+  // Add voice instructions based on locale
+  const voiceInstructions = useMemo(() => 
+    locale === 'ur' ? UR_INSTRUCTIONS : EN_INSTRUCTIONS,
+  [locale]);
+
+  // Modify startListening to use localized instructions
+  const startListening = useCallback(async (field?: 'email' | 'password') => {
+    if (field) {
+      setActiveField(field);
+      speak(field === 'email' ? voiceInstructions.speakEmail : voiceInstructions.speakPassword);
+    } else if (!canUseVoice) {
       speak(voiceMsgIncomplete);
       return;
     }
@@ -282,7 +329,7 @@ export default function LoginScreen() {
         speak(msg);
       }
     }
-  }, [ensurePermissions, locale, canUseVoice, speak, voiceMsgIncomplete]);
+  }, [ensurePermissions, locale, canUseVoice, speak, voiceMsgIncomplete, voiceInstructions]);
 
   const stopListening = useCallback(async () => {
     try { await ExpoSpeechRecognitionModule.stop(); } catch {}
@@ -292,99 +339,9 @@ export default function LoginScreen() {
     return () => { try { ExpoSpeechRecognitionModule.stop(); } catch {} };
   }, []);
 
-  return (
-    <View style={styles.container}>
-      {/* Back */}
-      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-        <Ionicons name="chevron-back" size={24} color="black" style={{ transform: [{ scaleX: isRTL ? -1 : 1 }] }} />
-      </TouchableOpacity>
 
-      <TextBold style={styles.title}>{i18n.t('login')}</TextBold>
 
-      {/* Email */}
-      <Text style={styles.label}>{i18n.t('email')}</Text>
-      <View style={styles.inputContainer}>
-        <TextInput
-          placeholder={i18n.t('enterEmail')}
-          value={email}
-          onChangeText={setEmail}
-          style={{
-            borderColor: '#E5E7EB',
-            borderWidth: 1,
-            backgroundColor: '#fff',
-            borderRadius: 6,
-            paddingHorizontal: 14,
-            paddingVertical: 12,
-            fontSize: 14,
-            textAlign: I18nManager.isRTL ? 'right' : 'left',
-          }}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          autoCorrect={false}
-        />
-        <TouchableOpacity
-          style={styles.forgotPassword}
-          onPress={() => router.push('/(signin)/forgot-password')}
-        >
-          <Text style={styles.forgotText}>{i18n.t('forgotPassword')}</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Password */}
-      <Text style={styles.label}>{i18n.t('password')}</Text>
-      <View style={styles.inputContainer}>
-        <TextInput
-          placeholder={i18n.t('enterPassword')}
-          placeholderTextColor="#A3A3A3"
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-          style={styles.input}
-        />
-      </View>
-
-      {/* Primary CTA (manual) */}
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.button} onPress={handleLogin}>
-          <TextBold style={styles.buttonText}>{i18n.t('login')}</TextBold>
-        </TouchableOpacity>
-      </View>
-
-      {/* Voice control button */}
-      <TouchableOpacity
-        style={[
-          styles.voiceBtn,
-          recognizing && styles.voiceBtnOn,
-          !canUseVoice && styles.voiceBtnDisabled,
-        ]}
-        onPress={recognizing ? stopListening : startListening}
-        activeOpacity={canUseVoice ? 0.7 : 1}
-      >
-        <Ionicons name={recognizing ? 'mic' : 'mic-outline'} size={22} color="#fff" />
-        <TextBold style={styles.voiceText}>
-         {recognizing ? i18n.t('listening') : i18n.t('voiceCommands')}
-        </TextBold>
-      </TouchableOpacity>
-
-      {/* Last heard phrase */}
-      {heard ? (
-        <Text style={styles.heardText}>
-          {i18n.t('youSaid') || 'You said'}: “{heard}”
-        </Text>
-      ) : null}
-
-      {/* Signup row */}
-      <View style={styles.signupRow}>
-        <Text style={styles.signupText}>{i18n.t('dontHaveAccount')}</Text>
-        <TouchableOpacity onPress={() => router.push('/(signup)')}>
-          <TextBold style={styles.signupLink}>{i18n.t('signUp')}</TextBold>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
+  const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F6F6FF', paddingHorizontal: 24, paddingTop: 60 },
   backButton: {
     position: 'absolute',
@@ -400,7 +357,7 @@ const styles = StyleSheet.create({
   inputContainer: { marginBottom: 28 },
   input: {
     backgroundColor: '#fff', borderRadius: 8, paddingHorizontal: 14, paddingVertical: 12,
-    fontSize: 14, borderColor: '#E5E7EB', borderWidth: 1, textAlign: isRTL ? 'right' : 'left',
+    fontSize: 14, borderColor: '#E5E7EB', borderWidth: 1,             textAlign: I18nManager.isRTL ? 'right' : 'left',
   },
   forgotPassword: { marginTop: 4, alignSelf: isRTL ? 'flex-start' : 'flex-end' },
   forgotText: { color: '#F87171', fontSize: 12 },
@@ -432,3 +389,118 @@ const styles = StyleSheet.create({
   signupText: { fontSize: 14, color: '#6B7280', marginHorizontal: 4, textAlign: isRTL ? 'right' : 'left' },
   signupLink: { fontSize: 14, color: '#8B5CF6', fontWeight: '600', textAlign: isRTL ? 'right' : 'left' },
 });
+
+
+  return (
+    <View style={styles.container}>
+      {/* Back */}
+      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+        <Ionicons name="chevron-forward" size={24} color="black" style={{ transform: [{ scaleX: isRTL ? -1 : 1 }] }} />
+      </TouchableOpacity>
+
+      <TextBold style={styles.title}>{i18n.t('login')}</TextBold>
+
+      {/* Email */}
+      <Text style={styles.label}>{i18n.t('email')}</Text>
+      <View style={styles.inputContainer}>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <TextInput
+            placeholder={i18n.t('enterEmail')}
+            value={email}
+            onChangeText={setEmail}
+            style={[styles.input, { flex: 1 }]}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          <TouchableOpacity
+            onPress={() => startListening('email')}
+            style={{
+              padding: 8,
+              marginLeft: 8,
+            }}
+          >
+            <Ionicons 
+              name={activeField === 'email' ? 'mic' : 'mic-outline'} 
+              size={24} 
+              color="#6D28D9" 
+            />
+          </TouchableOpacity>
+        </View>
+        <TouchableOpacity
+          style={styles.forgotPassword}
+          onPress={() => router.push('/(signin)/forgot-password')}
+        >
+          <Text style={styles.forgotText}>{i18n.t('forgotPassword')}</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Password */}
+      <Text style={styles.label}>{i18n.t('password')}</Text>
+      <View style={styles.inputContainer}>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <TextInput
+            placeholder={i18n.t('enterPassword')}
+            placeholderTextColor="#A3A3A3"
+            secureTextEntry
+            value={password}
+            onChangeText={setPassword}
+            style={[styles.input, { flex: 1 }]}
+          />
+          <TouchableOpacity
+            onPress={() => startListening('password')}
+            style={{
+              padding: 8,
+              marginLeft: 8,
+            }}
+          >
+            <Ionicons 
+              name={activeField === 'password' ? 'mic' : 'mic-outline'} 
+              size={24} 
+              color="#6D28D9" 
+            />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Primary CTA (manual) */}
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity style={styles.button} onPress={handleLogin}>
+          <TextBold style={styles.buttonText}>{i18n.t('login')}</TextBold>
+        </TouchableOpacity>
+      </View>
+
+      {/* Voice control button */}
+      <TouchableOpacity
+        style={[
+          styles.voiceBtn,
+          recognizing && styles.voiceBtnOn,
+          !canUseVoice && styles.voiceBtnDisabled,
+        ]}
+        onPress={recognizing ? stopListening : startListening}
+        activeOpacity={canUseVoice ? 0.7 : 1}
+      >
+        <Ionicons name={recognizing ? 'mic' : 'mic-outline'} size={22} color="#fff" />
+        <TextBold style={styles.voiceText}>
+          {recognizing ? voiceInstructions.listening : voiceInstructions.voiceCommands}
+        </TextBold>
+      </TouchableOpacity>
+
+      {/* Last heard phrase */}
+      {heard ? (
+        <Text style={styles.heardText}>
+          {voiceInstructions.youSaid}: "{heard}"
+        </Text>
+      ) : null}
+
+      {/* Signup row */}
+      <View style={styles.signupRow}>
+        <Text style={styles.signupText}>{i18n.t('dontHaveAccount')}</Text>
+        <TouchableOpacity onPress={() => router.push('/(signup)')}>
+          <TextBold style={styles.signupLink}>{i18n.t('signUp')}</TextBold>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+

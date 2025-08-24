@@ -1,11 +1,14 @@
-import { useEffect, useState } from 'react';
-import * as SecureStore from 'expo-secure-store';
-import { View, FlatList, TextInput, StyleSheet, Text, TouchableOpacity } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
 import { TextBold } from '@/components/TextBold';
-import { Ionicons } from '@expo/vector-icons';
+import i18n from '@/i18n';
 import useSignalR from '@/SignalR';
-import axios from 'axios'
+import { Ionicons } from '@expo/vector-icons';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import * as SecureStore from 'expo-secure-store';
+import { useEffect, useState } from 'react';
+import { FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useSelector } from 'react-redux';
+
+
 
 export default function LoginScreen() {
   const [message, setMessage] = useState('');
@@ -15,6 +18,15 @@ export default function LoginScreen() {
   const { user } = useLocalSearchParams();
   const [RecUserName, setRecUserName] = useState('');
   const router = useRouter();
+  // Get language from Redux store
+  const language = useSelector((state) => state.language.language);
+  const { textDirection } = useSelector((state: any) => state.language);
+  const isRTL = textDirection === 'rtl';
+
+  // Change language when it updates in Redux
+  useEffect(() => {
+    i18n.changeLanguage(language); // Update i18n language
+  }, [language]);
 
   let parsedUser = user;
   if (typeof user === 'string') {
@@ -81,14 +93,45 @@ export default function LoginScreen() {
 
   const allMessages = [...fetchedMessages, ...realTimeMessages];
 
+  // Create dynamic styles based on direction
+  const getMessageStyle = (isSender) => ({
+    ...styles.messageItem,
+    ...(isSender ? styles.sentMessage : styles.receivedMessage),
+    alignSelf: isSender 
+      ? (isRTL ? 'flex-start' : 'flex-end')
+      : (isRTL ? 'flex-end' : 'flex-start'),
+  });
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { direction: isRTL ? 'rtl' : 'ltr' }]}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="chevron-back" size={25} color="white" />
+        <TouchableOpacity 
+          style={[
+            styles.backButton, 
+            { 
+              left: isRTL ? undefined : '5%',
+              right: isRTL ? '5%' : undefined 
+            }
+          ]} 
+          onPress={() => router.back()}
+        >
+          <Ionicons 
+            name={isRTL ? "chevron-forward" : "chevron-back"} 
+            size={25} 
+            color="white" 
+          />
         </TouchableOpacity>
-        <TextBold style={styles.name}>
-          {RecUserName.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase())}
+        <TextBold style={[
+          styles.name,
+          {
+            marginLeft: isRTL ? 0 : '10%',
+            marginRight: isRTL ? '10%' : 0,
+            textAlign: isRTL ? 'right' : 'left'
+          }
+        ]}>
+          {RecUserName.replace(/\w\S*/g, (txt) => 
+            txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase()
+          )}
         </TextBold>
       </View>
 
@@ -96,34 +139,52 @@ export default function LoginScreen() {
         data={allMessages}
         keyExtractor={(item, index) => item.id?.toString() + index}
         renderItem={({ item }) => (
-          <View
-            style={[
-              styles.messageItem,
-              item.senderId !== receiverId ? styles.sentMessage : styles.receivedMessage,
-            ]}
-          >
-            <Text style={styles.senderName}>
+          <View style={getMessageStyle(item.senderId !== receiverId)}>
+            <Text style={[
+              styles.senderName,
+              { textAlign: isRTL ? 'right' : 'left' }
+            ]}>
               {item.senderId !== receiverId ? 'You:' : `${RecUserName}:`}
             </Text>
-            <Text>{item.content}</Text>
-            <Text style={styles.timestamp}>
-              {new Date(item.sendAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            <Text style={{ textAlign: isRTL ? 'right' : 'left' }}>
+              {item.content}
+            </Text>
+            <Text style={[
+              styles.timestamp,
+              { textAlign: isRTL ? 'left' : 'right' }
+            ]}>
+              {new Date(item.sendAt).toLocaleTimeString([], { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+              })}
             </Text>
           </View>
         )}
       />
 
-      {loading && <Text style={styles.loading}>Loading...</Text>}
+      {loading && (
+        <Text style={styles.loading}>{i18n.t('loading')}</Text>
+      )}
 
-      <View style={styles.inputContainer}>
+      <View style={[
+        styles.inputContainer,
+        { flexDirection: isRTL ? 'row-reverse' : 'row' }
+      ]}>
         <TextInput
           value={message}
           onChangeText={setMessage}
-          placeholder="Type a message"
-          style={styles.input}
+          placeholder={i18n.t('typeMessage')}
+          style={[
+            styles.input,
+            { 
+              textAlign: isRTL ? 'right' : 'left',
+              marginRight: isRTL ? 0 : 10,
+              marginLeft: isRTL ? 10 : 0
+            }
+          ]}
         />
         <TouchableOpacity onPress={handleSend} style={styles.sendButton}>
-          <Text style={styles.sendButtonText}>Send</Text>
+          <Text style={styles.sendButtonText}>{i18n.t('send')}</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -139,7 +200,7 @@ const styles = StyleSheet.create({
   backButton: {
     position: 'absolute',
     top: '60%',
-    left: '5%',
+    zIndex: 1,
   },
   header: {
     height: '10%',
@@ -148,12 +209,11 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     justifyContent: 'center',
     padding: 20,
-    borderRadius:5,
+    borderRadius: 5,
   },
   name: {
-    marginLeft: '10%',
-    color: '#fff',
     fontSize: 18,
+    color: '#fff',
   },
   messageItem: {
     marginBottom: 12,
@@ -163,14 +223,10 @@ const styles = StyleSheet.create({
     minWidth: '30%',
   },
   sentMessage: {
-    alignSelf: 'flex-end',
     backgroundColor: '#e5e5e5',
-    marginRight: 10,
   },
   receivedMessage: {
-    alignSelf: 'flex-start',
     backgroundColor: '#A78BFA',
-    marginLeft: 10,
   },
   senderName: {
     fontWeight: 'bold',

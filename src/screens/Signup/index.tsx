@@ -1,18 +1,17 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { View, TouchableOpacity, StyleSheet, Dimensions, Platform, I18nManager, Alert, ScrollView } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { TextBold } from '@/components/TextBold';
 import { Text } from '@/components/Text';
+import { TextBold } from '@/components/TextBold';
 import { TextInput } from '@/components/TextInput';
-import { useDispatch, useSelector } from 'react-redux';
-import { setLanguage } from '@/redux/slice/languageSlice';
 import i18n from '@/i18n';
-import { useRouter } from 'expo-router';
-import axios from 'axios';
-const EXPO_PUBLIC_URL = process.env.EXPO_PUBLIC_URL;
-import * as SecureStore from 'expo-secure-store';
+import { Ionicons } from '@expo/vector-icons';
 import NetInfo from '@react-native-community/netinfo';
+import axios from 'axios';
+import { useRouter } from 'expo-router';
+import * as SecureStore from 'expo-secure-store';
 import * as Speech from 'expo-speech';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Alert, Dimensions, Platform, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { useDispatch, useSelector } from 'react-redux';
+const EXPO_PUBLIC_URL = process.env.EXPO_PUBLIC_URL;
 
 import {
   ExpoSpeechRecognitionModule,
@@ -21,7 +20,7 @@ import {
 } from 'expo-speech-recognition';
 
 const screenWidth = Dimensions.get('window').width;
-const isRTL = I18nManager.isRTL;
+const isRTL = false; // I18nManager.isRTL;
 
 // ===== Voice command dictionaries =====
 const EN_CMDS = {
@@ -53,7 +52,7 @@ const CreateAccountScreen = () => {
   const [userType, setUserType]   = useState('');
   const [role, setRole]           = useState('');
 
-  const language = useSelector((state: any) => state.language.language) as 'en' | 'ur';
+  const { language, textDirection } = useSelector((state: any) => state.language);
   const locale = language; // keep local alias
 
   // ===== Voice state =====
@@ -426,28 +425,47 @@ const buildStatusAwareMessage = (
   // ===== UI =====
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <TouchableOpacity onPress={() => router.back()}>
-        <Ionicons name="chevron-back" size={24} color="#000" />
+      {/* Back Button */}
+      <TouchableOpacity 
+        style={styles.backButton} 
+        onPress={() => router.back()}
+      >
+        <Ionicons 
+          name={isRTL ? "chevron-back" : "chevron-forward"} 
+          size={24} 
+          color="#000" 
+        />
       </TouchableOpacity>
 
+      {/* Form Fields */}
       <TextBold style={styles.title}>{i18n.t('createAccount')}</TextBold>
       <Text style={styles.subtitle}>{i18n.t('createAccountSubtitle')}</Text>
 
-      <Text style={styles.label}>{i18n.t('firstName')}</Text>
-      <TextInput
-        style={styles.input}
-        placeholder={i18n.t('enterFirstName')}
-        value={firstName}
-        onChangeText={setFirstName}
-      />
+      <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.label}>{i18n.t('firstName')}</Text>
+          <TextInput
+            style={styles.input}
+            placeholder={i18n.t('enterFirstName')}
+            value={firstName}
+            onChangeText={setFirstName}
+            textAlign={isRTL ? 'right' : 'left'}
+          />
+        </View>
+      </View>
 
-      <Text style={styles.label}>{i18n.t('lastName')}</Text>
-      <TextInput
-        style={styles.input}
-        placeholder={i18n.t('enterLastName')}
-        value={lastName}
-        onChangeText={setLastName}
-      />
+      <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.label}>{i18n.t('lastName')}</Text>
+          <TextInput
+            style={styles.input}
+            placeholder={i18n.t('enterLastName')}
+            value={lastName}
+            onChangeText={setLastName}
+            textAlign={isRTL ? 'right' : 'left'}
+          />
+        </View>
+      </View>
 
       <Text style={styles.label}>{i18n.t('email')}</Text>
       <TextInput
@@ -456,6 +474,7 @@ const buildStatusAwareMessage = (
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
+        textAlign={isRTL ? 'right' : 'left'}
       />
 
       <Text style={styles.label}>{i18n.t('password')}</Text>
@@ -465,6 +484,7 @@ const buildStatusAwareMessage = (
         value={password}
         onChangeText={setPassword}
         secureTextEntry
+        textAlign={isRTL ? 'right' : 'left'}
       />
 
       {/* Admin toggle link (manual) */}
@@ -476,18 +496,18 @@ const buildStatusAwareMessage = (
 
       {/* Admin-only fields */}
       {isAdmin && (
-        <>
-          <Text style={styles.label}>{i18n.t('userType')}</Text>
-          <TextInput
-            style={styles.input}
-            placeholder={i18n.t('enterUserType')}
-            value={userType}
-            onChangeText={(text) => setUserType(text.toUpperCase())}
-          />
-
-          <Text style={styles.label}>{i18n.t('role')}</Text>
-          <TextInput style={styles.input} placeholder={i18n.t('enterRole')} value="admin" editable={false} />
-        </>
+        <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.label}>{i18n.t('userType')}</Text>
+            <TextInput
+              style={styles.input}
+              placeholder={i18n.t('enterUserType')}
+              value={userType}
+              onChangeText={(text) => setUserType(text.toUpperCase())}
+              textAlign={isRTL ? 'right' : 'left'}
+            />
+          </View>
+        </View>
       )}
 
       <View style={styles.buttonContainer}>
@@ -502,8 +522,15 @@ const buildStatusAwareMessage = (
         onPress={recognizing ? stopListening : startListening}
         activeOpacity={canUseVoice ? 0.7 : 1}
       >
-        <Ionicons name={recognizing ? 'mic' : 'mic-outline'} size={22} color="#fff" />
-        <TextBold style={styles.voiceText}>
+        <Ionicons 
+          name={recognizing ? 'mic' : 'mic-outline'} 
+          size={22} 
+          color="#fff" 
+        />
+        <TextBold style={[
+          styles.voiceText,
+          { marginLeft: isRTL ? 0 : 8, marginRight: isRTL ? 8 : 0 }
+        ]}>
           {recognizing ? i18n.t('listening') : i18n.t('voiceCommands')}
         </TextBold>
       </TouchableOpacity>
@@ -514,29 +541,70 @@ const buildStatusAwareMessage = (
         </Text>
       ) : null}
 
-      <Text style={styles.footerText}>
-        {i18n.t('alreadyHaveAccount')}{' '}
-        <Text style={styles.loginLink} onPress={() => router.push('/(signin)')}>
-          {i18n.t('login')}
+      {/* Footer */}
+      <View style={[
+        styles.footerContainer,
+        { flexDirection: isRTL ? 'row-reverse' : 'row' }
+      ]}>
+        <Text style={styles.footerText}>
+          {i18n.t('alreadyHaveAccount')}
         </Text>
-      </Text>
+        <TouchableOpacity onPress={() => router.push('/(signin)')}>
+          <Text style={styles.loginLink}>{i18n.t('login')}</Text>
+        </TouchableOpacity>
+      </View>
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flexGrow: 1, backgroundColor: '#F6F6FF', paddingHorizontal: 24, paddingTop: 60 },
-  title: { fontSize: 22, alignSelf: 'center', marginBottom: 20, textAlign: 'center' },
+  container: { 
+    flexGrow: 1, 
+    backgroundColor: '#F6F6FF', 
+    paddingHorizontal: 24, 
+    paddingTop: 60,
+    direction: isRTL ? 'rtl' : 'ltr'
+  },
+  backButton: {
+    alignSelf: isRTL ? 'flex-end' : 'flex-start',
+  },
+  title: { 
+    fontSize: 22, 
+    alignSelf: 'center', 
+    marginBottom: 20, 
+    textAlign: 'center' 
+  },
+  subtitle: { 
+    textAlign: 'center', 
+    marginTop: 3, 
+    fontSize: 16, 
+    color: '#000' 
+  },
   label: {
-    fontSize: 18, fontWeight: '600', marginBottom: 8, color: '#000',
-    textAlign: isRTL ? 'right' : 'left', alignSelf: isRTL ? 'flex-end' : 'flex-start',
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 8,
+    color: '#000',
+    textAlign: isRTL ? 'right' : 'left',
+    alignSelf: isRTL ? 'flex-end' : 'flex-start',
   },
-  subtitle: { textAlign: 'center', marginTop: 3, fontSize: 16, color: '#000' },
   input: {
-    backgroundColor: '#fff', borderRadius: 8, paddingHorizontal: 14, paddingVertical: 12,
-    fontSize: 14, borderColor: '#E5E7EB', borderWidth: 1, textAlign: isRTL ? 'right' : 'left',
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 14,
+    borderColor: '#E5E7EB',
+    borderWidth: 1,
+    textAlign: isRTL ? 'right' : 'left',
+    writingDirection: isRTL ? 'rtl' : 'ltr'
   },
-  buttonContainer: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', alignSelf: 'center' },
+  buttonContainer: { 
+    flexDirection: isRTL ? 'row-reverse' : 'row',
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    alignSelf: 'center' 
+  },
   button: {
     flexDirection: 'row', width: screenWidth * 0.8, marginTop: 16, backgroundColor: '#A78BFA',
     paddingVertical: 14, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 40,
@@ -559,5 +627,18 @@ const styles = StyleSheet.create({
   loginLink: { color: '#8877F5', fontWeight: '500' },
   linkText: { color: '#8877F5', fontWeight: '500', textAlign: 'center' },
 });
+
+// Additional styles
+const additionalStyles = {
+  footerContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 20,
+    gap: 4
+  }
+};
+
+// Merge with existing styles
+Object.assign(styles, additionalStyles);
 
 export default CreateAccountScreen;

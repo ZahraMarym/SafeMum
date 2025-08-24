@@ -1,20 +1,26 @@
-import { useEffect, useState } from "react";
+import { TextBold } from "@/components/TextBold";
+import i18n from "@/i18n";
+import useSignalR from "@/SignalR";
+import { Ionicons } from "@expo/vector-icons";
+import axios from "axios";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
+import { useEffect, useState } from "react";
 import {
-  View,
   FlatList,
-  TextInput,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
+  View,
 } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { TextBold } from "@/components/TextBold";
-import { Ionicons } from "@expo/vector-icons";
-import useSignalR from "@/SignalR";
-import axios from "axios";
+import { useSelector } from "react-redux";
 
 export default function GroupChatScreen() {
+  // Add Redux selector for RTL support
+  const { language, textDirection } = useSelector((state: any) => state.language);
+  const isRTL = textDirection === 'rtl';
+  
   const [loading, setLoading] = useState(false);
   const { user } = useLocalSearchParams();
   const [newMessage, setNewMessage] = useState("");
@@ -23,6 +29,10 @@ export default function GroupChatScreen() {
   const [userCache, setUserCache] = useState<Record<string, string>>({}); // Cache for senderId -> name
 
   const router = useRouter();
+
+    useEffect(() => {
+      i18n.changeLanguage(language); // Change language dynamically based on Redux store
+    }, [language]);
 
   const parsedUser = user ? JSON.parse(user) : null;
   console.log("Parsed user:", parsedUser);
@@ -141,14 +151,30 @@ export default function GroupChatScreen() {
   const allMessages = [...fetchedMessages, ...realTimeMessages];
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { direction: isRTL ? 'rtl' : 'ltr' }]}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="chevron-back" size={25} color="white" />
+        <TouchableOpacity 
+          style={[styles.backButton, {
+            left: isRTL ? undefined : '5%',
+            right: isRTL ? '5%' : undefined
+          }]} 
+          onPress={() => router.back()}
+        >
+          <Ionicons 
+            name={isRTL ? "chevron-forward" : "chevron-back"} 
+            size={25} 
+            color="white" 
+          />
         </TouchableOpacity>
-        <TextBold style={styles.name}>
-          {groupName.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase())}
+        <TextBold style={[styles.name, {
+          marginLeft: isRTL ? 0 : '10%',
+          marginRight: isRTL ? '10%' : 0,
+          textAlign: isRTL ? 'right' : 'left'
+        }]}>
+          {groupName.replace(/\w\S*/g, (txt) => 
+            txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase()
+          )}
         </TextBold>
       </View>
 
@@ -159,19 +185,38 @@ export default function GroupChatScreen() {
         renderItem={({ item }) => {
           const isCurrentUser = item.senderId === currentUserId;
           const senderName = isCurrentUser
-            ? "You"
-            : userCache[item.senderId] || "Loading...";
+            ? i18n.t('you')
+            : userCache[item.senderId] || i18n.t('loading');
 
           return (
-            <View
-              style={[
-                styles.messageItem,
-                isCurrentUser ? styles.sentMessage : styles.receivedMessage,
-              ]}
-            >
-              <Text style={styles.senderName}>{senderName}:</Text>
-              <Text style={styles.messageContent}>{item.content}</Text>
-              <Text style={styles.timestamp}>
+            <View style={[
+              styles.messageItem,
+              isCurrentUser ? styles.sentMessage : styles.receivedMessage,
+              {
+                alignSelf: isCurrentUser 
+                  ? (isRTL ? 'flex-start' : 'flex-end')
+                  : (isRTL ? 'flex-end' : 'flex-start'),
+                marginRight: isCurrentUser 
+                  ? (isRTL ? 10 : 0)
+                  : (isRTL ? 0 : 10),
+                marginLeft: isCurrentUser 
+                  ? (isRTL ? 0 : 10)
+                  : (isRTL ? 10 : 0),
+              }
+            ]}>
+              <Text style={[styles.senderName, {
+                textAlign: isRTL ? 'right' : 'left'
+              }]}>
+                {senderName}:
+              </Text>
+              <Text style={[styles.messageContent, {
+                textAlign: isRTL ? 'right' : 'left'
+              }]}>
+                {item.content}
+              </Text>
+              <Text style={[styles.timestamp, {
+                textAlign: isRTL ? 'left' : 'right'
+              }]}>
                 {new Date(item.sendAt).toLocaleTimeString([], {
                   hour: "2-digit",
                   minute: "2-digit",
@@ -182,22 +227,30 @@ export default function GroupChatScreen() {
         }}
       />
 
-      {loading && <Text style={styles.loading}>Loading...</Text>}
+      {loading && (
+        <Text style={styles.loading}>{i18n.t('loading')}</Text>
+      )}
 
       {/* Input */}
-      <View style={styles.inputContainer}>
+      <View style={[styles.inputContainer, {
+        flexDirection: isRTL ? 'row-reverse' : 'row'
+      }]}>
         <TextInput
           value={newMessage}
           onChangeText={setNewMessage}
-          placeholder="Type a message"
-          style={styles.input}
+          placeholder={i18n.t('typeMessage')}
+          style={[styles.input, {
+            textAlign: isRTL ? 'right' : 'left',
+            marginRight: isRTL ? 0 : 10,
+            marginLeft: isRTL ? 10 : 0
+          }]}
         />
         <TouchableOpacity
           onPress={handleSendMessage}
           style={styles.sendButton}
           disabled={!newMessage.trim()}
         >
-          <Text style={styles.sendButtonText}>Send</Text>
+          <Text style={styles.sendButtonText}>{i18n.t('send')}</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -205,8 +258,16 @@ export default function GroupChatScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 10, backgroundColor: "#fff" },
-  backButton: { position: "absolute", top: "60%", left: "5%" },
+  container: { 
+    flex: 1, 
+    padding: 10, 
+    backgroundColor: "#fff" 
+  },
+  backButton: { 
+    position: "absolute", 
+    top: "60%",
+    zIndex: 1
+  },
   header: {
     height: "10%",
     width: "100%",

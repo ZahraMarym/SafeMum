@@ -1,36 +1,69 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   TouchableOpacity,
   StyleSheet,
   Dimensions,
+  Platform,
   I18nManager,
   ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import NetInfo from '@react-native-community/netinfo';
-import * as FileSystem from 'expo-file-system';
-import * as Updates from 'expo-updates';
-import { Asset } from 'expo-asset';
-import { useRouter } from 'expo-router';
+import { Picker } from '@react-native-picker/picker';
+import { useSelector, useDispatch } from 'react-redux'; // Import hooks for redux
 import i18n from '@/i18n';
 import { Text } from '@/components/Text';
-import axios from 'axios';
-import * as SecureStore from 'expo-secure-store';
 import { TextBold } from '@/components/TextBold';
+import { Video, ResizeMode } from 'expo-av'; // Use the Video component from expo-av
+import { setLanguage } from '@/redux/slice/languageSlice'; // Import action from your language slice
+import { useRouter } from 'expo-router';
 
-const EXPO_PUBLIC_URL = process.env.EXPO_PUBLIC_URL;
+const screenWidth = Dimensions.get('window').width;
 const isRTL = I18nManager.isRTL;
-const LOCAL_FILE_PATH = FileSystem.documentDirectory + 'pregnancy-track.json';
+
+// Import video assets for both languages and trimetsters
+import t1en from '../../../assets/videos/eng/trimester1.mp4';
+import t2en from '../../../assets/videos/eng/trimester2.mp4';
+import t3en from '../../../assets/videos/eng/trimester3.mp4';
+import t1ur from '../../../assets/videos/ur/trimester1.mp4';
+import t2ur from '../../../assets/videos/ur/trimester2.mp4';
+import t3ur from '../../../assets/videos/ur/trimester3.mp4';
+
+// Map video assets based on language and trimester
+const VIDEO_ASSETS: Record<'en' | 'ur', Record<'1' | '2' | '3', any[]>> = {
+  en: {
+    '1': [t1en, t2en], // Multiple videos for trimester 1
+    '2': [t2en],
+    '3': [t3en]
+  },
+  ur: {
+    '1': [t1ur, t2ur], // Multiple videos for trimester 1
+    '2': [t2ur],
+    '3': [t3ur]
+  },
+};
 
 export default function HomeScreen() {
-  const router = useRouter();
-  const [locale, setLocale] = useState(i18n.locale);
-  const [data, setData] = useState<any | null>(null);
+  const dispatch = useDispatch();
+    const router = useRouter();
 
-  const changeLanguage = async (lang: string) => {
+
+  // Get the language from the redux store
+  const locale = useSelector((state) => state.language.language); // Access the language slice
+
+  const [tri, setTri] = useState<'1' | '2' | '3'>('1');
+
+  // Select the correct video asset based on language and trimester
+  const currentAssets = useMemo(() => {
+    const lang: 'en' | 'ur' = locale === 'ur' ? 'ur' : 'en';
+    return VIDEO_ASSETS[lang][tri];
+  }, [locale, tri]);
+
+  // Language change function
+  const changeLanguage = async (lang: 'en' | 'ur') => {
+    // Dispatch the action to change language in redux store
+    dispatch(setLanguage(lang));
     i18n.locale = lang;
-    setLocale(lang);
     const rtl = lang === 'ur';
     if (I18nManager.isRTL !== rtl) {
       I18nManager.forceRTL(rtl);
@@ -39,174 +72,145 @@ export default function HomeScreen() {
     }
   };
 
-  const copyAssetToFileSystem = async () => {
-    try {
-      const asset = Asset.fromModule(require('../../../assets/fallBackData.json'));
-      await asset.downloadAsync();
-      const sourceUri = asset.localUri || asset.uri;
-      await FileSystem.copyAsync({ from: sourceUri, to: LOCAL_FILE_PATH });
-      const content = await FileSystem.readAsStringAsync(LOCAL_FILE_PATH);
-      console.log('✅ Copied and loaded fallback from asset.');
-      setData(JSON.parse(content));
-    } catch (e) {
-      console.log('⚠️ Failed to load fallback asset:', e);
-    }
-  };
-
-  const loadLocalData = async () => {
-    try {
-      const file = await FileSystem.readAsStringAsync(LOCAL_FILE_PATH);
-      const parsed = JSON.parse(file);
-      console.log('✅ Loaded from local file.', parsed);
-
-      setData(parsed);
-    } catch (e) {
-      console.log('❌ No local file. Copying from fallback asset...');
-      await copyAssetToFileSystem();
-    }
-  };
-
-  const fetchFromAPI = async () => {
-    try {
-      const token = await SecureStore.getItemAsync("accessToken");
-
-      const response = await axios.get(
-        'https://safemum-app-5f503b88629c.herokuapp.com/api/pregnancy-tracker/weekly-pregnancy-profile',
-        {
-          headers: {
-            'Accept': '*/*',
-            'Authorization': `Bearer ${token}`,
-          },
-        }
-      );
-
-      const apiData = response.data.data || response.data;
-      setData(apiData);
-
-      await FileSystem.writeAsStringAsync(LOCAL_FILE_PATH, JSON.stringify(apiData));
-      console.log('🌐 Data fetched from API and cached.');
-    } catch (err) {
-      console.error('⚠️ Error fetching from API:', err.response?.data || err.message);
-      await loadLocalData();
-    }
-  };
-
-  useEffect(() => {
-    const init = async () => {
-      const fileInfo = await FileSystem.getInfoAsync(LOCAL_FILE_PATH);
-      if (fileInfo.exists) {
-        await loadLocalData();
-      } else {
-        await copyAssetToFileSystem();
-      }
-
-      const netState = await NetInfo.fetch();
-      if (netState.isConnected && netState.isInternetReachable) {
-        const token = await SecureStore.getItemAsync("accessToken");
-
-        if (token) {
-          await fetchFromAPI();
-        }
-      } else {
-        console.log("📴 Offline mode: showing cached data.");
-      }
+  // Labels for language-specific text
+  const L = useMemo(() => {
+    const ur = locale === 'ur';
+    return {
+      back: ur ? 'واپس' : 'Back',
+      choose: ur ? 'ٹرائمسٹر منتخب کریں' : 'Select Trimester',
+      t1: ur ? 'پہلا ٹرائمسٹر' : 'Trimester 1',
+      t2: ur ? 'دوسرا ٹرائمسٹر' : 'Trimester 2',
+      t3: ur ? 'تیسرا ٹرائمسٹر' : 'Trimester 3',
+      langToggle: ur ? 'English' : 'اردو',
     };
-
-    init();
-  }, []);
-
-  const renderCard = (title: string, content: string, icon: string) => (
-    <View style={styles.card}>
-      <Ionicons name={icon} size={32} color="#A78BFA" style={styles.cardIcon} />
-      <Text style={styles.cardTitle}>{title}</Text>
-      <Text style={styles.cardContent}>{content}</Text>
-    </View>
-  );
+  }, [locale]);
 
   return (
     <View style={styles.container}>
+      {/* Back Button */}
       <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-        <Ionicons name="chevron-back" size={24} color="black" />
+        <Ionicons
+          name="chevron-forward"
+          size={24}
+          color="black"
+          style={{ transform: [{ scaleX: isRTL ? -1 : 1 }] }}
+        />
       </TouchableOpacity>
 
-      <ScrollView contentContainerStyle={styles.cardList}>
-        {data ? (
-          <>
-            {renderCard('Baby Development', data.babyDevelopment, 'person')}
-            {renderCard('Danger Signs', data.dangerSigns, 'warning')}
-            {renderCard('Mother Changes', data.motherChanges, 'woman')}
-            {renderCard('Nutrition Tips', data.nutritionTips, 'leaf')}
-            {renderCard('Recommended Actions', data.recommendedActions, 'checkmark-circle')}
-          </>
-        ) : (
-          <Text>Loading data...</Text>
-        )}
-    <TouchableOpacity style={styles.nutritionButton} onPress={() => router.push("/(tabs)/(track)/nutrition-tracking")}>
-           <TextBold>
-           Track Nutrition
-           </TextBold>
-          </TouchableOpacity>
+      <ScrollView contentContainerStyle={{ paddingTop: 100, paddingBottom: 40 }}>
+        {/* Header */}
+        <TextBold style={styles.title}>{L.choose}</TextBold>
+
+        {/* Language toggle */}
+        <TouchableOpacity onPress={() => changeLanguage(locale === 'ur' ? 'en' : 'ur')} style={styles.langBtn}>
+          <Ionicons name="language" size={18} color="#fff" style={{ marginRight: 8 }} />
+          <Text style={styles.langBtnText}>{L.langToggle}</Text>
+        </TouchableOpacity>
+
+        {/* Trimester Dropdown */}
+        <View style={[styles.pickerWrap, isRTL && styles.pickerWrapRtl]}>
+          <Picker
+            selectedValue={tri}
+            onValueChange={(v) => setTri(v)}
+            mode="dropdown"
+            style={[styles.picker, isRTL && styles.pickerRtl]}
+            dropdownIconColor="#6B7280"
+          >
+            <Picker.Item label={L.t1} value="1" />
+            <Picker.Item label={L.t2} value="2" />
+            <Picker.Item label={L.t3} value="3" />
+          </Picker>
+        </View>
+
+        {/* Video */}
+        <View style={styles.videoCard}>
+          {currentAssets.map((asset, index) => (
+              <Video
+                          key={index}
+                          style={styles.video}
+                          source={asset} // Dynamic video based on language and trimester
+                          useNativeControls
+                          shouldPlay={index === 0} // Only play the first video by default
+                          resizeMode={ResizeMode.CONTAIN} // Adjust video to fit screen while preserving aspect ratio
+                        />
+          ))}
+        </View>
       </ScrollView>
     </View>
   );
 }
-
-const screenWidth = Dimensions.get('window').width;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F6F6FF',
     paddingHorizontal: 24,
-    paddingTop: 60,
   },
   backButton: {
     position: 'absolute',
     top: 60,
     left: isRTL ? undefined : 24,
     right: isRTL ? 24 : undefined,
-    transform: [{ scaleX: isRTL ? -1 : 1 }],
+    zIndex: 10,
   },
-  cardList: {
-    paddingBottom: 80,
-    backgroundColor: '#F9FAFB',
-    alignItems: 'center',
+
+  title: {
+    fontSize: 22,
+    color: '#374151',
+    marginBottom: 12,
+    textAlign: 'center',
   },
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    marginBottom: 20,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 5,
-    width: '90%',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  cardIcon: {
+
+  langBtn: {
+    alignSelf: 'center',
+    flexDirection: 'row',
+    backgroundColor: '#A78BFA',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 10,
     marginBottom: 16,
   },
-  cardTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 10,
-    textAlign: 'center',
+  langBtnText: {
+    color: '#fff',
+    fontSize: 14,
   },
-  cardContent: {
-    fontSize: 16,
-    color: '#555',
-    textAlign: 'center',
-    lineHeight: 22,
+
+  pickerWrap: {
+      height:60,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 12,
+    overflow: 'hidden',
+    backgroundColor: '#fff',
   },
-  nutritionButton:{
-      padding:20,
-      backgroundColor:"#A78BFA",
-      flexDirection:"row",
-      color:"white",
-      justifyContent:"center",
-      alignItems:"center",}
+  pickerWrapRtl: {
+    transform: [{ scaleX: -1 }],
+  },
+  picker: {
+    height: 58,
+    color: '#111827',
+  },
+  pickerRtl: {
+    transform: [{ scaleX: -1 }],
+  },
+
+  videoCard: {
+    marginTop: 18,
+    borderRadius: 16,
+    padding:20,
+    overflow: 'hidden',
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...Platform.select({
+      ios: { shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 6, shadowOffset: { width: 0, height: 4 } },
+      android: { elevation: 6 },
+    }),
+  },
+  video: {
+    width: screenWidth - 48,
+    aspectRatio: 16 / 9,
+    margin:10,
+    backgroundColor: '#000',
+  },
 });

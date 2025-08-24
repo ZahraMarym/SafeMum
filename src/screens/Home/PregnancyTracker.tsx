@@ -1,30 +1,30 @@
-import React, { useEffect, useState } from 'react';
-import {
-  View,
-  TouchableOpacity,
-  StyleSheet,
-  Dimensions,
-  I18nManager,
-  ScrollView,
-} from 'react-native';
+import { Text } from '@/components/Text';
+import i18n from '@/i18n';
 import { Ionicons } from '@expo/vector-icons';
 import NetInfo from '@react-native-community/netinfo';
-import * as FileSystem from 'expo-file-system';
-import * as Updates from 'expo-updates';
-import { Asset } from 'expo-asset';
-import { useRouter } from 'expo-router';
-import i18n from '@/i18n';
-import { Text } from '@/components/Text';
 import axios from 'axios';
+import { Asset } from 'expo-asset';
+import * as FileSystem from 'expo-file-system';
+import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
+import * as Updates from 'expo-updates';
+import React, { useEffect, useState } from 'react';
+import {
+  Dimensions,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { useSelector } from 'react-redux';
 
 const EXPO_PUBLIC_URL = process.env.EXPO_PUBLIC_URL;
-const isRTL = I18nManager.isRTL;
 const LOCAL_FILE_PATH = FileSystem.documentDirectory + 'pregnancy-track.json';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const [locale, setLocale] = useState(i18n.locale);
+  const { language, textDirection } = useSelector((state: any) => state.language);
+  const isRTL = textDirection === 'rtl';
   const [data, setData] = useState<any | null>(null);
 
   const changeLanguage = async (lang: string) => {
@@ -114,33 +114,78 @@ export default function HomeScreen() {
     init();
   }, []);
 
+  // Update renderCard to handle RTL
   const renderCard = (title: string, content: string, icon: string) => (
     <View style={styles.card}>
       <Ionicons name={icon} size={32} color="#A78BFA" style={styles.cardIcon} />
-      <Text style={styles.cardTitle}>{title}</Text>
-      <Text style={styles.cardContent}>{content}</Text>
+      <Text style={[styles.cardTitle, { textAlign: isRTL ? 'right' : 'left' }]}>
+        {title}
+      </Text>
+      <Text style={[styles.cardContent, { textAlign: isRTL ? 'right' : 'left' }]}>
+        {content}
+      </Text>
     </View>
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { direction: isRTL ? 'rtl' : 'ltr' }]}>
       <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-        <Ionicons name="chevron-back" size={24} color="black" />
+        <Ionicons 
+          name={isRTL ? "chevron-back" : "chevron-forward"} 
+          size={24} 
+          color="black" 
+        />
       </TouchableOpacity>
 
-      <ScrollView contentContainerStyle={styles.cardList}>
+      <ScrollView contentContainerStyle={[
+        styles.cardList,
+        { alignItems: isRTL ? 'flex-end' : 'flex-start' }
+      ]}>
         {data ? (
           <>
-            {renderCard('Baby Development', data.babyDevelopment, 'person')}
-            {renderCard('Danger Signs', data.dangerSigns, 'warning')}
-            {renderCard('Mother Changes', data.motherChanges, 'woman')}
-            {renderCard('Nutrition Tips', data.nutritionTips, 'leaf')}
-            {renderCard('Recommended Actions', data.recommendedActions, 'checkmark-circle')}
+            {renderCard(
+              i18n.t('babyDevelopment'), 
+              data.babyDevelopment, 
+              'person'
+            )}
+            {renderCard(
+              i18n.t('dangerSigns'), 
+              data.dangerSigns, 
+              'warning'
+            )}
+            {renderCard(
+              i18n.t('motherChanges'), 
+              data.motherChanges, 
+              'woman'
+            )}
+            {renderCard(
+              i18n.t('nutritionTips'), 
+              data.nutritionTips, 
+              'leaf'
+            )}
+            {renderCard(
+              i18n.t('recommendedActions'), 
+              data.recommendedActions, 
+              'checkmark-circle'
+            )}
           </>
         ) : (
-          <Text>Loading data...</Text>
+          <Text style={{ textAlign: isRTL ? 'right' : 'left' }}>
+            {i18n.t('loadingData')}
+          </Text>
         )}
       </ScrollView>
+
+      <View style={styles.nextButtonContainer}>
+        <TouchableOpacity 
+          style={styles.button} 
+          onPress={() => router.push("/(tabs)/(home)/nutrition-tracking")}
+        >
+          <Text style={styles.buttonText}>
+            {i18n.t('trackNutrition')}
+          </Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -157,14 +202,13 @@ const styles = StyleSheet.create({
   backButton: {
     position: 'absolute',
     top: 60,
-    left: isRTL ? undefined : 24,
-    right: isRTL ? 24 : undefined,
-    transform: [{ scaleX: isRTL ? -1 : 1 }],
+    left: undefined ? undefined : 24,
+    right: 24,
   },
   cardList: {
     paddingBottom: 80,
     backgroundColor: '#F9FAFB',
-    alignItems: 'center', // Ensure cards are centered in the list
+    paddingHorizontal: 20,
   },
   card: {
     backgroundColor: '#FFFFFF',
@@ -176,24 +220,39 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 6,
     elevation: 5,
-    width: '90%',  // Make card take up 90% of the screen width
-    justifyContent: 'center',
-    alignItems: 'center',
+    width: '100%',
   },
   cardIcon: {
     marginBottom: 16,
+    alignSelf: undefined ? 'flex-end' : 'flex-start',
   },
   cardTitle: {
     fontSize: 22,
     fontWeight: 'bold',
     color: '#333',
     marginBottom: 10,
-    textAlign: 'center',
   },
   cardContent: {
     fontSize: 16,
     color: '#555',
-    textAlign: 'center',
     lineHeight: 22,
+  },
+  nextButtonContainer: {
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  button: {
+    backgroundColor: '#A78BFA',
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 120,
+  },
+  buttonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

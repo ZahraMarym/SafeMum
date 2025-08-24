@@ -1,3 +1,10 @@
+import { Text } from "@/components/Text";
+import { TextBold } from "@/components/TextBold";
+import i18n from "@/i18n";
+import { setLanguage } from "@/redux/slice/languageSlice";
+import { Ionicons } from "@expo/vector-icons";
+import NetInfo from "@react-native-community/netinfo";
+import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
@@ -10,14 +17,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import NetInfo from "@react-native-community/netinfo";
 import { useDispatch, useSelector } from "react-redux";
-import { Text } from "@/components/Text";
-import { TextBold } from "@/components/TextBold";
-import i18n from "@/i18n";
-import { setLanguage } from "@/redux/slice/languageSlice";
 
 import {
   ExpoSpeechRecognitionModule,
@@ -57,21 +57,21 @@ export default function WelcomeScreen() {
   useSpeechRecognitionEvent("end", () => setRecognizing(false));
 
   useSpeechRecognitionEvent("result", (event) => {
-    // event.results is an array; take the top hypothesis
     const said = (event.results?.[0]?.transcript ?? "").toLowerCase().trim();
     if (!said) return;
 
-    setTranscript((prev) => (prev ? `${prev}\n${said}` : said));
+    const isCommand = (said: string, language: 'en' | 'ur') => {
+      if (language === 'ur') {
+        return UR_COMMANDS.some(w => said.includes(w));
+      }
+      return EN_COMMANDS.some(w => said.includes(w));
+    };
 
-    const isCmd =
-      EN_COMMANDS.some((w) => said.includes(w)) ||
-      UR_COMMANDS.some((w) => said.includes(w));
+    const isCmd = isCommand(said, language);
 
     if (isCmd && !navigatedRef.current) {
       navigatedRef.current = true;
-      // stop gracefully; final "end" will fire
       try { ExpoSpeechRecognitionModule.stop(); } catch {}
-      // small delay to let UI settle
       setTimeout(() => { checkConnection(); }, 300);
     }
   });
@@ -120,11 +120,9 @@ export default function WelcomeScreen() {
 
     try {
       await ExpoSpeechRecognitionModule.start({
-        lang: language === "ur" ? "ur-PK" : "en-US",
-        interimResults: false, // we only need final phrases for commands
-        continuous: false,     // end after final result
-        // You can also set: requiresOnDeviceSpeechRecognition: false
-        // and recordingOptions if you want persisted audio files
+        lang: getSpeechLanguage(language),
+        interimResults: false,
+        continuous: false,
       });
     } catch (err) {
       Alert.alert("Error", "Could not start speech recognition.");
@@ -194,6 +192,14 @@ export default function WelcomeScreen() {
     </View>
   );
 }
+
+const getSpeechLanguage = (language: 'en' | 'ur') => {
+  const langMap = {
+    'en': 'en-US',
+    'ur': 'ur-PK'
+  };
+  return langMap[language] || 'en-US';
+};
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#F6F6FF", alignItems: "center", justifyContent: "center", paddingHorizontal: 24 },

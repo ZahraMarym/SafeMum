@@ -1,37 +1,41 @@
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  TouchableOpacity,
-  StyleSheet,
-  Dimensions,
-  Platform,
-  I18nManager,
-  ScrollView,
-  Switch,
-  Alert,
-} from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import { Ionicons } from '@expo/vector-icons';
-import { Picker } from '@react-native-picker/picker'; // Add picker for blood group
-import { TextBold } from '@/components/TextBold';
 import { Text } from '@/components/Text';
+import { TextBold } from '@/components/TextBold';
 import { TextInput } from '@/components/TextInput';
-const screenWidth = Dimensions.get('window').width;
-import { useRouter } from 'expo-router';
 import i18n from '@/i18n';
-import { useDispatch, useSelector } from 'react-redux'; // Import Redux hooks
 import { setLanguage } from '@/redux/slice/languageSlice'; // Import language action
+import { Ionicons } from '@expo/vector-icons';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { Picker } from '@react-native-picker/picker'; // Add picker for blood group
 import axios from 'axios';
+import { useRouter } from 'expo-router';
+import * as SecureStore from 'expo-secure-store';
+import React, { useEffect, useState } from 'react';
+import {
+  Alert,
+  Dimensions,
+  I18nManager,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { useDispatch, useSelector } from 'react-redux'; // Import Redux hooks
+const screenWidth = Dimensions.get('window').width;
 const { width } = Dimensions.get('window');
 const isRTL = I18nManager.isRTL;
-import * as SecureStore from 'expo-secure-store';
 
 
 
 const MedicalPregnancyInfoScreen = () => {
   const router = useRouter();
-    const dispatch = useDispatch();
-    const [locale, setLocale] = useState(i18n.locale);
+  const dispatch = useDispatch();
+  
+  // Replace locale state with Redux selector
+  const { language, textDirection } = useSelector((state: any) => state.language);
+  const isRTL = textDirection === 'rtl';
+
   const [isPregnant, setIsPregnant] = useState(true);
   const [dueDate, setDueDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -45,7 +49,6 @@ const MedicalPregnancyInfoScreen = () => {
   const [isSmoker, setIsSmoker] = useState(false);
   const [takesMedication, setTakesMedication] = useState('');
   const [bloodGroup, setBloodGroup] = useState('A+'); // Default blood group
-    const language = useSelector((state) => state.language.language);
 
   const onChangeDate = (event, selectedDate) => {
     const currentDate = selectedDate || dueDate;
@@ -125,134 +128,191 @@ const MedicalPregnancyInfoScreen = () => {
  };
 
 
+  // Update styles to use dynamic RTL/LTR alignment
+  const getAlignmentStyles = () => ({
+    textAlign: isRTL ? 'right' : 'left',
+    writingDirection: isRTL ? 'rtl' : 'ltr',
+  });
+
   return (
-     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-            <Ionicons name="chevron-back" size={24} color="black" />
-          </TouchableOpacity>
+    <ScrollView style={[styles.container, { direction: isRTL ? 'rtl' : 'ltr' }]} 
+                contentContainerStyle={styles.content}>
+      <TouchableOpacity 
+        style={[styles.backButton, {
+          left: isRTL ? undefined : 24,
+          right: isRTL ? 24 : undefined,
+        }]} 
+        onPress={() => router.back()}
+      >
+        <Ionicons 
+          name={isRTL ? "chevron-back" : "chevron-forward"} 
+          size={24} 
+          color="black" 
+        />
+      </TouchableOpacity>
 
-          <TextBold style={styles.title}>{i18n.t('MedicalInfoTitle')}</TextBold>
+      <TextBold style={styles.title}>{i18n.t('MedicalInfoTitle')}</TextBold>
 
-          <View style={styles.rowBetween}>
-            <Text style={styles.label}>{i18n.t('currentlyPregnant')}</Text>
-            <Switch
-              trackColor={{ false: '#ccc', true: '#C1B2DF' }}
-              thumbColor={isPregnant ? '#8368C7' : '#f4f3f4'}
-              value={isPregnant}
-              onValueChange={setIsPregnant}
-            />
-          </View>
+      <View style={[styles.rowBetween, {
+        flexDirection: isRTL ? 'row-reverse' : 'row'
+      }]}>
+        <Text style={[styles.label, getAlignmentStyles()]}>
+          {i18n.t('currentlyPregnant')}
+        </Text>
+        <Switch
+          trackColor={{ false: '#ccc', true: '#C1B2DF' }}
+          thumbColor={isPregnant ? '#8368C7' : '#f4f3f4'}
+          value={isPregnant}
+          onValueChange={setIsPregnant}
+        />
+      </View>
 
-          <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.datePickerContainer}>
-            <Ionicons name="calendar-outline" size={20} color="#C1B2DF" />
-            <Text style={styles.dateText}>{dueDate.toLocaleDateString()}</Text>
-          </TouchableOpacity>
-          {showDatePicker && (
-            <DateTimePicker
-              value={dueDate}
-              mode="date"
-              display="default"
-              onChange={onChangeDate}
-            />
-          )}
+      <TouchableOpacity 
+        onPress={() => setShowDatePicker(true)} 
+        style={[styles.datePickerContainer, {
+          flexDirection: isRTL ? 'row-reverse' : 'row'
+        }]}
+      >
+        <Ionicons name="calendar-outline" size={20} color="#C1B2DF" />
+        <Text style={[styles.dateText, {
+          marginLeft: isRTL ? 0 : 10,
+          marginRight: isRTL ? 10 : 0
+        }]}>
+          {dueDate.toLocaleDateString()}
+        </Text>
+      </TouchableOpacity>
+      {showDatePicker && (
+        <DateTimePicker
+          value={dueDate}
+          mode="date"
+          display="default"
+          onChange={onChangeDate}
+        />
+      )}
 
-          <TextInput
-            placeholder={i18n.t('numberOfPreviousPregnancies')}
-            keyboardType="numeric"
-            value={previousPregnancies}
-            onChangeText={setPreviousPregnancies}
-            style={styles.input}
-          />
-          <TextInput
-            placeholder={i18n.t('numberOfLiveBirths')}
-            keyboardType="numeric"
-            value={liveBirths}
-            onChangeText={setLiveBirths}
-            style={styles.input}
-          />
+      {/* Form Inputs with RTL/LTR support */}
+      <TextInput
+        placeholder={i18n.t('numberOfPreviousPregnancies')}
+        keyboardType="numeric"
+        value={previousPregnancies}
+        onChangeText={setPreviousPregnancies}
+        style={[styles.input, getAlignmentStyles()]}
+      />
+      <TextInput
+        placeholder={i18n.t('numberOfLiveBirths')}
+        keyboardType="numeric"
+        value={liveBirths}
+        onChangeText={setLiveBirths}
+        style={[styles.input, getAlignmentStyles()]}
+      />
 
-          <TextInput
-            placeholder={i18n.t('emergencyContactName')}
-            value={emergencyName}
-            onChangeText={setEmergencyName}
-            style={styles.input}
-          />
+      <TextInput
+        placeholder={i18n.t('emergencyContactName')}
+        value={emergencyName}
+        onChangeText={setEmergencyName}
+        style={[styles.input, getAlignmentStyles()]}
+      />
 
-          <TextInput
-            placeholder={i18n.t('emergencyContactNumber')}
-            keyboardType="phone-pad"
-            value={emergencyContact}
-            onChangeText={setEmergencyContact}
-            style={styles.input}
-          />
+      <TextInput
+        placeholder={i18n.t('emergencyContactNumber')}
+        keyboardType="phone-pad"
+        value={emergencyContact}
+        onChangeText={setEmergencyContact}
+        style={[styles.input, getAlignmentStyles()]}
+      />
 
-          <View style={styles.rowBetween}>
-            <Text style={styles.label}>{i18n.t('diabetic')}</Text>
-            <Switch
-              value={isDiabetic}
-              onValueChange={setIsDiabetic}
-              trackColor={{ false: '#ccc', true: '#C1B2DF' }}
-              thumbColor={isDiabetic ? '#8368C7' : '#f4f3f4'}
-            />
-          </View>
+      <View style={[styles.rowBetween, {
+        flexDirection: isRTL ? 'row-reverse' : 'row'
+      }]}>
+        <Text style={[styles.label, getAlignmentStyles()]}>
+          {i18n.t('diabetic')}
+        </Text>
+        <Switch
+          value={isDiabetic}
+          onValueChange={setIsDiabetic}
+          trackColor={{ false: '#ccc', true: '#C1B2DF' }}
+          thumbColor={isDiabetic ? '#8368C7' : '#f4f3f4'}
+        />
+      </View>
 
-          <View style={styles.rowBetween}>
-            <Text style={styles.label}>{i18n.t('hasHypertension')}</Text>
-            <Switch
-              value={hasHypertension}
-              onValueChange={setHasHypertension}
-              trackColor={{ false: '#ccc', true: '#C1B2DF' }}
-              thumbColor={hasHypertension ? '#8368C7' : '#f4f3f4'}
-            />
-          </View>
+      <View style={[styles.rowBetween, {
+        flexDirection: isRTL ? 'row-reverse' : 'row'
+      }]}>
+        <Text style={[styles.label, getAlignmentStyles()]}>
+          {i18n.t('hasHypertension')}
+        </Text>
+        <Switch
+          value={hasHypertension}
+          onValueChange={setHasHypertension}
+          trackColor={{ false: '#ccc', true: '#C1B2DF' }}
+          thumbColor={hasHypertension ? '#8368C7' : '#f4f3f4'}
+        />
+      </View>
 
-          <TextInput
-            placeholder={i18n.t('haemoglobinLevel')}
-            keyboardType="decimal-pad"
-            value={haemoglobinLevel}
-            onChangeText={setHaemoglobinLevel}
-            style={styles.input}
-          />
+      <TextInput
+        placeholder={i18n.t('haemoglobinLevel')}
+        keyboardType="decimal-pad"
+        value={haemoglobinLevel}
+        onChangeText={setHaemoglobinLevel}
+        style={[styles.input, getAlignmentStyles()]}
+      />
 
-          <View style={styles.rowBetween}>
-            <Text style={styles.label}>{i18n.t('smoker')}</Text>
-            <Switch
-              value={isSmoker}
-              onValueChange={setIsSmoker}
-              trackColor={{ false: '#ccc', true: '#C1B2DF' }}
-              thumbColor={isSmoker ? '#8368C7' : '#f4f3f4'}
-            />
-          </View>
+      <View style={[styles.rowBetween, {
+        flexDirection: isRTL ? 'row-reverse' : 'row'
+      }]}>
+        <Text style={[styles.label, getAlignmentStyles()]}>
+          {i18n.t('smoker')}
+        </Text>
+        <Switch
+          value={isSmoker}
+          onValueChange={setIsSmoker}
+          trackColor={{ false: '#ccc', true: '#C1B2DF' }}
+          thumbColor={isSmoker ? '#8368C7' : '#f4f3f4'}
+        />
+      </View>
 
-          <TextInput
-            placeholder={i18n.t('takesMedication')}
-            value={takesMedication}
-            onChangeText={setTakesMedication}
-            style={styles.input}
-          />
+      <TextInput
+        placeholder={i18n.t('takesMedication')}
+        value={takesMedication}
+        onChangeText={setTakesMedication}
+        style={[styles.input, getAlignmentStyles()]}
+      />
 
-          <View style={styles.pickerContainer}>
-            <Text style={styles.label}>{i18n.t('bloodGroup')}</Text>
-            <Picker
-              selectedValue={bloodGroup}
-              onValueChange={(itemValue) => setBloodGroup(itemValue)}
-              style={styles.picker}
-            >
-              <Picker.Item label="A+" value="A+" />
-              <Picker.Item label="A-" value="A-" />
-              <Picker.Item label="B+" value="B+" />
-              <Picker.Item label="B-" value="B-" />
-              <Picker.Item label="AB+" value="AB+" />
-              <Picker.Item label="AB-" value="AB-" />
-              <Picker.Item label="O+" value="O+" />
-              <Picker.Item label="O-" value="O-" />
-            </Picker>
-          </View>
+      {/* Blood Group Picker */}
+      <View style={[styles.pickerContainer, {
+        alignItems: isRTL ? 'flex-end' : 'flex-start'
+      }]}>
+        <Text style={[styles.label, getAlignmentStyles()]}>
+          {i18n.t('bloodGroup')}
+        </Text>
+        <Picker
+          selectedValue={bloodGroup}
+          onValueChange={(itemValue) => setBloodGroup(itemValue)}
+          style={[styles.picker, { 
+            width: '100%',
+            textAlign: isRTL ? 'right' : 'left'
+          }]}
+        >
+          <Picker.Item label="A+" value="A+" />
+          <Picker.Item label="A-" value="A-" />
+          <Picker.Item label="B+" value="B+" />
+          <Picker.Item label="B-" value="B-" />
+          <Picker.Item label="AB+" value="AB+" />
+          <Picker.Item label="AB-" value="AB-" />
+          <Picker.Item label="O+" value="O+" />
+          <Picker.Item label="O-" value="O-" />
+        </Picker>
+      </View>
 
-          <TouchableOpacity style={styles.nextButton} onPress={submitForm}>
-            <Text style={styles.nextButtonText}>{i18n.t('next')}</Text>
-          </TouchableOpacity>
-        </ScrollView>
+      <TouchableOpacity 
+        style={[styles.nextButton, {
+          alignSelf: 'center'
+        }]} 
+        onPress={submitForm}
+      >
+        <Text style={styles.nextButtonText}>{i18n.t('next')}</Text>
+      </TouchableOpacity>
+    </ScrollView>
   );
 };
 
@@ -262,14 +322,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#F6F6FF',
     paddingHorizontal: 24,
     paddingTop: 10,
-     marginBottom:50,
+    marginBottom: 50,
   },
   backButton: {
     position: 'absolute',
     top: 35,
-    left: isRTL ? undefined : 5,
-    right: isRTL ? 24 : undefined,
-    transform: [{ scaleX: isRTL ? -1 : 1 }],
+    zIndex: 1,
   },
   title: {
     fontSize: 22,
@@ -278,17 +336,12 @@ const styles = StyleSheet.create({
     marginBottom: 40,
     textAlign: 'center',
   },
-  content: {
-    paddingVertical: 20,
-    paddingHorizontal: 10,
-  },
   label: {
     fontSize: 16,
     fontWeight: '600',
     color: '#000',
   },
   rowBetween: {
-    flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 20,
@@ -314,7 +367,6 @@ const styles = StyleSheet.create({
     borderColor: '#E5E7EB',
     borderWidth: 1,
     marginBottom: 15,
-    textAlign: isRTL ? 'right' : 'left',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,

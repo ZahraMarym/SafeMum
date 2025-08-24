@@ -1,21 +1,22 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { useFocusEffect } from "@react-navigation/native";
-import {
-  View,
-  FlatList,
-  StyleSheet,
-  TouchableOpacity,
-  Modal,
-  ActivityIndicator,
-  ScrollView,
-} from "react-native";
+import { Text } from "@/components/Text";
+import { TextBold } from "@/components/TextBold";
+import { TextInput } from "@/components/TextInput";
+import i18n from "@/i18n";
 import { Ionicons } from "@expo/vector-icons";
+import { useFocusEffect } from "@react-navigation/native";
 import axios from "axios";
 import { useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
-import { TextBold } from "@/components/TextBold";
-import { Text } from "@/components/Text";
-import { TextInput } from "@/components/TextInput";
+import React, { useCallback, useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  FlatList,
+  Modal,
+  StyleSheet,
+  TouchableOpacity,
+  View
+} from "react-native";
+import { useSelector } from "react-redux";
 
 export default function CommunityScreen() {
   const [modalVisible, setModalVisible] = useState(false);
@@ -26,6 +27,12 @@ export default function CommunityScreen() {
   const [conversations, setConversations] = useState([]);
   const [groups, setGroups] = useState([]);
   const router = useRouter();
+  const { language, textDirection } = useSelector((state: any) => state.language);
+  const isRTL = textDirection === 'rtl';
+
+  useEffect(() => {
+    i18n.changeLanguage(language); // Update i18n language dynamically
+  }, [language]);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -81,7 +88,7 @@ export default function CommunityScreen() {
           headers: { accept: "/", Authorization: `Bearer ${token}` },
         }
       );
-  console.log("get-conversation-by-userid", response.data);
+      console.log("get-conversation-by-userid", response.data);
       setConversations(response.data);
     } catch (err) {
       console.error("Error fetching conversations:", err);
@@ -120,24 +127,26 @@ export default function CommunityScreen() {
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { direction: isRTL ? 'rtl' : 'ltr' }]}>
       {/* Add User Button */}
       <TouchableOpacity
-        style={styles.addButton}
+        style={[styles.addButton, {
+          flexDirection: isRTL ? "row-reverse" : "row"
+        }]}
         onPress={() => setModalVisible(true)}
       >
         <Ionicons name="add-circle-outline" size={26} color="#fff" />
-        <Text style={styles.addButtonText}>Add User</Text>
+        <Text style={styles.addButtonText}>{i18n.t('addUser')}</Text>
       </TouchableOpacity>
 
       {/* Add User Modal */}
       <Modal visible={modalVisible} animationType="slide">
-        <View style={styles.modalContainer}>
+        <View style={[styles.modalContainer, { direction: isRTL ? 'rtl' : 'ltr' }]}>
           <TextInput
-            placeholder="Search user"
+            placeholder={i18n.t('searchUser')}
             value={searchQuery}
             onChangeText={handleSearch}
-            style={styles.searchBar}
+            style={[styles.searchBar, { textAlign: isRTL ? 'right' : 'left' }]}
           />
           {loading ? (
             <ActivityIndicator size="large" color="#000" />
@@ -147,10 +156,16 @@ export default function CommunityScreen() {
               keyExtractor={(item) => item.id}
               renderItem={({ item }) => (
                 <TouchableOpacity
-                  style={styles.userItem}
+                  style={[styles.userItem, {
+                    alignItems: isRTL ? 'flex-end' : 'flex-start'
+                  }]}
                   onPress={() => handleUserSelect(item)}
                 >
-                  <Text style={styles.userText}>{item.name}</Text>
+                  <Text style={[styles.userText, {
+                    textAlign: isRTL ? 'right' : 'left'
+                  }]}>
+                    {item.name}
+                  </Text>
                 </TouchableOpacity>
               )}
             />
@@ -159,22 +174,28 @@ export default function CommunityScreen() {
             onPress={() => setModalVisible(false)}
             style={styles.closeBtn}
           >
-            <Text style={styles.closeText}>Close</Text>
+            <Text style={styles.closeText}>{i18n.t('close')}</Text>
           </TouchableOpacity>
         </View>
       </Modal>
 
       {/* Scrollable Split Screen */}
       <View style={styles.splitContainer}>
-        {/* Top Half - Conversations */}
+        {/* Conversations Section */}
         <View style={styles.halfContainer}>
-          <TextBold style={styles.sectionTitle}>Conversations</TextBold>
+          <TextBold style={[styles.sectionTitle, {
+            textAlign: isRTL ? 'right' : 'left'
+          }]}>
+            {i18n.t('conversations')}
+          </TextBold>
           <FlatList
             data={conversations}
             keyExtractor={(item) => item.userId}
             renderItem={({ item }) => (
               <TouchableOpacity
-                style={styles.conversationItem}
+                style={[styles.conversationItem, {
+                  flexDirection: isRTL ? "row-reverse" : "row"
+                }]}
                 onPress={async () => {
                   try {
                     const token = await SecureStore.getItemAsync("accessToken");
@@ -200,7 +221,10 @@ export default function CommunityScreen() {
                   }
                 }}
               >
-                <View style={styles.avatar}>
+                <View style={[styles.avatar, {
+                  marginRight: isRTL ? 0 : 12,
+                  marginLeft: isRTL ? 12 : 0
+                }]}>
                   <Text style={styles.avatarText}>
                     {item.userName
                       ?.split(" ")
@@ -209,10 +233,18 @@ export default function CommunityScreen() {
                       .toUpperCase()}
                   </Text>
                 </View>
-                <View style={styles.chatInfo}>
-                  <Text style={styles.chatName}>{item.userName}</Text>
-                  <Text style={styles.lastMessage} numberOfLines={1}>
-                    {item.lastMessage || "No messages yet"}
+                <View style={[styles.chatInfo, {
+                  alignItems: isRTL ? 'flex-end' : 'flex-start'
+                }]}>
+                  <Text style={[styles.chatName, {
+                    textAlign: isRTL ? 'right' : 'left'
+                  }]}>
+                    {item.userName}
+                  </Text>
+                  <Text style={[styles.lastMessage, {
+                    textAlign: isRTL ? 'right' : 'left'
+                  }]} numberOfLines={1}>
+                    {item.lastMessage || i18n.t('noMessages')}
                   </Text>
                 </View>
               </TouchableOpacity>
@@ -220,15 +252,21 @@ export default function CommunityScreen() {
           />
         </View>
 
-        {/* Bottom Half - Groups */}
+        {/* Groups Section */}
         <View style={styles.halfContainer}>
-          <TextBold style={styles.sectionTitle}>Group Chats</TextBold>
+          <TextBold style={[styles.sectionTitle, {
+            textAlign: isRTL ? 'right' : 'left'
+          }]}>
+            {i18n.t('groupChats')}
+          </TextBold>
           <FlatList
             data={groups}
             keyExtractor={(item, index) => index.toString()}
             renderItem={({ item }) => (
               <TouchableOpacity
-                style={styles.groupItem}
+                style={[styles.groupItem, {
+                  alignItems: isRTL ? 'flex-end' : 'flex-start'
+                }]}
                 onPress={() =>
                   router.push({
                     pathname: "/(tabs)/(community)/group-chat",
@@ -236,12 +274,20 @@ export default function CommunityScreen() {
                   })
                 }
               >
-                <Text style={styles.groupName}>{item.name}</Text>
-                <Text style={styles.lastMessage}>
-                  {item.lastMessageContent || "No messages yet"}
+                <Text style={[styles.groupName, {
+                  textAlign: isRTL ? 'right' : 'left'
+                }]}>
+                  {item.name}
                 </Text>
-                <Text style={styles.lastMessageTime}>
-                  {item.lastMessageTime || "No time available"}
+                <Text style={[styles.lastMessage, {
+                  textAlign: isRTL ? 'right' : 'left'
+                }]}>
+                  {item.lastMessageContent || i18n.t('noMessages')}
+                </Text>
+                <Text style={[styles.lastMessageTime, {
+                  textAlign: isRTL ? 'right' : 'left'
+                }]}>
+                  {item.lastMessageTime || i18n.t('noTimeAvailable')}
                 </Text>
               </TouchableOpacity>
             )}
@@ -253,9 +299,12 @@ export default function CommunityScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: "#F9FAFB" },
+  container: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: "#F9FAFB"
+  },
   addButton: {
-    flexDirection: "row",
     alignItems: "center",
     gap: 10,
     paddingVertical: 14,
