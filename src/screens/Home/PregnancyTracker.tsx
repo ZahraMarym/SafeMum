@@ -70,7 +70,7 @@ export default function HomeScreen() {
       const token = await SecureStore.getItemAsync("accessToken");
 
       const response = await axios.get(
-        'https://safemum-app-5f503b88629c.herokuapp.com/api/pregnancy-tracker/weekly-pregnancy-profile',
+        `${process.env.EXPO_PUBLIC_URL}/pregnancy-tracker/weekly-pregnancy-profile`,
         {
           headers: {
             'Accept': '*/*',

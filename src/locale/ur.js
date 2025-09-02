@@ -72,5 +72,15 @@ export default {
           logSupplementIntake: "سپلیمنٹ کا استعمال درج کریں",
           addPrenatalAppointment: "قبل از پیدائش ملاقات شامل کریں",
             voiceInstructions: 'کہیں: "ای میل درج کریں [آپ کا ای میل]"، "پاس ورڈ درج کریں [آپ کا پاس ورڈ]"، "لاگ ان"، "سائن اپ"، یا "پاس ورڈ بھول گئے"',
+        noMessages: "ابھی تک کوئی پیغام نہیں",
+        noTimeAvailable: "وقت دستیاب نہیں",
+        settings: 'سیٹنگز',
+            language: 'زبان',
+            logout: 'لاگ آؤٹ',
+            english: 'انگریزی',
+            urdu: 'اردو',
+            selectLanguage: 'زبان منتخب کریں',
+            cancel: 'منسوخ کریں'
+
 
 };

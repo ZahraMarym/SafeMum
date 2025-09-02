@@ -72,5 +72,14 @@ addUser: 'Add User',
     logSupplementIntake: "Log Supplement Intake",
     addPrenatalAppointment: "Add Prenatal Appointment",
     voiceInstructions: 'Try saying: "type email [your email]", "type password [your password]", "login", "sign up", or "forgot password"',
+    noMessages:"No messages yet",
+    noTimeAvailable: "No time available",
+     settings: 'Settings',
+        language: 'Language',
+        logout: 'Logout',
+        english: 'English',
+        urdu: 'اردو',
+        selectLanguage: 'Select Language',
+        cancel: 'Cancel'
 
 };

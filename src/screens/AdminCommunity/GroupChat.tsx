@@ -40,10 +40,16 @@ export default function GroupChatScreen() {
     // Get language from Redux store
     const languageRedux = useSelector((state) => state.language.language);
 
-    // Change language when it updates in Redux
-    useEffect(() => {
-      i18n.changeLanguage(languageRedux); // Update i18n language
-    }, [languageRedux]);
+useEffect(() => {
+  const anyI18n = i18n as any;
+  if (typeof anyI18n.changeLanguage === "function") {
+    // react-i18next style
+    anyI18n.changeLanguage(language);
+  } else {
+    // i18n-js style
+    anyI18n.locale = language;
+  }
+}, [language]);
 
   if (!parsedUser) {
     return (

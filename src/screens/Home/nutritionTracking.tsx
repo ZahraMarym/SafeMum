@@ -26,9 +26,16 @@ export default function NutritionTrackingScreen() {
  const [appointmentDate, setAppointmentDate] = useState(new Date()); // default to current date
   const [showDatePicker, setShowDatePicker] = useState(false); // Show date picker on button press
 
-      useEffect(() => {
-        i18n.changeLanguage(language); // Change language dynamically based on Redux store
-      }, [language]);
+useEffect(() => {
+  const anyI18n = i18n as any;
+  if (typeof anyI18n.changeLanguage === "function") {
+    // react-i18next style
+    anyI18n.changeLanguage(language);
+  } else {
+    // i18n-js style
+    anyI18n.locale = language;
+  }
+}, [language]);
 
   // Handle date change from DateTimePicker
   const handleDateChange = (event, selectedDate) => {

@@ -35,9 +35,16 @@ export default function CommunityScreen() {
   const [groupName, setGroupName] = useState("");
   const [selectedMembers, setSelectedMembers] = useState([]);
 
-  useEffect(() => {
-    i18n.changeLanguage(language);
-  }, [language]);
+useEffect(() => {
+  const anyI18n = i18n as any;
+  if (typeof anyI18n.changeLanguage === "function") {
+    // react-i18next style
+    anyI18n.changeLanguage(language);
+  } else {
+    // i18n-js style
+    anyI18n.locale = language;
+  }
+}, [language]);
 
   // ✅ Fetch all users (for Add User modal)
   const fetchUsers = async () => {
@@ -300,6 +307,24 @@ export default function CommunityScreen() {
       borderRadius: 8,
     },
     closeText: { fontSize: 16, color: "#1E40AF", fontWeight: "600" },
+    userText: {
+      fontSize: 16,
+      color: "#111827",
+    },
+
+    groupName: {
+      fontSize: 16,
+      fontWeight: "600",
+      color: "#111827",
+      textAlign: isRTL ? "right" : "left",
+    },
+
+    lastMessageTime: {
+      fontSize: 12,
+      color: "#9CA3AF",
+      textAlign: isRTL ? "right" : "left",
+    },
+
   });
 
   return (
@@ -489,125 +514,3 @@ export default function CommunityScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    padding: 20, 
-    backgroundColor: "#F9FAFB",
-    direction: isRTL ? 'rtl' : 'ltr'
-  },
-  addButton: {
-    flexDirection: isRTL ? "row-reverse" : "row",
-    alignItems: "center",
-    gap: 10,
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    borderRadius: 12,
-    backgroundColor: "#825DEF",
-    marginBottom: 10,
-  },
-  addButtonText: { fontSize: 18, color: "#fff", fontWeight: "600" },
-  splitContainer: { flex: 1 },
-  halfContainer: { flex: 0.8, marginBottom: 10 },
-  sectionTitle: { 
-    fontSize: 18, 
-    color: "#000", 
-    marginBottom: 5,
-    textAlign: isRTL ? 'right' : 'left',
-  },
-  conversationItem: {
-    flexDirection: isRTL ? "row-reverse" : "row",
-    alignItems: "center",
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
-  },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: "#A78BFA",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: isRTL ? 0 : 12,
-    marginLeft: isRTL ? 12 : 0,
-  },
-  avatarText: { color: "#fff", fontSize: 18, fontWeight: "bold" },
-  chatInfo: { 
-    flex: 1,
-    alignItems: isRTL ? 'flex-end' : 'flex-start' 
-  },
-  chatName: { 
-    fontSize: 16, 
-    fontWeight: "600", 
-    color: "#111827",
-    textAlign: isRTL ? 'right' : 'left',
-  },
-  lastMessage: { 
-    fontSize: 14, 
-    color: "#6B7280",
-    textAlign: isRTL ? 'right' : 'left',
-  },
-  groupItem: {
-    paddingVertical: 10,
-    paddingHorizontal: isRTL ? 15 : 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
-    backgroundColor: "#F9FAFB",
-    borderRadius: 8,
-    marginBottom: 5,
-    alignItems: isRTL ? 'flex-end' : 'flex-start',
-  },
-  modalContainer: { flex: 1, padding: 20, backgroundColor: "#fff" },
-  searchBar: {
-    borderWidth: 1,
-    borderColor: "#D1D5DB",
-    borderRadius: 10,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    fontSize: 16,
-    backgroundColor: "#F3F4F6",
-    marginBottom: 16,
-    textAlign: isRTL ? 'right' : 'left',
-  },
-  userItem: {
-    flexDirection: isRTL ? "row-reverse" : "row",
-    justifyContent: 'space-between',
-    paddingVertical: 14,
-    paddingHorizontal: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
-    backgroundColor: "#F9FAFB",
-    borderRadius: 8,
-    marginBottom: 8,
-  },
-  input: {
-    height: 50,
-    borderColor: "#b7b7b7",
-    borderWidth: 1,
-    color: "black",
-    paddingHorizontal: 16,
-    borderRadius: 10,
-    marginBottom: 16,
-    backgroundColor: "#F3F4F6",
-    textAlign: isRTL ? 'right' : 'left',
-  },
-  createGroupButton: {
-    backgroundColor: "#10BE56",
-    paddingVertical: 12,
-    borderRadius: 10,
-    alignItems: "center",
-    marginTop: 16,
-  },
-  createGroupText: { color: "#fff", fontSize: 16, fontWeight: "600" },
-  closeBtn: {
-    marginTop: 24,
-    alignSelf: "center",
-    backgroundColor: "#E5E7EB",
-    paddingHorizontal: 24,
-    paddingVertical: 10,
-    borderRadius: 8,
-  },
-  closeText: { fontSize: 16, color: "#1E40AF", fontWeight: "600" },
-});

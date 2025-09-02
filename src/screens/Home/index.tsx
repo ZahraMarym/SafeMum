@@ -29,6 +29,7 @@ export default function LoginScreen() {
   const isRTL = textDirection === 'rtl';
   const [data, setData] = useState<any[] | null>(null);
   const [loading, setLoading] = useState(true);
+const LOCAL_FILE_PATH = FileSystem.documentDirectory + 'app-data.json';
 
   // Safe navigation function
   const safeNavigateBack = useCallback(() => {
@@ -97,9 +98,6 @@ export default function LoginScreen() {
 
   // Copy fallback data from assets to file system
   const copyAssetToFileSystem = async () => {
-    if (assetCopied) return;
-    assetCopied = true;
-
     try {
       const asset = Asset.fromModule(require('../../../assets/fallBackData.json'));
       await asset.downloadAsync();
@@ -138,7 +136,7 @@ export default function LoginScreen() {
       setLoading(true);
       const token = await SecureStore.getItemAsync('accessToken');
 
-      const res = await axios.get(`${EXPO_PUBLIC_URL}/content/get-all-content-item?Language=en`, {
+      const res = await axios.get(`${EXPO_PUBLIC_URL}/content/get-all-content-item?Language=${language}`, {
         headers: {
           Accept: '*/*',
           Authorization: `Bearer ${token}`,
@@ -162,7 +160,7 @@ export default function LoginScreen() {
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: '#F6F6FF',
+      backgroundColor: '#fff',
       paddingHorizontal: 24,
       paddingTop: 60,
       direction: isRTL ? 'rtl' : 'ltr'

@@ -30,9 +30,16 @@ export default function CommunityScreen() {
   const { language, textDirection } = useSelector((state: any) => state.language);
   const isRTL = textDirection === 'rtl';
 
-  useEffect(() => {
-    i18n.changeLanguage(language); // Update i18n language dynamically
-  }, [language]);
+useEffect(() => {
+  // Works for both setups
+  const anyI18n = i18n as any;
+  if (typeof anyI18n.changeLanguage === "function") {
+    anyI18n.changeLanguage(language);     // react-i18next style
+  } else {
+    anyI18n.locale = language;            // i18n-js style
+  }
+}, [language]);
+
 
   const fetchUsers = async () => {
     setLoading(true);

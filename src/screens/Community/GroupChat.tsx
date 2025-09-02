@@ -30,9 +30,16 @@ export default function GroupChatScreen() {
 
   const router = useRouter();
 
-    useEffect(() => {
-      i18n.changeLanguage(language); // Change language dynamically based on Redux store
-    }, [language]);
+useEffect(() => {
+  const anyI18n = i18n as any;
+  if (typeof anyI18n.changeLanguage === "function") {
+    // react-i18next style
+    anyI18n.changeLanguage(language);
+  } else {
+    // i18n-js style
+    anyI18n.locale = language;
+  }
+}, [language]);
 
   const parsedUser = user ? JSON.parse(user) : null;
   console.log("Parsed user:", parsedUser);

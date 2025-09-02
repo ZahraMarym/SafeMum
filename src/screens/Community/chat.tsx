@@ -23,9 +23,17 @@ export default function LoginScreen() {
   const router = useRouter();
 
   // Change language when it updates in Redux
-  useEffect(() => {
-    i18n.changeLanguage(language); // Update i18n language
-  }, [language]);
+useEffect(() => {
+  const anyI18n = i18n as any;
+  if (typeof anyI18n.changeLanguage === "function") {
+    // react-i18next style
+    anyI18n.changeLanguage(language);
+  } else {
+    // i18n-js style
+    anyI18n.locale = language;
+  }
+}, [language]);
+
 
   let parsedUser = user;
   if (typeof user === 'string') {

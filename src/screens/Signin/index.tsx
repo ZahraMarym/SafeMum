@@ -359,7 +359,7 @@ export default function LoginScreen() {
     backgroundColor: '#fff', borderRadius: 8, paddingHorizontal: 14, paddingVertical: 12,
     fontSize: 14, borderColor: '#E5E7EB', borderWidth: 1,             textAlign: I18nManager.isRTL ? 'right' : 'left',
   },
-  forgotPassword: { marginTop: 4, alignSelf: isRTL ? 'flex-start' : 'flex-end' },
+  forgotPassword: { marginTop: 4, alignSelf: isRTL ? 'flex-end' : 'flex-start' },
   forgotText: { color: '#F87171', fontSize: 12 },
   buttonContainer: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', alignSelf: 'center' },
   button: {
@@ -404,6 +404,19 @@ export default function LoginScreen() {
       <Text style={styles.label}>{i18n.t('email')}</Text>
       <View style={styles.inputContainer}>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <TouchableOpacity
+                    onPress={() => startListening('email')}
+                    style={{
+                      padding: 8,
+                      marginLeft: 8,
+                    }}
+                  >
+                    <Ionicons
+                      name={activeField === 'email' ? 'mic' : 'mic-outline'}
+                      size={24}
+                      color="#6D28D9"
+                    />
+                  </TouchableOpacity>
           <TextInput
             placeholder={i18n.t('enterEmail')}
             value={email}
@@ -413,19 +426,7 @@ export default function LoginScreen() {
             autoCapitalize="none"
             autoCorrect={false}
           />
-          <TouchableOpacity
-            onPress={() => startListening('email')}
-            style={{
-              padding: 8,
-              marginLeft: 8,
-            }}
-          >
-            <Ionicons 
-              name={activeField === 'email' ? 'mic' : 'mic-outline'} 
-              size={24} 
-              color="#6D28D9" 
-            />
-          </TouchableOpacity>
+
         </View>
         <TouchableOpacity
           style={styles.forgotPassword}
@@ -439,6 +440,19 @@ export default function LoginScreen() {
       <Text style={styles.label}>{i18n.t('password')}</Text>
       <View style={styles.inputContainer}>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+         <TouchableOpacity
+                    onPress={() => startListening('password')}
+                    style={{
+                      padding: 8,
+                      marginLeft: 8,
+                    }}
+                  >
+                    <Ionicons
+                      name={activeField === 'password' ? 'mic' : 'mic-outline'}
+                      size={24}
+                      color="#6D28D9"
+                    />
+                  </TouchableOpacity>
           <TextInput
             placeholder={i18n.t('enterPassword')}
             placeholderTextColor="#A3A3A3"
@@ -447,19 +461,7 @@ export default function LoginScreen() {
             onChangeText={setPassword}
             style={[styles.input, { flex: 1 }]}
           />
-          <TouchableOpacity
-            onPress={() => startListening('password')}
-            style={{
-              padding: 8,
-              marginLeft: 8,
-            }}
-          >
-            <Ionicons 
-              name={activeField === 'password' ? 'mic' : 'mic-outline'} 
-              size={24} 
-              color="#6D28D9" 
-            />
-          </TouchableOpacity>
+
         </View>
       </View>
 
