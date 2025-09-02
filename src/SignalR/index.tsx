@@ -10,7 +10,7 @@ const useSignalR = () => {
     const connect = async () => {
       try {
         const conn = new HubConnectionBuilder()
-          .withUrl('https://safemum-app-5f503b88629c.herokuapp.com/chatHub')
+          .withUrl(`${process.env.EXPO_PUBLIC_URL_CHAT}/chatHub`)
           .withAutomaticReconnect()
           .configureLogging(LogLevel.Information)
           .build();

@@ -1,7 +1,8 @@
 import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
-  language: 'en', // Default language
+  language: 'en',
+  textDirection: 'ltr' // Add text direction
 };
 
 const languageSlice = createSlice({
@@ -10,6 +11,7 @@ const languageSlice = createSlice({
   reducers: {
     setLanguage: (state, action) => {
       state.language = action.payload;
+      state.textDirection = action.payload === 'ur' ? 'rtl' : 'ltr';
     },
   },
 });

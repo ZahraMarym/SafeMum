@@ -1,22 +1,28 @@
-import { useEffect, useState, useMemo } from "react";
-import * as SecureStore from "expo-secure-store";
-import {
-  View,
-  FlatList,
-  TextInput,
-  StyleSheet,
-  Modal,
-  Text,
-  Button,
-  TouchableOpacity,
-} from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
 import { TextBold } from "@/components/TextBold";
-import { Ionicons } from "@expo/vector-icons";
+import i18n from "@/i18n";
 import useSignalR from "@/SignalR";
+import { Ionicons } from "@expo/vector-icons";
 import axios from "axios";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import * as SecureStore from "expo-secure-store";
+import { useEffect, useMemo, useState } from "react";
+import {
+  FlatList,
+  Modal,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
+} from "react-native";
+import { useSelector } from "react-redux";
+
 
 export default function GroupChatScreen() {
+  // Add RTL support from Redux
+  const { language, textDirection } = useSelector((state: any) => state.language);
+  const isRTL = textDirection === 'rtl';
+  
   const [loading, setLoading] = useState(false);
   const { user } = useLocalSearchParams();
   const router = useRouter();
@@ -30,6 +36,20 @@ export default function GroupChatScreen() {
 
   const parsedUser = user ? JSON.parse(user) : null;
   console.log("Parsed user:", parsedUser);
+
+    // Get language from Redux store
+    const languageRedux = useSelector((state) => state.language.language);
+
+useEffect(() => {
+  const anyI18n = i18n as any;
+  if (typeof anyI18n.changeLanguage === "function") {
+    // react-i18next style
+    anyI18n.changeLanguage(language);
+  } else {
+    // i18n-js style
+    anyI18n.locale = language;
+  }
+}, [language]);
 
   if (!parsedUser) {
     return (
@@ -214,28 +234,57 @@ console.log("✅ Request complete");
  };
 
 
-
+  // Update styles to be dynamic based on RTL
+  const getMessageStyle = (isCurrentUser) => ({
+    ...styles.messageItem,
+    ...(isCurrentUser ? styles.sentMessage : styles.receivedMessage),
+    alignSelf: isCurrentUser 
+      ? (isRTL ? 'flex-start' : 'flex-end')
+      : (isRTL ? 'flex-end' : 'flex-start'),
+    marginRight: isCurrentUser 
+      ? (isRTL ? 10 : 0)
+      : (isRTL ? 0 : 10),
+    marginLeft: isCurrentUser 
+      ? (isRTL ? 0 : 10)
+      : (isRTL ? 10 : 0),
+  });
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { direction: isRTL ? 'rtl' : 'ltr' }]}>
       <View style={styles.header}>
         <TouchableOpacity
-          style={styles.backButton}
+          style={[styles.backButton, {
+            left: isRTL ? undefined : '5%',
+            right: isRTL ? '5%' : undefined
+          }]}
           onPress={() => router.back()}
         >
-          <Ionicons name="chevron-back" size={25} color="white" />
+          <Ionicons 
+            name={isRTL ? "chevron-forward" : "chevron-back"} 
+            size={25} 
+            color="white" 
+          />
         </TouchableOpacity>
-        <TextBold style={styles.name}>
-          {groupName.replace(/\w\S*/g, (txt) => {
-            return txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase();
-          })}
+        
+        <TextBold style={[styles.name, {
+          marginLeft: isRTL ? 0 : '10%',
+          marginRight: isRTL ? '10%' : 0,
+          textAlign: isRTL ? 'right' : 'left'
+        }]}>
+          {groupName.replace(/\w\S*/g, (txt) => 
+            txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase()
+          )}
         </TextBold>
-        <TouchableOpacity style={styles.addButton}
-       onPress={fetchUsers}
+
+        <TouchableOpacity 
+          style={[styles.addButton, {
+            left: isRTL ? '5%' : undefined,
+            right: isRTL ? undefined : '5%'
+          }]}
+          onPress={fetchUsers}
         >
           <Ionicons name="add-circle-outline" size={25} color="white" />
         </TouchableOpacity>
-
       </View>
 
       <FlatList
@@ -244,19 +293,24 @@ console.log("✅ Request complete");
         renderItem={({ item }) => {
           const isCurrentUser = item.senderId === currentUserId;
           const displayName = isCurrentUser
-            ? "You"
-            : userNames[item.senderId] || "User";
+            ? i18n.t('you')
+            : userNames[item.senderId] || i18n.t('user');
 
           return (
-            <View
-              style={[
-                styles.messageItem,
-                isCurrentUser ? styles.sentMessage : styles.receivedMessage,
-              ]}
-            >
-              <Text style={styles.senderName}>{displayName}:</Text>
-              <Text style={styles.messageContent}>{item.content}</Text>
-              <Text style={styles.timestamp}>
+            <View style={getMessageStyle(isCurrentUser)}>
+              <Text style={[styles.senderName, {
+                textAlign: isRTL ? 'right' : 'left'
+              }]}>
+                {displayName}:
+              </Text>
+              <Text style={[styles.messageContent, {
+                textAlign: isRTL ? 'right' : 'left'
+              }]}>
+                {item.content}
+              </Text>
+              <Text style={[styles.timestamp, {
+                textAlign: isRTL ? 'left' : 'right'
+              }]}>
                 {new Date(item.sendAt).toLocaleTimeString([], {
                   hour: "2-digit",
                   minute: "2-digit",
@@ -267,68 +321,92 @@ console.log("✅ Request complete");
         }}
       />
 
-      {loading && <Text style={styles.loading}>Loading...</Text>}
+      {loading && (
+        <Text style={styles.loading}>{i18n.t('loading')}</Text>
+      )}
 
-      <View style={styles.inputContainer}>
+      <View style={[styles.inputContainer, {
+        flexDirection: isRTL ? 'row-reverse' : 'row'
+      }]}>
         <TextInput
           value={newMessage}
           onChangeText={setNewMessage}
-          placeholder="Type a message"
-          style={styles.input}
+          placeholder={i18n.t('typeMessage')}
+          style={[styles.input, {
+            textAlign: isRTL ? 'right' : 'left',
+            marginRight: isRTL ? 0 : 10,
+            marginLeft: isRTL ? 10 : 0
+          }]}
         />
         <TouchableOpacity
           onPress={handleSendMessage}
           style={styles.sendButton}
           disabled={!newMessage.trim()}
         >
-          <Text style={styles.sendButtonText}>Send</Text>
+          <Text style={styles.sendButtonText}>{i18n.t('send')}</Text>
         </TouchableOpacity>
       </View>
-       {/* Modal to show users */}
+
+      {/* Modal with RTL support */}
       <Modal
         visible={modalVisible}
         animationType="slide"
         onRequestClose={() => setModalVisible(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-           <TouchableOpacity
-                  style={styles.crossButton}
-                  onPress={() => setModalVisible(false)}
-                >
-                  <Ionicons name="close" size={24} color="black" />
-                </TouchableOpacity>
-            <Text style={styles.modalTitle}>Select a User</Text>
+          <View style={[styles.modalContainer, {
+            direction: isRTL ? 'rtl' : 'ltr'
+          }]}>
+            <TouchableOpacity
+              style={[styles.crossButton, {
+                left: isRTL ? 10 : undefined,
+                right: isRTL ? undefined : 10
+              }]}
+              onPress={() => setModalVisible(false)}
+            >
+              <Ionicons name="close" size={24} color="black" />
+            </TouchableOpacity>
 
-            {/* User list */}
+            <Text style={[styles.modalTitle, {
+              textAlign: isRTL ? 'right' : 'left'
+            }]}>
+              {i18n.t('selectUser')}
+            </Text>
+
             <FlatList
               data={users}
               keyExtractor={(item) => item.id}
               renderItem={({ item }) => (
                 <TouchableOpacity
-                  style={styles.userItem}
+                  style={[styles.userItem, {
+                    alignItems: isRTL ? 'flex-end' : 'flex-start'
+                  }]}
                   onPress={() => setSelectedUser(item)}
                 >
-                  <Text style={styles.userItemText}>{item.name}</Text>
+                  <Text style={[styles.userItemText, {
+                    textAlign: isRTL ? 'right' : 'left'
+                  }]}>
+                    {item.name}
+                  </Text>
                 </TouchableOpacity>
               )}
             />
 
             {selectedUser && (
               <View style={styles.addButtonContainer}>
-               <TouchableOpacity
-                             style={styles.closeButton}
-                             onPress={() => addUserToGroup(selectedUser.id)}
-                           >
-                 <TextBold style={styles.closeButtonText}>{`Add ${selectedUser.name} to Group`}</TextBold>
+                <TouchableOpacity
+                  style={styles.closeButton}
+                  onPress={() => addUserToGroup(selectedUser.id)}
+                >
+                  <TextBold style={styles.closeButtonText}>
+                    {i18n.t('addUserToGroup', { name: selectedUser.name })}
+                  </TextBold>
                 </TouchableOpacity>
               </View>
             )}
-
           </View>
         </View>
       </Modal>
-
     </View>
   );
 }

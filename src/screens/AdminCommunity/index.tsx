@@ -1,23 +1,28 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { useFocusEffect } from "@react-navigation/native";
-import {
-  View,
-  FlatList,
-  StyleSheet,
-  TouchableOpacity,
-  Modal,
-  Alert,
-  ActivityIndicator,
-} from "react-native";
+import { Text } from "@/components/Text";
+import { TextBold } from "@/components/TextBold";
+import { TextInput } from "@/components/TextInput";
+import i18n from "@/i18n";
 import { Ionicons } from "@expo/vector-icons";
+import { useFocusEffect } from "@react-navigation/native";
 import axios from "axios";
 import { useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
-import { TextBold } from "@/components/TextBold";
-import { Text } from "@/components/Text";
-import { TextInput } from "@/components/TextInput";
+import React, { useCallback, useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  Modal,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { useSelector } from "react-redux";
 
 export default function CommunityScreen() {
+  const { language, textDirection } = useSelector((state: any) => state.language);
+  const isRTL = textDirection === 'rtl';
+
   const [modalVisible, setModalVisible] = useState(false);
   const [users, setUsers] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -29,6 +34,17 @@ export default function CommunityScreen() {
   const [groupChatModalVisible, setGroupChatModalVisible] = useState(false);
   const [groupName, setGroupName] = useState("");
   const [selectedMembers, setSelectedMembers] = useState([]);
+
+useEffect(() => {
+  const anyI18n = i18n as any;
+  if (typeof anyI18n.changeLanguage === "function") {
+    // react-i18next style
+    anyI18n.changeLanguage(language);
+  } else {
+    // i18n-js style
+    anyI18n.locale = language;
+  }
+}, [language]);
 
   // ✅ Fetch all users (for Add User modal)
   const fetchUsers = async () => {
@@ -170,6 +186,147 @@ export default function CommunityScreen() {
     }
   };
 
+  // Move StyleSheet inside component to access isRTL
+  const styles = StyleSheet.create({
+    container: { 
+      flex: 1, 
+      padding: 20, 
+      backgroundColor: "#F9FAFB",
+      direction: isRTL ? 'rtl' : 'ltr'
+    },
+    addButton: {
+      flexDirection: isRTL ? "row-reverse" : "row",
+      alignItems: "center",
+      gap: 10,
+      paddingVertical: 14,
+      paddingHorizontal: 20,
+      borderRadius: 12,
+      backgroundColor: "#825DEF",
+      marginBottom: 10,
+    },
+    addButtonText: { fontSize: 18, color: "#fff", fontWeight: "600" },
+    splitContainer: { flex: 1 },
+    halfContainer: { flex: 0.8, marginBottom: 10 },
+    sectionTitle: { 
+      fontSize: 18, 
+      color: "#000", 
+      marginBottom: 5,
+      textAlign: isRTL ? 'right' : 'left',
+    },
+    conversationItem: {
+      flexDirection: isRTL ? "row-reverse" : "row",
+      alignItems: "center",
+      paddingVertical: 10,
+      borderBottomWidth: 1,
+      borderBottomColor: "#E5E7EB",
+    },
+    avatar: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      backgroundColor: "#A78BFA",
+      alignItems: "center",
+      justifyContent: "center",
+      marginRight: isRTL ? 0 : 12,
+      marginLeft: isRTL ? 12 : 0,
+    },
+    avatarText: { color: "#fff", fontSize: 18, fontWeight: "bold" },
+    chatInfo: { 
+      flex: 1,
+      alignItems: isRTL ? 'flex-end' : 'flex-start' 
+    },
+    chatName: { 
+      fontSize: 16, 
+      fontWeight: "600", 
+      color: "#111827",
+      textAlign: isRTL ? 'right' : 'left',
+    },
+    lastMessage: { 
+      fontSize: 14, 
+      color: "#6B7280",
+      textAlign: isRTL ? 'right' : 'left',
+    },
+    groupItem: {
+      paddingVertical: 10,
+      paddingHorizontal: isRTL ? 15 : 10,
+      borderBottomWidth: 1,
+      borderBottomColor: "#E5E7EB",
+      backgroundColor: "#F9FAFB",
+      borderRadius: 8,
+      marginBottom: 5,
+      alignItems: isRTL ? 'flex-end' : 'flex-start',
+    },
+    modalContainer: { flex: 1, padding: 20, backgroundColor: "#fff" },
+    searchBar: {
+      borderWidth: 1,
+      borderColor: "#D1D5DB",
+      borderRadius: 10,
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      fontSize: 16,
+      backgroundColor: "#F3F4F6",
+      marginBottom: 16,
+      textAlign: isRTL ? 'right' : 'left',
+    },
+    userItem: {
+      flexDirection: isRTL ? "row-reverse" : "row",
+      justifyContent: 'space-between',
+      paddingVertical: 14,
+      paddingHorizontal: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: "#E5E7EB",
+      backgroundColor: "#F9FAFB",
+      borderRadius: 8,
+      marginBottom: 8,
+    },
+    input: {
+      height: 50,
+      borderColor: "#b7b7b7",
+      borderWidth: 1,
+      color: "black",
+      paddingHorizontal: 16,
+      borderRadius: 10,
+      marginBottom: 16,
+      backgroundColor: "#F3F4F6",
+      textAlign: isRTL ? 'right' : 'left',
+    },
+    createGroupButton: {
+      backgroundColor: "#10BE56",
+      paddingVertical: 12,
+      borderRadius: 10,
+      alignItems: "center",
+      marginTop: 16,
+    },
+    createGroupText: { color: "#fff", fontSize: 16, fontWeight: "600" },
+    closeBtn: {
+      marginTop: 24,
+      alignSelf: "center",
+      backgroundColor: "#E5E7EB",
+      paddingHorizontal: 24,
+      paddingVertical: 10,
+      borderRadius: 8,
+    },
+    closeText: { fontSize: 16, color: "#1E40AF", fontWeight: "600" },
+    userText: {
+      fontSize: 16,
+      color: "#111827",
+    },
+
+    groupName: {
+      fontSize: 16,
+      fontWeight: "600",
+      color: "#111827",
+      textAlign: isRTL ? "right" : "left",
+    },
+
+    lastMessageTime: {
+      fontSize: 12,
+      color: "#9CA3AF",
+      textAlign: isRTL ? "right" : "left",
+    },
+
+  });
+
   return (
     <View style={styles.container}>
       {/* ✅ Add User Button */}
@@ -178,17 +335,18 @@ export default function CommunityScreen() {
         onPress={() => setModalVisible(true)}
       >
         <Ionicons name="add-circle-outline" size={26} color="#fff" />
-        <Text style={styles.addButtonText}>Add User</Text>
+        <Text style={styles.addButtonText}>{i18n.t("addUser")}</Text>
       </TouchableOpacity>
 
       {/* ✅ Add User Modal */}
       <Modal visible={modalVisible} animationType="slide">
-        <View style={styles.modalContainer}>
+        <View style={[styles.modalContainer, { direction: isRTL ? 'rtl' : 'ltr' }]}>
           <TextInput
-            placeholder="Search user"
+            placeholder={i18n.t("searchUser")}
             value={searchQuery}
             onChangeText={handleSearch}
             style={styles.searchBar}
+            textAlign={isRTL ? 'right' : 'left'}
           />
           {loading ? (
             <ActivityIndicator size="large" color="#000" />
@@ -210,7 +368,7 @@ export default function CommunityScreen() {
             onPress={() => setModalVisible(false)}
             style={styles.closeBtn}
           >
-            <Text style={styles.closeText}>Close</Text>
+            <Text style={styles.closeText}>{i18n.t("close")}</Text>
           </TouchableOpacity>
         </View>
       </Modal>
@@ -219,7 +377,7 @@ export default function CommunityScreen() {
       <View style={styles.splitContainer}>
         {/* Conversations (Top Half) */}
         <View style={styles.halfContainer}>
-          <TextBold style={styles.sectionTitle}>Conversations</TextBold>
+          <TextBold style={styles.sectionTitle}>{i18n.t("conversations")}</TextBold>
           <FlatList
             data={conversations}
             keyExtractor={(item) => item.userId}
@@ -263,7 +421,7 @@ export default function CommunityScreen() {
                 <View style={styles.chatInfo}>
                   <Text style={styles.chatName}>{item.userName}</Text>
                   <Text style={styles.lastMessage} numberOfLines={1}>
-                    {item.lastMessage || "No messages yet"}
+                    {item.lastMessage || i18n.t("noMessagesYet")}
                   </Text>
                 </View>
               </TouchableOpacity>
@@ -273,7 +431,7 @@ export default function CommunityScreen() {
 
         {/* Groups (Bottom Half) */}
         <View style={styles.halfContainer}>
-          <TextBold style={styles.sectionTitle}>Group Chats</TextBold>
+          <TextBold style={styles.sectionTitle}>{i18n.t("groupChats")}</TextBold>
           <FlatList
             data={groups}
             keyExtractor={(item, index) => index.toString()}
@@ -289,10 +447,10 @@ export default function CommunityScreen() {
               >
                 <Text style={styles.groupName}>{item.name}</Text>
                 <Text style={styles.lastMessage}>
-                  {item.lastMessageContent || "No messages yet"}
+                  {item.lastMessageContent || i18n.t("noMessagesYet")}
                 </Text>
                 <Text style={styles.lastMessageTime}>
-                  {item.lastMessageTime || "No time available"}
+                  {item.lastMessageTime || i18n.t("noTimeAvailable")}
                 </Text>
               </TouchableOpacity>
             )}
@@ -302,12 +460,12 @@ export default function CommunityScreen() {
 
       {/* ✅ Group Chat Modal */}
       <Modal visible={groupChatModalVisible} animationType="slide">
-        <View style={styles.modalContainer}>
+        <View style={[styles.modalContainer, { direction: isRTL ? 'rtl' : 'ltr' }]}>
           <TextInput
-            placeholder="Group Name"
+            placeholder={i18n.t("groupName")}
             value={groupName}
             onChangeText={setGroupName}
-            style={styles.input}
+            style={[styles.input, { textAlign: isRTL ? 'right' : 'left' }]}
           />
           <FlatList
             data={users}
@@ -334,121 +492,25 @@ export default function CommunityScreen() {
             style={styles.createGroupButton}
             onPress={handleCreateGroupChat}
           >
-            <Text style={styles.createGroupText}>Create Group</Text>
+            <Text style={styles.createGroupText}>{i18n.t("createGroup")}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.closeBtn}
             onPress={() => setGroupChatModalVisible(false)}
           >
-            <Text style={styles.closeText}>Close</Text>
+            <Text style={styles.closeText}>{i18n.t("close")}</Text>
           </TouchableOpacity>
         </View>
       </Modal>
 
       {/* ✅ Button to open Group Chat Modal */}
       <TouchableOpacity
-        style={styles.addButton}
+        style={[styles.addButton, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}
         onPress={() => setGroupChatModalVisible(true)}
       >
         <Ionicons name="chatbox-ellipses" size={26} color="#fff" />
-        <Text style={styles.addButtonText}>Create Group</Text>
+        <Text style={styles.addButtonText}>{i18n.t("createGroup")}</Text>
       </TouchableOpacity>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: "#F9FAFB" },
-  addButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    borderRadius: 12,
-    backgroundColor: "#825DEF",
-    marginBottom: 10,
-  },
-  addButtonText: { fontSize: 18, color: "#fff", fontWeight: "600" },
-  splitContainer: { flex: 1 },
-  halfContainer: { flex: 0.8, marginBottom: 10 },
-  sectionTitle: { fontSize: 18, color: "#000", marginBottom: 5 },
-  conversationItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
-  },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: "#A78BFA",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 12,
-  },
-  avatarText: { color: "#fff", fontSize: 18, fontWeight: "bold" },
-  chatInfo: { flex: 1 },
-  chatName: { fontSize: 16, fontWeight: "600", color: "#111827" },
-  lastMessage: { fontSize: 14, color: "#6B7280" },
-  groupItem: {
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
-    backgroundColor: "#F9FAFB",
-    borderRadius: 8,
-    marginBottom: 5,
-  },
-  groupName: { fontSize: 16, fontWeight: "600", color: "#111827" },
-  lastMessageTime: { fontSize: 12, color: "#9CA3AF" },
-  modalContainer: { flex: 1, padding: 20, backgroundColor: "#fff" },
-  searchBar: {
-    borderWidth: 1,
-    borderColor: "#D1D5DB",
-    borderRadius: 10,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    fontSize: 16,
-    backgroundColor: "#F3F4F6",
-    marginBottom: 16,
-  },
-  userItem: {
-    paddingVertical: 14,
-    paddingHorizontal: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
-    backgroundColor: "#F9FAFB",
-    borderRadius: 8,
-    marginBottom: 8,
-  },
-  userText: { fontSize: 16, fontWeight: "500", color: "#111827" },
-  closeBtn: {
-    marginTop: 24,
-    alignSelf: "center",
-    backgroundColor: "#E5E7EB",
-    paddingHorizontal: 24,
-    paddingVertical: 10,
-    borderRadius: 8,
-  },
-  closeText: { fontSize: 16, color: "#1E40AF", fontWeight: "600" },
-  input: {
-    height: 50,
-    borderColor: "#b7b7b7",
-    borderWidth: 1,
-    color: "black",
-    paddingHorizontal: 16,
-    borderRadius: 10,
-    marginBottom: 16,
-    backgroundColor: "#F3F4F6",
-  },
-  createGroupButton: {
-    backgroundColor: "#10BE56",
-    paddingVertical: 12,
-    borderRadius: 10,
-    alignItems: "center",
-    marginTop: 16,
-  },
-  createGroupText: { color: "#fff", fontSize: 16, fontWeight: "600" },
-});
