@@ -5,6 +5,7 @@ import { Asset } from 'expo-asset';
 import * as FileSystem from 'expo-file-system';
 import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
+import { SvgUri } from "react-native-svg";
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
@@ -13,25 +14,38 @@ import {
   ScrollView,
   StyleSheet,
   TouchableOpacity,
-  View
+  View,
+  StatusBar,
+  I18nManager,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { Text } from '../../components/Text';
 import i18n from '../../i18n';
+import MotherImage from "../../../assets/images/motherImage.svg";
 import { setLanguage } from '../../redux/slice/languageSlice';
+import assets from "@/lib/utils/assets";
+import pregnancySymptoms from "../../../assets/pregnancy_symptoms_en_ur.json";
 
 const EXPO_PUBLIC_URL = process.env.EXPO_PUBLIC_URL;
+const { width } = Dimensions.get('window');
 
-export default function LoginScreen() {
+export default function SafeMumDashboard() {
   const router = useRouter();
   const dispatch = useDispatch();
   const { language, textDirection } = useSelector((state: any) => state.language);
   const isRTL = textDirection === 'rtl';
-  const [data, setData] = useState<any[] | null>(null);
+  const [data, setData] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
-const LOCAL_FILE_PATH = FileSystem.documentDirectory + 'app-data.json';
+  const LOCAL_FILE_PATH = FileSystem.documentDirectory + 'app-data.json';
+  const [userName, setUserName] = useState<string>(''); // State to store the user's name
 
-  // Safe navigation function
+  useEffect(() => {
+    if (I18nManager.isRTL !== isRTL) {
+      I18nManager.allowRTL(isRTL);
+      I18nManager.forceRTL(isRTL);
+    }
+  }, [isRTL]);
+
   const safeNavigateBack = useCallback(() => {
     try {
       if (router.canGoBack()) {
@@ -41,31 +55,31 @@ const LOCAL_FILE_PATH = FileSystem.documentDirectory + 'app-data.json';
       }
     } catch (error) {
       console.warn('Navigation error:', error);
-      // Ultimate fallback
       router.replace('/(signin)');
     }
   }, [router]);
 
   const safeNavigateNext = useCallback(() => {
     try {
-      router.push('/(tabs)/(home)/pregnancy-tracker');
+        console.log("current week", data?.currentWeek)
+router.push({
+  pathname: "/(tabs)/(home)/pregnancy-tracker",
+  params: { weekNumber: data?.currentWeek },
+});
     } catch (error) {
       console.warn('Navigation error:', error);
-      // You could show an alert or try alternative navigation
-      Alert.alert('Navigation Error', 'Unable to navigate to the next screen.');
+      Alert.alert('Navigation Error', 'Unable to navigate');
     }
   }, [router]);
 
-  // Change language handler
   const changeLanguage = async (lang: string) => {
-    dispatch(setLanguage(lang)); // Dispatch action to update language
+    dispatch(setLanguage(lang));
     i18n.locale = lang;
   };
 
   useEffect(() => {
     const init = async () => {
       try {
-        // Load local data for instant display
         const fileInfo = await FileSystem.getInfoAsync(LOCAL_FILE_PATH);
         if (fileInfo.exists) {
           await loadLocalData();
@@ -73,7 +87,6 @@ const LOCAL_FILE_PATH = FileSystem.documentDirectory + 'app-data.json';
           await copyAssetToFileSystem();
         }
 
-        // Check internet connection
         const netState = await NetInfo.fetch();
         if (netState.isConnected && netState.isInternetReachable) {
           const token = await SecureStore.getItemAsync('accessToken');
@@ -87,7 +100,7 @@ const LOCAL_FILE_PATH = FileSystem.documentDirectory + 'app-data.json';
         }
       } catch (error) {
         console.error('Error during initialization:', error);
-        Alert.alert('Error', 'Failed to initialize the app.');
+        Alert.alert('Error', 'Initialization failed');
       } finally {
         setLoading(false);
       }
@@ -96,7 +109,6 @@ const LOCAL_FILE_PATH = FileSystem.documentDirectory + 'app-data.json';
     init();
   }, []);
 
-  // Copy fallback data from assets to file system
   const copyAssetToFileSystem = async () => {
     try {
       const asset = Asset.fromModule(require('../../../assets/fallBackData.json'));
@@ -104,51 +116,65 @@ const LOCAL_FILE_PATH = FileSystem.documentDirectory + 'app-data.json';
       const sourceUri = asset.localUri || asset.uri;
       await FileSystem.copyAsync({ from: sourceUri, to: LOCAL_FILE_PATH });
       const content = await FileSystem.readAsStringAsync(LOCAL_FILE_PATH);
-      console.log('✅ Copied and loaded fallback from asset.');
       setData(JSON.parse(content));
     } catch (e) {
       console.log('⚠️ Failed to load fallback asset:', e);
     }
   };
 
-  // Load local data from file system
   const loadLocalData = async () => {
     try {
       const file = await FileSystem.readAsStringAsync(LOCAL_FILE_PATH);
       const parsed = JSON.parse(file);
-      console.log('✅ Loaded from local file.', parsed);
-
-      const normalizedData = Array.isArray(parsed)
-        ? parsed
-        : parsed.data || [];
-
-      setData(normalizedData);
+      setData(parsed);
     } catch (e) {
-      console.log('❌ No local file. Copying from fallback asset...');
-      Alert.alert('Error', 'Failed to load data from local file. Using fallback data.');
+      Alert.alert('Error', 'Failed to load local data');
       await copyAssetToFileSystem();
     }
   };
 
-  // Fetch data from the API and cache it locally
-  const fetchFromAPI = async () => {
+const fetchFromAPI = async () => {
     try {
       setLoading(true);
       const token = await SecureStore.getItemAsync('accessToken');
+      const storedUser = await SecureStore.getItemAsync('user');
+      const currentUser = JSON.parse(storedUser);
+      const senderId = currentUser.userId;
 
-      const res = await axios.get(`${EXPO_PUBLIC_URL}/content/get-all-content-item?Language=${language}`, {
-        headers: {
-          Accept: '*/*',
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      // API call to get user details
+      const response = await axios.get(
+        `${EXPO_PUBLIC_URL}/communication/get-user-by-id?Id=${senderId}`,
+        {
+          headers: {
+            Accept: '*/*',
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      // Extract the name from the response
+      const name = response.data?.name || "Unknown";
+      setUserName(name);  // Set the user's name in the state
+
+      // Fetch the dashboard content
+      const res = await axios.get(
+        `${EXPO_PUBLIC_URL}/content/dashboard-content?Id=${senderId}`,
+        {
+          headers: {
+            Accept: '*/*',
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       const apiData = res.data.data || res.data;
-      console.log('apiData', res.data);
       setData(apiData);
 
-      await FileSystem.writeAsStringAsync(LOCAL_FILE_PATH, JSON.stringify(apiData));
-      console.log('🌐 Data fetched from API and cached.');
+      // Save the fetched data to local storage
+      await FileSystem.writeAsStringAsync(
+        LOCAL_FILE_PATH,
+        JSON.stringify(apiData)
+      );
     } catch (err) {
       console.warn('⚠️ Failed to fetch from API, loading local data.', err.message);
       await loadLocalData();
@@ -160,17 +186,15 @@ const LOCAL_FILE_PATH = FileSystem.documentDirectory + 'app-data.json';
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: '#fff',
-      paddingHorizontal: 24,
-      paddingTop: 60,
-      direction: isRTL ? 'rtl' : 'ltr'
+      backgroundColor: '#F8FAFC',
     },
-    backButton: {
-      position: 'absolute',
-      top: 60,
-      left: isRTL ? undefined : 24,
-      right: isRTL ? 24 : undefined,
-      zIndex: 1,
+    header: {
+      backgroundColor: '#FFFFFF',
+      paddingTop: StatusBar.currentHeight ? StatusBar.currentHeight + 20 : 60,
+      paddingBottom: 20,
+      paddingHorizontal: 24,
+      borderBottomWidth: 1,
+      borderBottomColor: '#E2E8F0',
     },
     loadingContainer: {
       flex: 1,
@@ -178,153 +202,284 @@ const LOCAL_FILE_PATH = FileSystem.documentDirectory + 'app-data.json';
       alignItems: 'center',
     },
     loadingText: {
-      fontSize: 16,
-      color: '#6B7280',
+      fontSize: 18,
+      color: '#64748B',
+      marginTop: 16,
+      fontWeight: '500',
     },
-    noDataContainer: {
+    dashboardContent: {
       flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      paddingVertical: 40,
     },
-    noDataText: {
-      fontSize: 16,
-      color: '#6B7280',
-      textAlign: 'center',
+    scrollContainer: {
+      paddingHorizontal: 24,
+      paddingVertical: 24,
+      paddingBottom: 100,
     },
-    cardList: {
-      paddingTop: 80,
-      paddingBottom: 80,
-      backgroundColor: '#F9FAFB',
+    welcomeCard: {
+      backgroundColor: '#8B5CF6',
+      borderRadius: 20,
+      paddingHorizontal: 20,
+      paddingVertical: 5,
+      marginTop: 24,
+      marginBottom:10,
     },
-    card: {
-      backgroundColor: '#FFFFFF',
-      borderRadius: 16,
-      marginBottom: 20,
-      padding: 16,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.1,
-      shadowRadius: 6,
-      elevation: 4,
-    },
-    cardImage: {
-      width: '100%',
-      height: 160,
-      borderRadius: 12,
-      marginBottom: 12,
-    },
-    title: {
-      fontSize: 20,
+    welcomeTitle: {
+      fontSize: 24,
       fontWeight: '700',
-      color: '#111827',
-      marginBottom: 8,
-      textAlign: isRTL ? 'right' : 'left',
-    },
-    summary: {
-      fontSize: 14,
-      color: '#374151',
-      marginBottom: 10,
-      textAlign: isRTL ? 'right' : 'left',
-    },
-    subsummary: {
-      fontSize: 13,
-      color: '#6B7280',
-      marginBottom: 6,
-      textAlign: isRTL ? 'right' : 'left',
-    },
-    meta: {
-      fontSize: 12,
-      color: '#6B7280',
-      textAlign: isRTL ? 'right' : 'left',
-    },
-    tagsContainer: {
-      flexDirection: isRTL ? 'row-reverse' : 'row',
-      flexWrap: 'wrap',
-      gap: 8,
-      marginTop: 8,
-    },
-    tag: {
-      backgroundColor: '#E0E7FF',
-      paddingHorizontal: 10,
-      paddingVertical: 4,
-      borderRadius: 12,
-      marginRight: isRTL ? 0 : 6,
-      marginLeft: isRTL ? 6 : 0,
-      marginTop: 6,
-    },
-    nextButtonContainer: {
-      marginTop: 20,
-      alignItems: 'center',
-    },
-    button: {
-      backgroundColor: '#A78BFA',
-      paddingVertical: 12,
-      paddingHorizontal: 30,
-      borderRadius: 8,
-      alignItems: 'center',
-      justifyContent: 'center',
-      minWidth: 120,
-    },
-    buttonText: {
       color: '#FFFFFF',
-      fontSize: 16,
-      fontWeight: '600',
+      marginBottom: 8,
     },
+    welcomeSubtitle: {
+      fontSize: 16,
+      color: '#FFFFFF',
+      opacity: 0.9,
+    },
+   weekCard: {
+       flexDirection: "row",
+       backgroundColor: "#FFFFFF",
+       borderRadius: 20,
+       padding: 5,
+       borderWidth: 1.5,
+       borderColor: "#C7B7F5",
+       alignItems: "center",
+       marginBottom: 20,
+     },
+     weekInfo: {
+       marginLeft: 20,
+     },
+     weekTitle: {
+       fontSize: 30,
+       fontWeight: "700",
+       color: "#8B5CF6",
+       marginBottom: 6,
+     },
+     subText: {
+       fontSize: 20,
+       color: "#64748B",
+       marginBottom: 4,
+     },
+     timeText: {
+       fontSize: 40,
+       fontWeight: "700",
+       color: "#8B5CF6",
+     },
+     infoRow: {
+       flexDirection: "row",
+       justifyContent: "space-between",
+       marginBottom: 10,
+     },
+     infoBox: {
+       flex: 1,
+       backgroundColor: "#FFFFFF",
+       borderRadius: 16,
+       padding: 16,
+       alignItems: "center",
+       marginHorizontal: 4,
+       borderWidth: 1,
+       borderColor: "#C7B7F5",
+     },
+     infoIcon: {
+       width: 28,
+       height: 28,
+       marginBottom: 6,
+     },
+     infoText: {
+       fontSize: 16,
+       fontWeight: "700",
+       color: "#1E293B",
+     },
+     infoLabel: {
+       fontSize: 13,
+       color: "#64748B",
+       marginTop: 4,
+     },
+     symptomContainer: {
+       marginBottom: 20,
+     },
+     sectionTitle: {
+       fontSize: 18,
+       fontWeight: "700",
+       color: "#1E293B",
+       marginBottom: 12,
+     },
+     symptomBox: {
+       backgroundColor: "#C7B7F5",
+       borderWidth: 1,
+       borderColor: "#C7B7F5",
+       borderRadius: 20,
+       paddingVertical: 12,
+       paddingHorizontal: 16,
+       marginBottom: 10,
+     },
+     symptomText: {
+       fontSize: 15,
+       color: "#475569",
+     },
+     nextButtonContainer: {
+       padding: 20,
+       backgroundColor: "#F6F5FF",
+     },
+     nextButton: {
+       backgroundColor: "#7C3AED",
+       paddingVertical: 16,
+       borderRadius: 16,
+       alignItems: "center",
+     },
+     nextButtonText: {
+       color: "#FFFFFF",
+       fontSize: 18,
+       fontWeight: "700",
+     },
+ timeTextWeek:{
+     fontSize: 24,
+     fontWeight: "700",
+     color: "#7C3AED",},
+     actionContainer: {
+       flexDirection: "row",
+       backgroundColor: "#FEF2F2",
+       borderWidth: 1,
+       borderColor: "#FCA5A5",
+       borderRadius: 16,
+       padding: 16,
+       marginBottom: 10,
+       alignItems: "flex-start",
+     },
+     actionTitle: {
+       fontSize: 16,
+       fontWeight: "700",
+       color: "#B91C1C",
+       marginBottom: 10,
+     },
+     actionText: {
+       fontSize: 14,
+       color: "#1E293B",
+       lineHeight: 20,
+     },
+
   });
 
-  return (
-    <View style={styles.container}>
-      {/* Back Button */}
-      <TouchableOpacity style={styles.backButton} onPress={safeNavigateBack}>
-        <Ionicons 
-          name={isRTL ? "chevron-back" : "chevron-forward"} 
-          size={24} 
-          color="black" 
-        />
-      </TouchableOpacity>
+const getTrimester = (week: number, language: string): string => {
+  if (week >= 1 && week <= 12) {
+    return language === "ur" ? "پہلا " : "First";
+  } else if (week >= 13 && week <= 27) {
+    return language === "ur" ? "دوسرا " : "Second";
+  } else if (week >= 28 && week <= 40) {
+    return language === "ur" ? "تیسرا " : "Third";
+  } else {
+    return language === "ur" ? "غلط ہفتہ" : "Invalid Week";
+  }
+};
 
-      {/* Content List */}
-      {loading ? (
-        <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Loading...</Text>
-        </View>
-      ) : (
-        <ScrollView contentContainerStyle={styles.cardList}>
-          {Array.isArray(data) && data.length > 0 ? (
-            data.map((item, index) => (
-              <View key={item.id || index} style={styles.card}>
-                {item.imageUrl && (
-                  <Image source={{ uri: item.imageUrl }} style={styles.cardImage} resizeMode="cover" />
-                )}
-                <Text style={styles.title}>{item.title}</Text>
-                <Text style={styles.summary}>{item.summary}</Text>
-                <Text style={styles.subsummary}>{item.text}</Text>
-                <Text style={styles.meta}>🎯 {item.audience}</Text>
-                <View style={styles.tagsContainer}>
-                  {item.tags?.map((tag, idx) => (
-                    <View key={idx} style={styles.tag}>
-                      <Text style={styles.tagText}>#{tag}</Text>
-                    </View>
-                  ))}
+let weekKey = "week_1";
+let symptoms: string[] = [];
+
+if (data?.currentWeek) {
+  weekKey = `week_${data.currentWeek}`;
+  symptoms =
+    pregnancySymptoms.pregnancy_symptoms[weekKey]?.[
+      language === "ur" ? "urdu" : "english"
+    ] || [];
+}
+console.log("symptopms",symptoms )
+
+
+return (
+  <View style={styles.container}>
+    <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+
+    {loading ? (
+      <View style={styles.loadingContainer}>
+        <Text style={styles.loadingText}>Loading...</Text>
+      </View>
+    ) : data ? (
+      <View style={styles.dashboardContent}>
+        <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+          <View style={styles.scrollContainer}>
+            {/* Welcome Card */}
+            <View style={styles.welcomeCard}>
+              <Text style={styles.welcomeTitle}>
+                {i18n.t("welcome", )} {userName}
+              </Text>
+          </View>
+
+            {data?.recommendedActions ? (
+                        <View style={styles.actionContainer}>
+                          <Ionicons name="alert-circle" size={22} color="#DC2626" style={{ marginRight: 8 }} />
+                          <View style={{ flex: 1 }}>
+                            <Text style={styles.actionTitle}>
+                              {language === "ur" ? "اہم ہدایت" : "Important Action"}
+                            </Text>
+                            <Text style={styles.actionText}>{data.recommendedActions}</Text>
+                          </View>
+                        </View>
+                      ) : null}
+
+            {/* Week Card */}
+            <View style={styles.weekCard}>
+              <MotherImage width={150} height={200} />
+              <View style={styles.weekInfo}>
+<Text style={styles.weekTitle}>{i18n.t("week")} {data.currentWeek}</Text>
+<Text style={styles.subText}>{i18n.t("timeToBaby")}</Text>
+                <View style={{flexDirection:"row", alignItems:"center"}}>
+                <Text style={styles.timeText}>{40-data.currentWeek} </Text>
+<Text style={styles.timeTextWeek}>{i18n.t("weeks")}</Text>
                 </View>
               </View>
-            ))
-          ) : (
-            <View style={styles.noDataContainer}>
-              <Text style={styles.noDataText}>No data available.</Text>
             </View>
-          )}
 
-          <View style={styles.nextButtonContainer}>
-            <TouchableOpacity style={styles.button} onPress={safeNavigateNext}>
-              <Text style={styles.buttonText}>Next</Text>
-            </TouchableOpacity>
+         <View style={styles.infoRow}>
+           <View style={styles.infoBox}>
+             <Image source={assets.bg} style={styles.infoIcon} resizeMode="contain" />
+             <Text style={styles.infoText}>{data.bloodGroup}</Text>
+             <Text style={styles.infoLabel}>{i18n.t("bloodGroup")}</Text>
+           </View>
+
+           <View style={styles.infoBox}>
+             <Image source={assets.water} style={styles.infoIcon} resizeMode="contain" />
+             <Text style={styles.infoText}>{data.amountInMl}</Text>
+             <Text style={styles.infoLabel}>{i18n.t("waterInLtr")}</Text>
+           </View>
+
+           <View style={styles.infoBox}>
+             <Image source={assets.trimester} style={styles.infoIcon} resizeMode="contain" />
+             <Text style={styles.infoText}>{getTrimester(data.currentWeek, language)}</Text>
+             <Text style={styles.infoLabel}>{i18n.t("trimester")}</Text>
+           </View>
+         </View>
+
+
+            {/* Symptoms */}
+            <View style={styles.symptomContainer}>
+<Text style={styles.sectionTitle}>{i18n.t("symptoms")}</Text>
+             {symptoms.length > 0 ? (
+                            symptoms.map((symptom: string, index: number) => (
+                              <View key={index} style={styles.symptomBox}>
+                                              <Text style={styles.symptomText}>{symptom}</Text>
+                                            </View>
+                            ))
+                          ) : (
+                            <Text style={styles.noSymptomsText}>
+                              {language === "ur" ? "کوئی علامات دستیاب نہیں" : "No symptoms available"}
+                            </Text>
+                          )}
+            </View>
+
+
+            {/* Continue Button */}
+            <View style={styles.nextButtonContainer}>
+              <TouchableOpacity style={styles.nextButton} onPress={safeNavigateNext}>
+                <Text style={styles.nextButtonText}>{i18n.t("continue")}</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </ScrollView>
-      )}
-    </View>
-  );
-}
+      </View>
+    ) : (
+      <View>
+        <Text>No Data Available</Text>
+      </View>
+    )}
+  </View>
+);
 
-const screenWidth = Dimensions.get('window').width;
+}

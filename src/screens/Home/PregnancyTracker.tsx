@@ -5,31 +5,113 @@ import NetInfo from '@react-native-community/netinfo';
 import axios from 'axios';
 import { Asset } from 'expo-asset';
 import * as FileSystem from 'expo-file-system';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import * as Updates from 'expo-updates';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   Dimensions,
-  ScrollView,
   StyleSheet,
   TouchableOpacity,
   View,
+  I18nManager,
+  Animated,
+  ScrollView,
+  PanResponder,
 } from 'react-native';
 import { useSelector } from 'react-redux';
+import fallbackData from '../../../assets/fallBackData.json';
 
 const EXPO_PUBLIC_URL = process.env.EXPO_PUBLIC_URL;
 const LOCAL_FILE_PATH = FileSystem.documentDirectory + 'pregnancy-track.json';
+
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 export default function HomeScreen() {
   const router = useRouter();
   const { language, textDirection } = useSelector((state: any) => state.language);
   const isRTL = textDirection === 'rtl';
   const [data, setData] = useState<any | null>(null);
+  const params = useLocalSearchParams();
+  const weekNumber = params.weekNumber;
+  console.log("weekNumber",weekNumber);
+
+  // Animation refs
+  const animatedValues = useRef<Animated.Value[]>([]).current;
+  const headerAnimation = useRef(new Animated.Value(0)).current;
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const pulseAnimation = useRef(new Animated.Value(1)).current;
+  const floatingElements = useRef([...Array(6)].map(() => new Animated.Value(0))).current;
+
+  // Floating background elements animation
+  useEffect(() => {
+    const animateFloatingElements = () => {
+      floatingElements.forEach((element, index) => {
+        Animated.loop(
+          Animated.sequence([
+            Animated.timing(element, {
+              toValue: 1,
+              duration: 3000 + (index * 500),
+              useNativeDriver: true,
+            }),
+            Animated.timing(element, {
+              toValue: 0,
+              duration: 3000 + (index * 500),
+              useNativeDriver: true,
+            }),
+          ])
+        ).start();
+      });
+    };
+
+    animateFloatingElements();
+  }, []);
+
+  // Header entrance animation
+  useEffect(() => {
+    Animated.sequence([
+      Animated.timing(headerAnimation, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Pulse animation for timeline dots
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnimation, {
+          toValue: 1.2,
+          duration: 1500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnimation, {
+          toValue: 1,
+          duration: 1500,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  }, []);
+
+  const animateCards = (count: number) => {
+    animatedValues.length = count;
+    animatedValues.forEach((val, index) => {
+      if (!val) {
+        animatedValues[index] = new Animated.Value(0);
+      }
+      Animated.spring(animatedValues[index], {
+        toValue: 1,
+        delay: index * 150,
+        tension: 100,
+        friction: 8,
+        useNativeDriver: true,
+      }).start();
+    });
+  };
 
   const changeLanguage = async (lang: string) => {
     i18n.locale = lang;
-    setLocale(lang);
     const rtl = lang === 'ur';
     if (I18nManager.isRTL !== rtl) {
       I18nManager.forceRTL(rtl);
@@ -45,7 +127,6 @@ export default function HomeScreen() {
       const sourceUri = asset.localUri || asset.uri;
       await FileSystem.copyAsync({ from: sourceUri, to: LOCAL_FILE_PATH });
       const content = await FileSystem.readAsStringAsync(LOCAL_FILE_PATH);
-      console.log('✅ Copied and loaded fallback from asset.');
       setData(JSON.parse(content));
     } catch (e) {
       console.log('⚠️ Failed to load fallback asset:', e);
@@ -56,11 +137,8 @@ export default function HomeScreen() {
     try {
       const file = await FileSystem.readAsStringAsync(LOCAL_FILE_PATH);
       const parsed = JSON.parse(file);
-      console.log('✅ Loaded from local file.', parsed);
-
       setData(parsed);
     } catch (e) {
-      console.log('❌ No local file. Copying from fallback asset...');
       await copyAssetToFileSystem();
     }
   };
@@ -68,9 +146,8 @@ export default function HomeScreen() {
   const fetchFromAPI = async () => {
     try {
       const token = await SecureStore.getItemAsync("accessToken");
-
       const response = await axios.get(
-        `${process.env.EXPO_PUBLIC_URL}/pregnancy-tracker/weekly-pregnancy-profile`,
+        `${EXPO_PUBLIC_URL}/pregnancy-tracker/weekly-pregnancy-profile?Language=${language}`,
         {
           headers: {
             'Accept': '*/*',
@@ -78,14 +155,10 @@ export default function HomeScreen() {
           },
         }
       );
-
       const apiData = response.data.data || response.data;
       setData(apiData);
-
       await FileSystem.writeAsStringAsync(LOCAL_FILE_PATH, JSON.stringify(apiData));
-      console.log('🌐 Data fetched from API and cached.');
     } catch (err) {
-      console.error('⚠️ Error fetching from API:', err.response?.data || err.message);
       await loadLocalData();
     }
   };
@@ -98,161 +171,664 @@ export default function HomeScreen() {
       } else {
         await copyAssetToFileSystem();
       }
-
       const netState = await NetInfo.fetch();
       if (netState.isConnected && netState.isInternetReachable) {
         const token = await SecureStore.getItemAsync("accessToken");
-
         if (token) {
-          await fetchFromAPI(); // Only fetch if authenticated
+          await fetchFromAPI();
         }
-      } else {
-        console.log("📴 Offline mode: showing cached data.");
       }
     };
-
     init();
   }, []);
 
-  // Update renderCard to handle RTL
-  const renderCard = (title: string, content: string, icon: string) => (
-    <View style={styles.card}>
-      <Ionicons name={icon} size={32} color="#A78BFA" style={styles.cardIcon} />
-      <Text style={[styles.cardTitle, { textAlign: isRTL ? 'right' : 'left' }]}>
-        {title}
-      </Text>
-      <Text style={[styles.cardContent, { textAlign: isRTL ? 'right' : 'left' }]}>
-        {content}
-      </Text>
-    </View>
-  );
+
+  // 🍼 Determine baby size based on week ranges
+  const currentWeek = Number(params?.weekNumber || 1);
+
+  const babySizeRanges = [
+    { range: [1, 3], size: "Poppy Seed", length: "0.1 cm", weight: "< 1g" },
+    { range: [4, 7], size: "Blueberry", length: "0.5 – 1.2 cm", weight: "1g" },
+    { range: [8, 11], size: "Lime", length: "1.6 – 4.5 cm", weight: "4 – 10g" },
+    { range: [12, 15], size: "Plum", length: "5 – 10 cm", weight: "20 – 70g" },
+    { range: [16, 19], size: "Avocado", length: "11 – 15 cm", weight: "100 – 200g" },
+    { range: [20, 23], size: "Banana", length: "25 – 28 cm", weight: "300 – 500g" },
+    { range: [24, 27], size: "Corn", length: "30 – 34 cm", weight: "600 – 900g" },
+    { range: [28, 31], size: "Eggplant", length: "35 – 39 cm", weight: "1.1 – 1.5 kg" },
+    { range: [32, 35], size: "Squash", length: "40 – 45 cm", weight: "1.8 – 2.4 kg" },
+    { range: [36, 39], size: "Papaya", length: "46 – 49 cm", weight: "2.5 – 3.1 kg" },
+    { range: [40, 42], size: "Watermelon", length: "50 – 52 cm", weight: "3.3 – 3.8 kg" },
+  ];
+
+  // Find the correct size based on current week range
+  const babySize =
+    babySizeRanges.find(
+      (b) => currentWeek >= b.range[0] && currentWeek <= b.range[1]
+    ) || babySizeRanges[babySizeRanges.length - 1];
+
+
+  const getCardStyle = (type: string) => {
+    const cardStyles = {
+      babyDevelopment: {
+        backgroundColor: '#FFE5F1',
+        iconColor: '#FF69B4',
+        gradient: ['#FFE5F1', '#FFD1E3']
+      },
+      dangerSigns: {
+        backgroundColor: '#FFE5E5',
+        iconColor: '#FF4757',
+        gradient: ['#FFE5E5', '#FFD1D1']
+      },
+      motherChanges: {
+        backgroundColor: '#E8F4FD',
+        iconColor: '#4A90E2',
+        gradient: ['#E8F4FD', '#D1E7FC']
+      },
+      nutritionTips: {
+        backgroundColor: '#E8F5E8',
+        iconColor: '#2ECC71',
+        gradient: ['#E8F5E8', '#D1F2D1']
+      },
+      recommendedActions: {
+        backgroundColor: '#FFF4E6',
+        iconColor: '#F39C12',
+        gradient: ['#FFF4E6', '#FFECD1']
+      },
+    };
+    return cardStyles[type] || cardStyles.babyDevelopment;
+  };
+
+  const renderFloatingElements = () => {
+    return floatingElements.map((element, index) => {
+      const translateY = element.interpolate({
+        inputRange: [0, 1],
+        outputRange: [0, -20],
+      });
+
+      const opacity = element.interpolate({
+        inputRange: [0, 0.5, 1],
+        outputRange: [0.3, 0.8, 0.3],
+      });
+
+      return (
+        <Animated.View
+          key={index}
+          style={[
+            styles.floatingElement,
+            {
+              left: `${(index * 15) + 10}%`,
+              top: `${(index * 12) + 20}%`,
+              transform: [{ translateY }],
+              opacity,
+            },
+          ]}
+        >
+          <Ionicons
+            name="heart"
+            size={12 + (index % 3) * 4}
+            color="rgba(124, 58, 237, 0.2)"
+          />
+        </Animated.View>
+      );
+    });
+  };
+
+  const renderCard = (title: string, content: string, icon: string, type: string, index: number) => {
+    if (!animatedValues[index]) {
+      animatedValues[index] = new Animated.Value(0);
+    }
+    const cardStyle = getCardStyle(type);
+
+    const translateY = animatedValues[index].interpolate({
+      inputRange: [0, 1],
+      outputRange: [80, 0],
+    });
+
+    const opacity = animatedValues[index].interpolate({
+      inputRange: [0, 1],
+      outputRange: [0, 1],
+    });
+
+    const scale = animatedValues[index].interpolate({
+      inputRange: [0, 1],
+      outputRange: [0.8, 1],
+    });
+
+    const rotateY = animatedValues[index].interpolate({
+      inputRange: [0, 1],
+      outputRange: ['15deg', '0deg'],
+    });
+
+    const isLeft = index % 2 === 0;
+
+    // Create pan responder for interactive cards
+    const panResponder = PanResponder.create({
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderGrant: () => {
+        Animated.spring(animatedValues[index], {
+          toValue: 0.95,
+          useNativeDriver: true,
+        }).start();
+      },
+      onPanResponderRelease: () => {
+        Animated.spring(animatedValues[index], {
+          toValue: 1,
+          useNativeDriver: true,
+        }).start();
+      },
+    });
+
+    return (
+      <View style={styles.timelineRow} key={index}>
+        {/* Left side */}
+        {isLeft && (
+          <Animated.View
+            {...panResponder.panHandlers}
+            style={[
+              styles.card,
+              {
+                backgroundColor: cardStyle.backgroundColor,
+                transform: [{ translateY }, { scale }, { rotateY }],
+                opacity,
+                alignSelf: "flex-end",
+              },
+            ]}
+          >
+            <View style={styles.cardGlow} />
+            <View style={styles.cardHeader}>
+              <Animated.View
+                style={[
+                  styles.iconContainer,
+                  {
+                    backgroundColor: cardStyle.iconColor + "20",
+                    transform: [{ scale: pulseAnimation }]
+                  }
+                ]}
+              >
+                <Ionicons name={icon} size={28} color={cardStyle.iconColor} />
+              </Animated.View>
+              <Text style={[styles.cardTitle, { textAlign: isRTL ? "right" : "left" }]}>
+                {title}
+              </Text>
+            </View>
+            <Text style={[styles.cardContent, { textAlign: isRTL ? "right" : "left" }]}>
+              {content}
+            </Text>
+            <View style={[styles.cardAccent, { backgroundColor: cardStyle.iconColor }]} />
+          </Animated.View>
+        )}
+
+        {/* Enhanced Timeline Dot */}
+        <View style={styles.timelineDotContainer}>
+          <Animated.View
+            style={[
+              styles.timelineDot,
+              { transform: [{ scale: pulseAnimation }] }
+            ]}
+          />
+          <View style={styles.timelineLine} />
+          <Animated.View style={[styles.timelineDotGlow, { opacity: pulseAnimation }]} />
+        </View>
+
+        {/* Right side */}
+        {!isLeft && (
+          <Animated.View
+            {...panResponder.panHandlers}
+            style={[
+              styles.card,
+              {
+                backgroundColor: cardStyle.backgroundColor,
+                transform: [{ translateY }, { scale }, { rotateY }],
+                opacity,
+                alignSelf: "flex-start",
+              },
+            ]}
+          >
+            <View style={styles.cardGlow} />
+            <View style={styles.cardHeader}>
+              <Animated.View
+                style={[
+                  styles.iconContainer,
+                  {
+                    backgroundColor: cardStyle.iconColor + "20",
+                    transform: [{ scale: pulseAnimation }]
+                  }
+                ]}
+              >
+                <Ionicons name={icon} size={28} color={cardStyle.iconColor} />
+              </Animated.View>
+              <Text style={[styles.cardTitle, { textAlign: isRTL ? "right" : "left" }]}>
+                {title}
+              </Text>
+            </View>
+            <Text style={[styles.cardContent, { textAlign: isRTL ? "right" : "left" }]}>
+              {content}
+            </Text>
+            <View style={[styles.cardAccent, { backgroundColor: cardStyle.iconColor }]} />
+          </Animated.View>
+        )}
+      </View>
+    );
+  };
+
+  const cards = data
+    ? [
+        {
+                title: i18n.t('babySize') || 'Baby Size',
+                content: `In week ${currentWeek}, your baby is about the size of a ${babySize.size}.
+Length: ${babySize.length}
+Weight: ${babySize.weight}`,
+                icon: 'body-outline',
+                type: 'babySize',
+              },
+        { title: i18n.t('babyDevelopment'), content: data.babyDevelopment, icon: 'happy-outline', type: 'babyDevelopment' },
+        { title: i18n.t('dangerSigns'), content: data.dangerSigns, icon: 'alert-circle-outline', type: 'dangerSigns' },
+        { title: i18n.t('motherChanges'), content: data.motherChanges, icon: 'female-outline', type: 'motherChanges' },
+        { title: i18n.t('nutritionTips'), content: data.nutritionTips, icon: 'nutrition-outline', type: 'nutritionTips' },
+        { title: i18n.t('recommendedActions'), content: data.recommendedActions, icon: 'checkmark-circle-outline', type: 'recommendedActions' },
+      ]
+    : [];
+
+  useEffect(() => {
+    if (cards.length > 0) {
+      animateCards(cards.length);
+    }
+  }, [cards.length]);
+
+  // Parallax effect for header
+  const headerTranslateY = scrollY.interpolate({
+    inputRange: [0, 200],
+    outputRange: [0, -50],
+    extrapolate: 'clamp',
+  });
+
+  const headerOpacity = scrollY.interpolate({
+    inputRange: [0, 200],
+    outputRange: [1, 0.8],
+    extrapolate: 'clamp',
+  });
 
   return (
-    <View style={[styles.container, { direction: isRTL ? 'rtl' : 'ltr' }]}>
-      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-        <Ionicons 
-          name={isRTL ? "chevron-back" : "chevron-forward"} 
-          size={24} 
-          color="black" 
-        />
-      </TouchableOpacity>
+    <View style={styles.container}>
+      {/* Floating Background Elements */}
+      {renderFloatingElements()}
 
-      <ScrollView contentContainerStyle={[
-        styles.cardList,
-        { alignItems: isRTL ? 'flex-end' : 'flex-start' }
-      ]}>
-        {data ? (
-          <>
-            {renderCard(
-              i18n.t('babyDevelopment'), 
-              data.babyDevelopment, 
-              'person'
-            )}
-            {renderCard(
-              i18n.t('dangerSigns'), 
-              data.dangerSigns, 
-              'warning'
-            )}
-            {renderCard(
-              i18n.t('motherChanges'), 
-              data.motherChanges, 
-              'woman'
-            )}
-            {renderCard(
-              i18n.t('nutritionTips'), 
-              data.nutritionTips, 
-              'leaf'
-            )}
-            {renderCard(
-              i18n.t('recommendedActions'), 
-              data.recommendedActions, 
-              'checkmark-circle'
-            )}
-          </>
-        ) : (
-          <Text style={{ textAlign: isRTL ? 'right' : 'left' }}>
-            {i18n.t('loadingData')}
-          </Text>
-        )}
-      </ScrollView>
-
-      <View style={styles.nextButtonContainer}>
-        <TouchableOpacity 
-          style={styles.button} 
-          onPress={() => router.push("/(tabs)/(home)/nutrition-tracking")}
+      {/* Enhanced Header with Parallax */}
+      <Animated.View
+        style={[
+          styles.header,
+          {
+            transform: [
+              { translateY: headerAnimation.interpolate({
+                inputRange: [0, 1],
+                outputRange: [-100, 0],
+              })},
+              { translateY: headerTranslateY }
+            ],
+            opacity: headerOpacity,
+          }
+        ]}
+      >
+        <View style={styles.headerGradientOverlay} />
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.push("/(tabs)/(home)")}
+          activeOpacity={0.8}
         >
-          <Text style={styles.buttonText}>
-            {i18n.t('trackNutrition')}
-          </Text>
+          <Ionicons name={isRTL ? "chevron-forward" : "chevron-back"} size={24} color="white" />
         </TouchableOpacity>
-      </View>
+
+        <Animated.View
+          style={[
+            styles.headerContent,
+            {
+              transform: [{
+                scale: headerAnimation.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.8, 1],
+                })
+              }]
+            }
+          ]}
+        >
+          <View style={styles.weekBadge}>
+            <Text style={styles.headerTitle}>Pregnancy Tracker</Text>
+          </View>
+          <Text style={styles.headerSubtitle}>Week {weekNumber || '...'}</Text>
+        </Animated.View>
+
+        {/* Header decorative elements */}
+        <View style={styles.headerDecoration1} />
+        <View style={styles.headerDecoration2} />
+      </Animated.View>
+
+      {/* Enhanced Animated Zig-Zag Cards with Parallax Scroll */}
+      <Animated.ScrollView
+        contentContainerStyle={styles.cardList}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: true }
+        )}
+        scrollEventThrottle={16}
+        showsVerticalScrollIndicator={false}
+      >
+        {cards.map((c, idx) =>
+          renderCard(c.title, c.content, c.icon, c.type, idx)
+        )}
+      </Animated.ScrollView>
+
+      {/* Enhanced Bottom Button */}
+      <Animated.View
+        style={[
+          styles.nextButtonContainer,
+          {
+            transform: [{
+              translateY: scrollY.interpolate({
+                inputRange: [0, 100],
+                outputRange: [0, 100],
+                extrapolate: 'clamp',
+              })
+            }]
+          }
+        ]}
+      >
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => router.push("/(tabs)/(home)/nutrition-tracking")}
+          activeOpacity={0.9}
+        >
+          <Animated.View style={[styles.buttonGlow, { opacity: pulseAnimation }]} />
+          <Ionicons name="leaf-outline" size={20} color="white" style={styles.buttonIcon} />
+          <Text style={styles.buttonText}>{i18n.t('trackNutrition')}</Text>
+          <Ionicons name="arrow-forward" size={16} color="white" style={styles.buttonArrow} />
+        </TouchableOpacity>
+      </Animated.View>
     </View>
   );
 }
 
-const screenWidth = Dimensions.get('window').width;
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F6F6FF',
-    paddingHorizontal: 24,
-    paddingTop: 60,
+    backgroundColor: '#FFF8F8',
   },
+
+  // Floating elements
+  floatingElement: {
+    position: 'absolute',
+    zIndex: 1,
+  },
+
+  // Enhanced Header
+  header: {
+    paddingTop: 60,
+    paddingBottom: 30,
+    paddingHorizontal: 24,
+    backgroundColor: '#7C3AED',
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    overflow: 'hidden',
+    position: 'relative',
+    zIndex: 10,
+  },
+
+  headerGradientOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(124, 58, 237, 0.1)',
+  },
+
+  headerDecoration1: {
+    position: 'absolute',
+    top: -50,
+    right: -50,
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  },
+
+  headerDecoration2: {
+    position: 'absolute',
+    bottom: -30,
+    left: -30,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+  },
+
   backButton: {
     position: 'absolute',
     top: 60,
-    left: undefined ? undefined : 24,
-    right: 24,
-  },
-  cardList: {
-    paddingBottom: 80,
-    backgroundColor: '#F9FAFB',
-    paddingHorizontal: 20,
-  },
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    marginBottom: 20,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 5,
-    width: '100%',
-  },
-  cardIcon: {
-    marginBottom: 16,
-    alignSelf: undefined ? 'flex-end' : 'flex-start',
-  },
-  cardTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 10,
-  },
-  cardContent: {
-    fontSize: 16,
-    color: '#555',
-    lineHeight: 22,
-  },
-  nextButtonContainer: {
-    marginTop: 20,
-    alignItems: 'center',
-  },
-  button: {
-    backgroundColor: '#A78BFA',
-    paddingVertical: 12,
-    paddingHorizontal: 30,
-    borderRadius: 8,
+    left: 24,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     alignItems: 'center',
     justifyContent: 'center',
-    minWidth: 120,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
-  buttonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
+
+  headerContent: {
+    alignItems: 'center',
+    marginTop: 20,
+    zIndex: 2,
+  },
+
+  weekBadge: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginBottom: 10,
+  },
+
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: 'white',
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
+  },
+
+  headerSubtitle: {
+    fontSize: 18,
+    color: 'rgba(255,255,255,0.9)',
     fontWeight: '600',
   },
+
+  // Enhanced Cards
+  cardList: {
+    padding: 20,
+    paddingBottom: 140,
+    paddingTop: 40,
+  },
+
+  timelineRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 25,
+    position: 'relative',
+  },
+
+  timelineDotContainer: {
+    width: 50,
+    alignItems: "center",
+    position: 'relative',
+  },
+
+  timelineDot: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: "#7C3AED",
+    marginBottom: 4,
+    borderWidth: 3,
+    borderColor: '#FFF',
+    shadowColor: '#7C3AED',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.5,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+
+  timelineDotGlow: {
+    position: 'absolute',
+    top: -5,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#7C3AED',
+    opacity: 0.3,
+  },
+
+  timelineLine: {
+    flex: 1,
+    width: 3,
+    backgroundColor: "#E0E0E0",
+    borderRadius: 1.5,
+  },
+
+  card: {
+    width: screenWidth * 0.75,
+    borderRadius: 25,
+    padding: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 16,
+    elevation: 12,
+    position: 'relative',
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.5)',
+  },
+
+  cardGlow: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 40,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    borderRadius: 25,
+  },
+
+  cardAccent: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    width: 4,
+    height: '100%',
+    borderTopRightRadius: 25,
+    borderBottomRightRadius: 25,
+  },
+
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+
+  iconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.5)',
+  },
+
+  cardTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#2C3E50',
+    flex: 1,
+    lineHeight: 24,
+  },
+
+  cardContent: {
+    fontSize: 16,
+    color: '#5A6C7D',
+    lineHeight: 26,
+    fontWeight: '400',
+  },
+
+  // Enhanced Bottom Button
+  nextButtonContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'white',
+    paddingVertical: 24,
+    paddingHorizontal: 20,
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 10,
+  },
+
+  button: {
+    backgroundColor: '#7C3AED',
+    borderRadius: 28,
+    flexDirection: 'row',
+    paddingVertical: 18,
+    paddingHorizontal: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+    overflow: 'hidden',
+    shadowColor: '#7C3AED',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+
+  buttonGlow: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 28,
+  },
+
+  buttonIcon: {
+    marginRight: 10,
+  },
+
+  buttonText: {
+    color: 'white',
+    fontSize: 17,
+    fontWeight: '600',
+    letterSpacing: 0.5,
+    flex: 1,
+    textAlign: 'center',
+  },
+
+  buttonArrow: {
+    marginLeft: 8,
+    opacity: 0.8,
+  },
+  babySize: {
+    backgroundColor: '#FFF9E6',
+    iconColor: '#F4B400',
+    gradient: ['#FFF9E6', '#FFEFC1']
+  },
+
 });

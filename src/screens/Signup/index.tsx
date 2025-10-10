@@ -20,7 +20,6 @@ import {
 } from 'expo-speech-recognition';
 
 const screenWidth = Dimensions.get('window').width;
-const isRTL = false; // I18nManager.isRTL;
 
 // ===== Voice command dictionaries =====
 const EN_CMDS = {
@@ -54,6 +53,7 @@ const CreateAccountScreen = () => {
 
   const { language, textDirection } = useSelector((state: any) => state.language);
   const locale = language; // keep local alias
+  const isRTL = textDirection === 'rtl'; // Use Redux state instead of hardcoded false
 
   // ===== Voice state =====
   const [recognizing, setRecognizing] = useState(false);
@@ -92,120 +92,118 @@ const CreateAccountScreen = () => {
     return reachable;
   }, []);
 
-
-
 const handleSignUp = useCallback(async () => {
-  if (!isFieldsComplete) {
-    Alert.alert('Error', 'All fields are required.');
-    speak(voiceMsgIncomplete);
-    return;
-  }
-
-  // Normalize inputs
-  const clean = {
-    firstName: firstName.trim(),
-    lastName:  lastName.trim(),
-    email:     email.trim().toLowerCase(),
-    password, // keep exact
-    userType:  isAdmin
-      ? userType.trim().charAt(0).toUpperCase() + userType.trim().slice(1).toLowerCase() // Capital Case
-      : 'User',
-    role:      isAdmin ? 'Admin' : 'User',
-  };
-
-  const payload = {
-    email: clean.email,
-    password: clean.password,
-    username: `${clean.firstName}${clean.lastName}`.replace(/\s+/g, ''),
-    firstName: clean.firstName,
-    lastName: clean.lastName,
-    userType: clean.userType,
-    role: clean.role,
-  };
-
-  try {
-    // 1) REGISTER
-    const reg = await axios.post(`${EXPO_PUBLIC_URL}/users/register`, payload, {
-      headers: { 'Content-Type': 'application/json', Accept: '*/*' },
-      validateStatus: () => true,
-    });
-    console.log('REGISTER status:', reg.status, 'data:', reg.data);
-
-    const regSuccess =
-      (reg.status === 200 || reg.status === 201) &&
-      (reg.data?.success === true || reg.data?.id || reg.data?._id);
-
-    if (!regSuccess) {
-      const serverMsg = extractApiError(reg.data.errorMessage || reg.data.errorMessage.key);
-      const msg = buildStatusAwareMessage(reg.status, serverMsg, locale);
-      Alert.alert('Register Failed', msg);
-      speak(msg);
-      return;
-    }
-
-    Alert.alert(
-      'Success',
-      locale === 'ur' ? 'اکاؤنٹ کامیابی سے بن گیا!' : 'Account created successfully!'
-    );
-
-    // small pause to avoid any eventual consistency issues
-    await new Promise((r) => setTimeout(r, 250));
-
-    // 2) LOGIN — email first
-    let loginResp = await axios.post(
-      `${EXPO_PUBLIC_URL}/users/login`,
-      { email: clean.email, password: clean.password /*, role: clean.role */ },
-      { headers: { 'Content-Type': 'application/json', Accept: '*/*' }, validateStatus: () => true }
-    );
-    console.log('LOGIN(email) status:', loginResp.status, 'data:', loginResp.data);
-
-    // Fallback: username login if email flow failed
-    if (!(loginResp.status === 200 && loginResp.data?.success)) {
-      const fb = await axios.post(
-        `${EXPO_PUBLIC_URL}/users/login`,
-        { username: payload.username, password: clean.password /*, role: clean.role */ },
-        { headers: { 'Content-Type': 'application/json', Accept: '*/*' }, validateStatus: () => true }
-      );
-      console.log('LOGIN(username) status:', fb.status, 'data:', fb.data);
-      if (fb.status === 200 && fb.data?.success) loginResp = fb;
-    }
-
-    if (loginResp.status === 401 || loginResp.status === 403) {
-      const serverMsg = extractApiError(loginResp.data);
-      const msg = serverMsg || (locale === 'ur' ? 'براہِ مہربانی پہلے تصدیق کریں۔' : 'Please verify your email/OTP first.');
-      Alert.alert('Verification Required', msg);
-      speak(msg);
-      return;
-    }
-
-    if (!(loginResp.status === 200 && loginResp.data?.success)) {
-      const serverMsg = extractApiError(loginResp.data);
-      const msg = buildStatusAwareMessage(loginResp.status, serverMsg, locale);
-      Alert.alert('Login Failed', msg);
-      speak(msg);
-      return;
-    }
-
-    // 3) SAVE + NAVIGATE
-    await SecureStore.setItemAsync('accessToken', loginResp.data.token);
-    await SecureStore.setItemAsync('user', JSON.stringify(loginResp.data));
-    if (loginResp.data.refreshToken) {
-      await SecureStore.setItemAsync('refreshToken', loginResp.data.refreshToken);
-    }
-
-    if (loginResp.data.role === 'Admin') {
-      router.push('/(admin-tabs)/(admin-home)');
-    } else {
+//   if (!isFieldsComplete) {
+//     Alert.alert('Error', 'All fields are required.');
+//     speak(voiceMsgIncomplete);
+//     return;
+//   }
+//
+//   // Normalize inputs
+//   const clean = {
+//     firstName: firstName.trim(),
+//     lastName:  lastName.trim(),
+//     email:     email.trim().toLowerCase(),
+//     password, // keep exact
+//     userType:  isAdmin
+//       ? userType.trim().charAt(0).toUpperCase() + userType.trim().slice(1).toLowerCase() // Capital Case
+//       : 'User',
+//     role:      isAdmin ? 'Admin' : 'User',
+//   };
+//
+//   const payload = {
+//     email: clean.email,
+//     password: clean.password,
+//     username: `${clean.firstName}${clean.lastName}`.replace(/\s+/g, ''),
+//     firstName: clean.firstName,
+//     lastName: clean.lastName,
+//     userType: clean.userType,
+//     role: clean.role,
+//   };
+//
+//   try {
+//     // 1) REGISTER
+//     const reg = await axios.post(`${EXPO_PUBLIC_URL}/users/register`, payload, {
+//       headers: { 'Content-Type': 'application/json', Accept: '*/*' },
+//       validateStatus: () => true,
+//     });
+//     console.log('REGISTER status:', reg.status, 'data:', reg.data);
+//
+//     const regSuccess =
+//       (reg.status === 200 || reg.status === 201) &&
+//       (reg.data?.success === true || reg.data?.id || reg.data?._id);
+//
+//     if (!regSuccess) {
+//       const serverMsg = extractApiError(reg.data.errorMessage || reg.data.errorMessage.key);
+//       const msg = buildStatusAwareMessage(reg.status, serverMsg, locale);
+//       Alert.alert('Register Failed', msg);
+//       speak(msg);
+//       return;
+//     }
+//
+//     Alert.alert(
+//       'Success',
+//       locale === 'ur' ? 'اکاؤنٹ کامیابی سے بن گیا!' : 'Account created successfully!'
+//     );
+//
+//     // small pause to avoid any eventual consistency issues
+//     await new Promise((r) => setTimeout(r, 250));
+//
+//     // 2) LOGIN — email first
+//     let loginResp = await axios.post(
+//       `${EXPO_PUBLIC_URL}/users/login`,
+//       { email: clean.email, password: clean.password /*, role: clean.role */ },
+//       { headers: { 'Content-Type': 'application/json', Accept: '*/*' }, validateStatus: () => true }
+//     );
+//     console.log('LOGIN(email) status:', loginResp.status, 'data:', loginResp.data);
+//
+//     // Fallback: username login if email flow failed
+//     if (!(loginResp.status === 200 && loginResp.data?.success)) {
+//       const fb = await axios.post(
+//         `${EXPO_PUBLIC_URL}/users/login`,
+//         { username: payload.username, password: clean.password /*, role: clean.role */ },
+//         { headers: { 'Content-Type': 'application/json', Accept: '*/*' }, validateStatus: () => true }
+//       );
+//       console.log('LOGIN(username) status:', fb.status, 'data:', fb.data);
+//       if (fb.status === 200 && fb.data?.success) loginResp = fb;
+//     }
+//
+//     if (loginResp.status === 401 || loginResp.status === 403) {
+//       const serverMsg = extractApiError(loginResp.data);
+//       const msg = serverMsg || (locale === 'ur' ? 'براہِ مہربانی پہلے تصدیق کریں۔' : 'Please verify your email/OTP first.');
+//       Alert.alert('Verification Required', msg);
+//       speak(msg);
+//       return;
+//     }
+//
+//     if (!(loginResp.status === 200 && loginResp.data?.success)) {
+//       const serverMsg = extractApiError(loginResp.data);
+//       const msg = buildStatusAwareMessage(loginResp.status, serverMsg, locale);
+//       Alert.alert('Login Failed', msg);
+//       speak(msg);
+//       return;
+//     }
+//
+//     // 3) SAVE + NAVIGATE
+//     await SecureStore.setItemAsync('accessToken', loginResp.data.token);
+//     await SecureStore.setItemAsync('user', JSON.stringify(loginResp.data));
+//     if (loginResp.data.refreshToken) {
+//       await SecureStore.setItemAsync('refreshToken', loginResp.data.refreshToken);
+//     }
+//
+//     if (loginResp.data.role === 'Admin') {
+//       router.push('/(admin-tabs)/(admin-home)');
+//     } else {
       router.push('/(signup)/medical-information');
-    }
-  } catch (err: any) {
-    const status = err?.response?.status;
-    const serverMsg = extractApiError(err?.response?.data);
-    const msg = buildStatusAwareMessage(status, serverMsg, locale);
-    console.log('SIGNUP/LOGIN error:', status, err?.response?.data, err?.message);
-    Alert.alert('Error', msg);
-    speak(msg.errorMessage);
-  }
+//     }
+//   } catch (err: any) {
+//     const status = err?.response?.status;
+//     const serverMsg = extractApiError(err?.response?.data);
+//     const msg = buildStatusAwareMessage(status, serverMsg, locale);
+//     console.log('SIGNUP/LOGIN error:', status, err?.response?.data, err?.message);
+//     Alert.alert('Error', msg);
+//     speak(msg.errorMessage);
+//   }
 }, [
   isFieldsComplete,
   isAdmin,
@@ -258,7 +256,7 @@ const buildStatusAwareMessage = (
   switch (status) {
     case 400: return tMsg(locale, 'Bad request. Please check the form inputs.', 'غلط درخواست۔ براہِ کرم فارم کی معلومات چیک کریں۔');
     case 401: return tMsg(locale, 'Unauthorized. Please sign in first.', 'غیر مجاز۔ براہِ کرم پہلے سائن اِن کریں۔');
-    case 403: return tMsg(locale, 'Forbidden. You don’t have access for this action.', 'منع۔ آپ کو اس عمل کی اجازت نہیں۔');
+    case 403: return tMsg(locale, 'Forbidden. You dont have access for this action.', 'منع۔ آپ کو اس عمل کی اجازت نہیں۔');
     case 409: return tMsg(locale, 'This email already exists. Try signing in instead.', 'یہ ای میل پہلے سے موجود ہے۔ براہِ کرم سائن اِن کریں۔');
     case 422: return tMsg(locale, 'Validation failed. Please fix the highlighted fields.', 'توثیق ناکام۔ براہِ کرم غلط خانوں کی تصحیح کریں۔');
     case 429: return tMsg(locale, 'Too many attempts. Please wait and try again.', 'بہت زیادہ کوششیں۔ کچھ دیر بعد دوبارہ کوشش کریں۔');
@@ -269,8 +267,6 @@ const buildStatusAwareMessage = (
       return tMsg(locale, 'Something went wrong. Please try again.', 'کچھ غلط ہو گیا۔ براہِ کرم دوبارہ کوشش کریں۔');
   }
 };
-
-
 
   // ===== Speech recognition events =====
   useSpeechRecognitionEvent('start', () => setRecognizing(true));
@@ -424,16 +420,16 @@ const buildStatusAwareMessage = (
 
   // ===== UI =====
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView contentContainerStyle={[styles.container, { direction: isRTL ? 'rtl' : 'ltr' }]}>
       {/* Back Button */}
-      <TouchableOpacity 
-        style={styles.backButton} 
+      <TouchableOpacity
+        style={[styles.backButton, { alignSelf: isRTL ? 'flex-end' : 'flex-start' }]}
         onPress={() => router.back()}
       >
-        <Ionicons 
-          name={isRTL ? "chevron-back" : "chevron-forward"} 
-          size={24} 
-          color="#000" 
+        <Ionicons
+          name={isRTL ? "chevron-forward" : "chevron-back"}
+          size={24}
+          color="#000"
         />
       </TouchableOpacity>
 
@@ -441,75 +437,116 @@ const buildStatusAwareMessage = (
       <TextBold style={styles.title}>{i18n.t('createAccount')}</TextBold>
       <Text style={styles.subtitle}>{i18n.t('createAccountSubtitle')}</Text>
 
-      <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.label}>{i18n.t('firstName')}</Text>
-          <TextInput
-            style={styles.input}
-            placeholder={i18n.t('enterFirstName')}
-            value={firstName}
-            onChangeText={setFirstName}
-            textAlign={isRTL ? 'right' : 'left'}
-          />
-        </View>
+      {/* First Name */}
+      <View style={styles.fieldContainer}>
+        <Text style={[styles.label, { textAlign: isRTL ? 'right' : 'left' }]}>
+          {i18n.t('firstName')}
+        </Text>
+        <TextInput
+          style={[
+            styles.input,
+            {
+              textAlign: isRTL ? 'right' : 'left',
+              writingDirection: isRTL ? 'rtl' : 'ltr'
+            }
+          ]}
+          placeholder={i18n.t('enterFirstName')}
+          value={firstName}
+          onChangeText={setFirstName}
+        />
       </View>
 
-      <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.label}>{i18n.t('lastName')}</Text>
-          <TextInput
-            style={styles.input}
-            placeholder={i18n.t('enterLastName')}
-            value={lastName}
-            onChangeText={setLastName}
-            textAlign={isRTL ? 'right' : 'left'}
-          />
-        </View>
+      {/* Last Name */}
+      <View style={styles.fieldContainer}>
+        <Text style={[styles.label, { textAlign: isRTL ? 'right' : 'left' }]}>
+          {i18n.t('lastName')}
+        </Text>
+        <TextInput
+          style={[
+            styles.input,
+            {
+              textAlign: isRTL ? 'right' : 'left',
+              writingDirection: isRTL ? 'rtl' : 'ltr'
+            }
+          ]}
+          placeholder={i18n.t('enterLastName')}
+          value={lastName}
+          onChangeText={setLastName}
+        />
       </View>
 
-      <Text style={styles.label}>{i18n.t('email')}</Text>
-      <TextInput
-        style={styles.input}
-        placeholder={i18n.t('enterEmail')}
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        textAlign={isRTL ? 'right' : 'left'}
-      />
+      {/* Email */}
+      <View style={styles.fieldContainer}>
+        <Text style={[styles.label, { textAlign: isRTL ? 'right' : 'left' }]}>
+          {i18n.t('email')}
+        </Text>
+        <TextInput
+          style={[
+            styles.input,
+            {
+              textAlign: isRTL ? 'right' : 'left',
+              writingDirection: isRTL ? 'rtl' : 'ltr'
+            }
+          ]}
+          placeholder={i18n.t('enterEmail')}
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+        />
+      </View>
 
-      <Text style={styles.label}>{i18n.t('password')}</Text>
-      <TextInput
-        style={styles.input}
-        placeholder={i18n.t('enterPassword')}
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        textAlign={isRTL ? 'right' : 'left'}
-      />
+      {/* Password */}
+      <View style={styles.fieldContainer}>
+        <Text style={[styles.label, { textAlign: isRTL ? 'right' : 'left' }]}>
+          {i18n.t('password')}
+        </Text>
+        <TextInput
+          style={[
+            styles.input,
+            {
+              textAlign: isRTL ? 'right' : 'left',
+              writingDirection: isRTL ? 'rtl' : 'ltr'
+            }
+          ]}
+          placeholder={i18n.t('enterPassword')}
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+        />
+      </View>
 
-      {/* Admin toggle link (manual) */}
-      <TouchableOpacity onPress={() => setIsAdmin(!isAdmin)}>
-        <Text style={styles.linkText}>
+      {/* Admin toggle link */}
+      <TouchableOpacity
+        onPress={() => setIsAdmin(!isAdmin)}
+        style={[styles.linkContainer, { alignItems: isRTL ? 'flex-end' : 'flex-start' }]}
+      >
+        <Text style={[styles.linkText, { textAlign: isRTL ? 'right' : 'left' }]}>
           {isAdmin ? i18n.t('registerAsUser') : i18n.t('registerAsAdmin')}
         </Text>
       </TouchableOpacity>
 
       {/* Admin-only fields */}
       {isAdmin && (
-        <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.label}>{i18n.t('userType')}</Text>
-            <TextInput
-              style={styles.input}
-              placeholder={i18n.t('enterUserType')}
-              value={userType}
-              onChangeText={(text) => setUserType(text.toUpperCase())}
-              textAlign={isRTL ? 'right' : 'left'}
-            />
-          </View>
+        <View style={styles.fieldContainer}>
+          <Text style={[styles.label, { textAlign: isRTL ? 'right' : 'left' }]}>
+            {i18n.t('userType')}
+          </Text>
+          <TextInput
+            style={[
+              styles.input,
+              {
+                textAlign: isRTL ? 'right' : 'left',
+                writingDirection: isRTL ? 'rtl' : 'ltr'
+              }
+            ]}
+            placeholder={i18n.t('enterUserType')}
+            value={userType}
+            onChangeText={(text) => setUserType(text.toUpperCase())}
+          />
         </View>
       )}
 
+      {/* Sign Up Button */}
       <View style={styles.buttonContainer}>
         <TouchableOpacity style={styles.button} onPress={handleSignUp}>
           <TextBold style={styles.buttonText}>{i18n.t('signUp')}</TextBold>
@@ -518,39 +555,60 @@ const buildStatusAwareMessage = (
 
       {/* Voice control button */}
       <TouchableOpacity
-        style={[styles.voiceBtn, recognizing && styles.voiceBtnOn, !canUseVoice && styles.voiceBtnDisabled]}
+        style={[
+          styles.voiceBtn,
+          recognizing && styles.voiceBtnOn,
+          !canUseVoice && styles.voiceBtnDisabled,
+          { flexDirection: isRTL ? 'row-reverse' : 'row' }
+        ]}
         onPress={recognizing ? stopListening : startListening}
         activeOpacity={canUseVoice ? 0.7 : 1}
       >
-        <Ionicons 
-          name={recognizing ? 'mic' : 'mic-outline'} 
-          size={22} 
-          color="#fff" 
+        <Ionicons
+          name={recognizing ? 'mic' : 'mic-outline'}
+          size={22}
+          color="#fff"
         />
         <TextBold style={[
           styles.voiceText,
-          { marginLeft: isRTL ? 0 : 8, marginRight: isRTL ? 8 : 0 }
+          {
+            marginLeft: isRTL ? 0 : 8,
+            marginRight: isRTL ? 8 : 0,
+          }
         ]}>
           {recognizing ? i18n.t('listening') : i18n.t('voiceCommands')}
         </TextBold>
       </TouchableOpacity>
 
+      {/* Heard text */}
       {heard ? (
-        <Text style={styles.heardText}>
-          {i18n.t('youSaid') || 'You said'}: “{heard}”
+        <Text style={[styles.heardText, { textAlign: isRTL ? 'right' : 'left' }]}>
+          {i18n.t('youSaid') || 'You said'}: "{heard}"
         </Text>
       ) : null}
 
       {/* Footer */}
       <View style={[
         styles.footerContainer,
-        { flexDirection: isRTL ? 'row-reverse' : 'row' }
+        {
+          flexDirection: isRTL ? 'row-reverse' : 'row',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }
       ]}>
         <Text style={styles.footerText}>
           {i18n.t('alreadyHaveAccount')}
         </Text>
         <TouchableOpacity onPress={() => router.push('/(signin)')}>
-          <Text style={styles.loginLink}>{i18n.t('login')}</Text>
+          <Text style={[
+            styles.loginLink,
+            {
+              marginLeft: isRTL ? 0 : 4,
+              marginRight: isRTL ? 4 : 0
+            }
+          ]}>
+            {i18n.t('login')}
+          </Text>
         </TouchableOpacity>
       </View>
     </ScrollView>
@@ -558,35 +616,38 @@ const buildStatusAwareMessage = (
 };
 
 const styles = StyleSheet.create({
-  container: { 
-    flexGrow: 1, 
-    backgroundColor: '#F6F6FF', 
-    paddingHorizontal: 24, 
+  container: {
+    flexGrow: 1,
+    backgroundColor: '#F6F6FF',
+    paddingHorizontal: 24,
     paddingTop: 60,
-    direction: isRTL ? 'rtl' : 'ltr'
   },
   backButton: {
-    alignSelf: isRTL ? 'flex-end' : 'flex-start',
+    marginBottom: 20,
+    width:"100%",
   },
-  title: { 
-    fontSize: 22, 
-    alignSelf: 'center', 
-    marginBottom: 20, 
-    textAlign: 'center' 
+  title: {
+    fontSize: 22,
+    alignSelf: 'center',
+    marginBottom: 20,
+    textAlign: 'center'
   },
-  subtitle: { 
-    textAlign: 'center', 
-    marginTop: 3, 
-    fontSize: 16, 
-    color: '#000' 
+  subtitle: {
+    textAlign: 'center',
+    marginTop: 3,
+    marginBottom: 20,
+    fontSize: 16,
+    color: '#000'
+  },
+  fieldContainer: {
+    marginBottom: 16,
   },
   label: {
     fontSize: 18,
     fontWeight: '600',
     marginBottom: 8,
+    width:"100",
     color: '#000',
-    textAlign: isRTL ? 'right' : 'left',
-    alignSelf: isRTL ? 'flex-end' : 'flex-start',
   },
   input: {
     backgroundColor: '#fff',
@@ -596,49 +657,74 @@ const styles = StyleSheet.create({
     fontSize: 14,
     borderColor: '#E5E7EB',
     borderWidth: 1,
-    textAlign: isRTL ? 'right' : 'left',
-    writingDirection: isRTL ? 'rtl' : 'ltr'
   },
-  buttonContainer: { 
-    flexDirection: isRTL ? 'row-reverse' : 'row',
-    justifyContent: 'center', 
-    alignItems: 'center', 
-    alignSelf: 'center' 
+  linkContainer: {
+    marginBottom: 16,
+    width: '100%',
+  },
+  linkText: {
+    color: '#8877F5',
+    fontWeight: '500',
+  },
+  buttonContainer: {
+    alignItems: 'center',
+    marginBottom: 16,
   },
   button: {
-    flexDirection: 'row', width: screenWidth * 0.8, marginTop: 16, backgroundColor: '#A78BFA',
-    paddingVertical: 14, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 40,
-    borderRadius: 14, shadowColor: '#A78BFA', shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: Platform.OS === 'ios' ? 0.3 : 0.6, shadowRadius: 6, elevation: 6,
-  },
-  buttonText: { color: '#FFFFFF', fontSize: 20, fontWeight: '600', letterSpacing: 0.8 },
-
-  // Voice button
-  voiceBtn: {
-    flexDirection: 'row', alignSelf: 'center', marginTop: 14, backgroundColor: '#6D28D9',
-    paddingVertical: 10, paddingHorizontal: 16, borderRadius: 12, alignItems: 'center', gap: 8,
-  },
-  voiceBtnOn: { backgroundColor: '#10B981' },
-  voiceBtnDisabled: { opacity: 0.4 },
-  voiceText: { color: '#fff', fontSize: 16, marginLeft: 8 },
-  heardText: { marginTop: 8, fontSize: 12, color: '#6B7280', textAlign: 'center', fontStyle: 'italic' },
-
-  footerText: { textAlign: 'center', marginTop: 20, fontSize: 14, color: '#7D7D7D' },
-  loginLink: { color: '#8877F5', fontWeight: '500' },
-  linkText: { color: '#8877F5', fontWeight: '500', textAlign: 'center' },
-});
-
-// Additional styles
-const additionalStyles = {
-  footerContainer: {
+    width: screenWidth * 0.8,
+    backgroundColor: '#A78BFA',
+    paddingVertical: 14,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 20,
-    gap: 4
-  }
-};
-
-// Merge with existing styles
-Object.assign(styles, additionalStyles);
+    borderRadius: 14,
+    shadowColor: '#A78BFA',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: Platform.OS === 'ios' ? 0.3 : 0.6,
+    shadowRadius: 6,
+    elevation: 6,
+  },
+  buttonText: {
+    color: '#FFFFFF',
+    fontSize: 20,
+    fontWeight: '600',
+    letterSpacing: 0.8
+  },
+  voiceBtn: {
+    alignSelf: 'center',
+    marginBottom: 16,
+    backgroundColor: '#6D28D9',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  voiceBtnOn: {
+    backgroundColor: '#10B981'
+  },
+  voiceBtnDisabled: {
+    opacity: 0.4
+  },
+  voiceText: {
+    color: '#fff',
+    fontSize: 16
+  },
+  heardText: {
+    marginBottom: 16,
+    fontSize: 12,
+    color: '#6B7280',
+    fontStyle: 'italic'
+  },
+  footerContainer: {
+    marginBottom: 20,
+  },
+  footerText: {
+    fontSize: 14,
+    color: '#7D7D7D'
+  },
+  loginLink: {
+    color: '#8877F5',
+    fontWeight: '500'
+  },
+});
 
 export default CreateAccountScreen;

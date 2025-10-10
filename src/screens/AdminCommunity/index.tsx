@@ -102,7 +102,11 @@ useEffect(() => {
           headers: { accept: "/", Authorization: `Bearer ${token}` },
         }
       );
-      setConversations(response.data);
+      // ✅ filter out conversations where userName === "unknown"
+      const filteredConversations = (response.data || []).filter(
+        (conv: any) => conv.userName?.toLowerCase() !== "unknown"
+      );
+      setConversations(filteredConversations);
     } catch (err) {
       console.error("Error fetching conversations:", err);
     } finally {
