@@ -12,7 +12,6 @@ import {
 import messaging from '@react-native-firebase/messaging';
 import notifee, { AndroidImportance } from '@notifee/react-native';
 import * as SecureStore from 'expo-secure-store';
-import axios from 'axios';
 import { NotificationContext } from '../../context/NotificationContext';
 
 export default function NotificationScreen() {
@@ -23,12 +22,15 @@ export default function NotificationScreen() {
     markOneAsRead,
     setNotifications,
     removeNotification,
+    fetchUnreadCount, // Get the refresh function
   } = useContext(NotificationContext);
 
   const [fcmToken, setFcmToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-console.log('Notifications state:', notifications);
+
+  console.log('📋 Notifications state:', notifications);
+  console.log('📊 Unread count:', unreadCount);
 
   // --------------------- 🔔 NOTIFEE CONFIG ---------------------
   const displayLocalNotification = async (title: string, body: string) => {
@@ -88,7 +90,10 @@ console.log('Notifications state:', notifications);
 
       if (!accessToken || !senderId) throw new Error('Missing auth details');
 
-      const apiUrl = `${process.env.EXPO_PUBLIC_URL}/notification/register-device-token`;
+      // Use the correct base URL from your notification API
+      const apiUrl = `${process.env.EXPO_PUBLIC_URL_CHAT}/api/notification/register-device-token`;
+
+      const axios = require('axios');
       const res = await axios.post(
         apiUrl,
         { userId: senderId, deviceToken: token },
@@ -107,33 +112,6 @@ console.log('Notifications state:', notifications);
       console.error('❌ Error registering token:', error);
     }
   };
-
-  // --------------------- 🔁 FETCH NOTIFICATIONS ---------------------
-  const fetchNotifications = async () => {
-    try {
-      const accessToken = await SecureStore.getItemAsync('accessToken');
-      const storedUser = await SecureStore.getItemAsync('user');
-      const currentUser = storedUser ? JSON.parse(storedUser) : null;
-      const senderId = currentUser?.userId;
-
-      if (!accessToken || !senderId) throw new Error('Missing auth');
-
-      const apiUrl = `${process.env.EXPO_PUBLIC_URL}/notification?page=1&pageSize=20`;
-      const res = await axios.get(apiUrl, {
-        headers: {
-          Accept: '*/*',
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-
-      console.log('📩 Notifications fetched:', res.data);
-      setNotifications(res.data);  // Ensure notifications state is being updated properly
-    } catch (err) {
-      console.error('❌ Fetch notifications error:', err);
-      Alert.alert('Error', 'Unable to fetch notifications at the moment. Please try again later.');
-    }
-  };
-
 
   // --------------------- 🚀 INIT HOOK ---------------------
   useEffect(() => {
@@ -178,8 +156,23 @@ console.log('Notifications state:', notifications);
   // --------------------- 🔁 REFRESH HANDLER ---------------------
   const handleRefresh = async () => {
     setRefreshing(true);
-    await fetchNotifications();
-    setRefreshing(false);
+    try {
+      // Import the API function
+      const { getNotifications } = require('../../api/notificationApi');
+      const res = await getNotifications();
+      console.log('📩 Notifications refreshed:', res.data);
+      setNotifications(res.data);
+
+      // Also refresh unread count
+      if (fetchUnreadCount) {
+        await fetchUnreadCount();
+      }
+    } catch (err) {
+      console.error('❌ Fetch notifications error:', err);
+      Alert.alert('Error', 'Unable to fetch notifications. Please try again later.');
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   // --------------------- 🎯 SIGNALR LISTENER HOOK ---------------------
@@ -201,61 +194,88 @@ console.log('Notifications state:', notifications);
     );
   }
 
-const renderItem = ({ item }) => {
-  console.log('📋 Notification item:', JSON.stringify(item, null, 2)); // Debug log
+  const renderItem = ({ item }) => {
+    console.log('📋 Rendering notification item:', JSON.stringify(item, null, 2));
 
-  return (
-    <View
-      style={[
-        styles.card,
-        { backgroundColor: item.isRead ? '#f4f4f4' : '#d9fdd3' },
-      ]}
-    >
-      <View style={styles.rowBetween}>
-        <Text style={styles.title}>{item.title || 'Untitled'}</Text>
-        <Text style={styles.time}>
-          {new Date(item.createdAt || Date.now()).toLocaleString()}
-        </Text>
-      </View>
-      <Text style={styles.message}>{item.message || 'No message body'}</Text>
+    // Use notificationId or id, whichever is available
+    const itemId = item.notificationId || item.id;
 
-      <View style={styles.actions}>
-        {!item.isRead && (
-          <TouchableOpacity
-            onPress={() => {
-              console.log('🔵 Marking as read, ID:', item.id); // Debug before calling
-              markOneAsRead(item.id);
-            }}
-          >
-            <Text style={styles.readBtn}>Mark Read</Text>
-          </TouchableOpacity>
-        )}
-        <TouchableOpacity
-          onPress={() => {
-            console.log('🔴 Deleting, ID:', item.id); // Debug before calling
-            removeNotification(item.id);
-          }}
-        >
-          <Text style={styles.deleteBtn}>Delete</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
-};
+    return (
+      <TouchableOpacity
+        style={[
+          styles.card,
+          { backgroundColor: item.isRead ? '#f4f4f4' : '#d9fdd3' },
+        ]}
+        onPress={() => {
+          // Mark as read when tapped if unread
+          if (!item.isRead && itemId) {
+            markOneAsRead(itemId);
+          }
+        }}
+      >
+        <View style={styles.rowBetween}>
+          <Text style={styles.title}>{item.title || 'Untitled'}</Text>
+          <Text style={styles.time}>
+            {new Date(item.createdAt || Date.now()).toLocaleString()}
+          </Text>
+        </View>
+        <Text style={styles.message}>{item.message || 'No message body'}</Text>
 
+        <View style={styles.actions}>
+          {!item.isRead && itemId && (
+            <TouchableOpacity
+              onPress={() => {
+                console.log('🔵 Marking as read, ID:', itemId);
+                markOneAsRead(itemId);
+              }}
+            >
+              <Text style={styles.readBtn}>Mark Read</Text>
+            </TouchableOpacity>
+          )}
+          {itemId && (
+            <TouchableOpacity
+              onPress={() => {
+                console.log('🔴 Deleting, ID:', itemId);
+                Alert.alert(
+                  'Delete Notification',
+                  'Are you sure you want to delete this notification?',
+                  [
+                    { text: 'Cancel', style: 'cancel' },
+                    {
+                      text: 'Delete',
+                      style: 'destructive',
+                      onPress: () => removeNotification(itemId)
+                    },
+                  ]
+                );
+              }}
+            >
+              <Text style={styles.deleteBtn}>Delete</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Notifications</Text>
-       <TouchableOpacity onPress={markAllAsRead}>
-         <Text style={styles.markAll}>Mark All Read ({unreadCount?.count ?? 0})</Text>
-       </TouchableOpacity>
+        <TouchableOpacity onPress={markAllAsRead}>
+          <Text style={styles.markAll}>
+            Mark All Read ({unreadCount?.count ?? 0})
+          </Text>
+        </TouchableOpacity>
       </View>
 
       <FlatList
         data={notifications}
-        keyExtractor={(item, index) => item.id || index.toString()}  // Ensure a unique key for each item
+        keyExtractor={(item, index) =>
+          item.notificationId?.toString() ||
+          item.id?.toString() ||
+          index.toString()
+        }
         renderItem={renderItem}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
@@ -266,7 +286,6 @@ const renderItem = ({ item }) => {
           </View>
         }
       />
-
     </View>
   );
 }
@@ -306,13 +325,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 4,
   },
-  title: { fontWeight: '700', fontSize: 16 },
+  title: { fontWeight: '700', fontSize: 16, flex: 1, marginRight: 10 },
   time: { fontSize: 12, color: '#777' },
-  message: { fontSize: 14, color: '#444' },
+  message: { fontSize: 14, color: '#444', marginTop: 4 },
   actions: { flexDirection: 'row', marginTop: 10 },
   readBtn: { color: '#007BFF', marginRight: 20, fontWeight: '600' },
   deleteBtn: { color: '#FF3B30', fontWeight: '600' },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', marginTop: 50 },
   loadingText: { marginTop: 10, color: '#555' },
-  emptyText: { color: '#777', marginTop: 10 },
+  emptyText: { color: '#777', fontSize: 16 },
 });

@@ -3,14 +3,14 @@ import * as SecureStore from 'expo-secure-store';
 
 const BASE_URL = `${process.env.EXPO_PUBLIC_URL_CHAT}/api/notification`;
 
-console.log('🔍 BASE_URL:', BASE_URL); // Debug log
+console.log('🔍 BASE_URL:', BASE_URL);
 
 const api = axios.create({
   baseURL: BASE_URL,
   headers: { accept: '*/*' },
 });
 
-// inject token automatically
+// Inject token automatically
 api.interceptors.request.use(
   async (config) => {
     const token = await SecureStore.getItemAsync('accessToken');
@@ -26,9 +26,13 @@ api.interceptors.request.use(
   }
 );
 
-// Add response interceptor to log errors
+// Add response interceptor to log responses and errors
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Log the actual data being returned
+    console.log('✅ API Response data:', response.data);
+    return response;
+  },
   (error) => {
     console.error('❌ API Error:', {
       url: error.config?.url,
@@ -41,15 +45,32 @@ api.interceptors.response.use(
 
 // ----------------------- REST ENDPOINTS -----------------------
 
-export const getNotifications = (page = 1, pageSize = 15) =>
-  api.get(`?page=${page}&pageSize=${pageSize}`);
+export const getNotifications = (page = 1, pageSize = 15) => {
+  console.log(`Fetching notifications (page: ${page}, size: ${pageSize})`);
+  return api.get(`?page=${page}&pageSize=${pageSize}`);
+};
 
-export const getUnreadCount = () => api.get('/unread-count');
+export const getUnreadCount = () => {
+  console.log('Fetching unread count...');
+  return api.get('/unread-count');
+};
 
-export const markAllRead = () => api.patch('/read-all');
+export const markAllRead = () => {
+  console.log('Marking all as read...');
+  return api.patch('/read-all');
+};
 
-export const markOneRead = (id) => api.patch(`/${id}/read`);
+export const markOneRead = (id) => {
+  console.log(`Marking notification ${id} as read...`);
+  return api.patch(`/${id}/read`);
+};
 
-export const deleteNotification = (id) => api.delete(`/${id}`);
+export const deleteNotification = (id) => {
+  console.log(`Deleting notification ${id}...`);
+  return api.delete(`/${id}`);
+};
 
-export const createNotification = (payload) => api.post('/', payload);
+export const createNotification = (payload) => {
+  console.log('Creating notification:', payload);
+  return api.post('/', payload);
+};
