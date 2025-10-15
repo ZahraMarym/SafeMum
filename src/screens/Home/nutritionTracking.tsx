@@ -2,118 +2,184 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import DateTimePicker from '@react-native-community/datetimepicker';
 import axios from "axios";
 import * as SecureStore from "expo-secure-store";
-import * as SpeechRecognition from "expo-speech-recognition";
-import React, { useCallback, useEffect, useState } from "react";
-import { Alert, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
+import {
+  ExpoSpeechRecognitionModule,
+  useSpeechRecognitionEvent,
+  type SpeechRecognitionErrorCode,
+} from "expo-speech-recognition";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { Alert, ScrollView, StyleSheet, TouchableOpacity, View, Platform } from "react-native";
 import { useSelector } from "react-redux";
+import { useRouter } from 'expo-router';
 import { Text } from '../../components/Text';
 import { TextInput } from '../../components/TextInput';
 import i18n from '../../i18n';
 
-
-
 export default function NutritionTrackingScreen() {
+  const router = useRouter();
+
   // Add Redux selector for language and direction
   const { language, textDirection } = useSelector((state: any) => state.language);
   const isRTL = textDirection === 'rtl';
 
-  const [waterAmount, setWaterAmount] = useState(""); // For water intake
-  const [supplementName, setSupplementName] = useState(""); // For supplement name
-  const [supplementDosage, setSupplementDosage] = useState(""); // For supplement dosage
-  const [doctorName, setDoctorName] = useState(""); // For prenatal appointment
-  const [hospitalName, setHospitalName] = useState(""); // For prenatal appointment
-  const [location, setLocation] = useState(""); // For prenatal appointment
- const [appointmentDate, setAppointmentDate] = useState(new Date()); // default to current date
-  const [showDatePicker, setShowDatePicker] = useState(false); // Show date picker on button press
+  const [waterAmount, setWaterAmount] = useState("");
+  const [supplementName, setSupplementName] = useState("");
+  const [supplementDosage, setSupplementDosage] = useState("");
+  const [doctorName, setDoctorName] = useState("");
+  const [hospitalName, setHospitalName] = useState("");
+  const [location, setLocation] = useState("");
+  const [appointmentDate, setAppointmentDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [currentField, setCurrentField] = useState("");
+  const [appointmentTime, setAppointmentTime] = useState("");
+  const [showTimePicker, setShowTimePicker] = useState(false);
 
-useEffect(() => {
-  const anyI18n = i18n as any;
-  if (typeof anyI18n.changeLanguage === "function") {
-    // react-i18next style
-    anyI18n.changeLanguage(language);
-  } else {
-    // i18n-js style
-    anyI18n.locale = language;
-  }
-}, [language]);
+  // Voice recognition state
+  const [recognizing, setRecognizing] = useState(false);
+  const [recognizedText, setRecognizedText] = useState("");
+  const guardRef = useRef(false);
+  const alertShownRef = useRef(false);
+
+  useEffect(() => {
+    const anyI18n = i18n as any;
+    if (typeof anyI18n.changeLanguage === "function") {
+      // react-i18next style
+      anyI18n.changeLanguage(language);
+    } else {
+      // i18n-js style
+      anyI18n.locale = language;
+    }
+  }, [language]);
 
   // Handle date change from DateTimePicker
   const handleDateChange = (event, selectedDate) => {
     const currentDate = selectedDate || appointmentDate;
     setShowDatePicker(false);
-    setAppointmentDate(currentDate); // Set the selected date
+    setAppointmentDate(currentDate);
   };
 
-  const handleSubmit = () => {
-    // Ensure appointmentDate is a valid Date before using it
-    if (!(appointmentDate instanceof Date) || isNaN(appointmentDate.getTime())) {
-      Alert.alert("Error", "Invalid date selected.");
-      return;
-    }
-
-    // Format the date if needed (e.g., to ISO format)
-    const formattedDate = appointmentDate.toISOString();
-    console.log("Appointment Date:", formattedDate);
-    // Handle further logic to send the date to the API
-    Alert.alert("Success", `Appointment scheduled for: ${formattedDate}`);
-  };
-
-
-  const startListening = useCallback(async (field) => {
-      setCurrentField(field);
-      const isPermissionGranted = await SpeechRecognition.getPermissionsAsync();
-      if (!isPermissionGranted.granted) {
-        Alert.alert("Permission Denied", "Please enable microphone permissions.");
-        return;
+  // ===== Permissions & availability =====
+  const ensurePermissions = useCallback(async () => {
+    try {
+      const cur = await ExpoSpeechRecognitionModule.getPermissionsAsync?.();
+      if (!cur?.granted) {
+        const req = await ExpoSpeechRecognitionModule.requestPermissionsAsync();
+        if (!req.granted) return false;
       }
 
-      setRecognizing(true);
-      await SpeechRecognition.startAsync({
-        language: "en-US",
+      if (Platform.OS === 'android') {
+        const { PermissionsAndroid } = require('react-native');
+        const mic = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.RECORD_AUDIO
+        );
+        if (mic !== PermissionsAndroid.RESULTS.GRANTED) return false;
+      }
+
+      const available = await (ExpoSpeechRecognitionModule.isRecognitionAvailableAsync?.()
+        ?? ExpoSpeechRecognitionModule.isRecognitionAvailable?.());
+      if (!available) {
+        const msg = "Speech recognition isn't available. Ensure Google Speech Services are installed/enabled.";
+        Alert.alert("Unavailable", msg);
+        return false;
+      }
+      return true;
+    } catch {
+      return false;
+    }
+  }, []);
+
+  // ===== Speech recognition events =====
+  useSpeechRecognitionEvent('start', () => setRecognizing(true));
+  useSpeechRecognitionEvent('end', () => setRecognizing(false));
+
+  useSpeechRecognitionEvent('result', (event) => {
+    const text = (event.results?.[0]?.transcript ?? '').trim();
+    if (!text) return;
+
+    setRecognizedText(text);
+
+    // Set the appropriate field based on currentField
+    if (currentField === "waterAmount") setWaterAmount(text);
+    if (currentField === "supplementName") setSupplementName(text);
+    if (currentField === "supplementDosage") setSupplementDosage(text);
+    if (currentField === "doctorName") setDoctorName(text);
+    if (currentField === "hospitalName") setHospitalName(text);
+    if (currentField === "location") setLocation(text);
+
+    // Stop recognition after getting result
+    try {
+      ExpoSpeechRecognitionModule.stop();
+    } catch {}
+  });
+
+  useSpeechRecognitionEvent('error', (e) => {
+    setRecognizing(false);
+    if (alertShownRef.current) return;
+    alertShownRef.current = true;
+
+    const code = e.error as SpeechRecognitionErrorCode;
+    let msg = e.message || 'Speech recognition failed.';
+    if (code === 'no-speech') msg = 'No speech detected. Please try again.';
+    if (code === 'not-allowed') msg = 'Microphone/Speech permission denied.';
+    if (code === 'service-not-allowed') msg = 'Speech service not available.';
+    if (code === 'language-not-supported') msg = 'Selected language not supported.';
+
+    Alert.alert('Speech Error', msg, [
+      { text: 'OK', onPress: () => (alertShownRef.current = false) },
+    ]);
+  });
+
+  const startListening = useCallback(async (field: string) => {
+    setCurrentField(field);
+    guardRef.current = false;
+    alertShownRef.current = false;
+
+    const ok = await ensurePermissions();
+    if (!ok) return;
+
+    try {
+      await ExpoSpeechRecognitionModule.start({
+        lang: language === 'ur' ? 'ur-PK' : 'en-US',
         interimResults: false,
+        continuous: false,
       });
-    }, []);
+    } catch (error) {
+      if (!alertShownRef.current) {
+        alertShownRef.current = true;
+        Alert.alert('Error', 'Could not start speech recognition.', [
+          { text: 'OK', onPress: () => (alertShownRef.current = false) },
+        ]);
+      }
+    }
+  }, [ensurePermissions, language]);
 
-    // Stop speech recognition
-    const stopListening = useCallback(async () => {
-      setRecognizing(false);
-      await SpeechRecognition.stopAsync();
-    }, []);
+  const stopListening = useCallback(async () => {
+    try {
+      await ExpoSpeechRecognitionModule.stop();
+    } catch {}
+  }, []);
 
-   // Handle speech result and update respective field
-     useEffect(() => {
-       const handleSpeechResult = (result) => {
-         const text = result?.transcript || "";
-         if (currentField === "waterAmount") setWaterAmount(text);
-         if (currentField === "supplementName") setSupplementName(text);
-         if (currentField === "supplementDosage") setSupplementDosage(text);
-         if (currentField === "doctorName") setDoctorName(text);
-         if (currentField === "hospitalName") setHospitalName(text);
-         if (currentField === "location") setLocation(text);
-       };
-
-       SpeechRecognition.addEventListener("onSpeechResult", handleSpeechResult);
-
-       return () => {
-         SpeechRecognition.removeEventListener("onSpeechResult", handleSpeechResult);
-       };
-     }, [currentField]);
-
-
+  useEffect(() => {
+    return () => {
+      try {
+        ExpoSpeechRecognitionModule.stop();
+      } catch {}
+    };
+  }, []);
 
   // Handle water intake submission
   const handleWaterIntakeSubmit = async () => {
     try {
       const token = await SecureStore.getItemAsync("accessToken");
-      console.log("waterAmount", waterAmount)
+      console.log("waterAmount", waterAmount);
       const response = await axios.post(
         `${process.env.EXPO_PUBLIC_URL}/nutrition-tracker/add-water-intake-log`,
         {
-          amountInMl: parseInt(waterAmount), // Convert water amount to number
+          amountInMl: parseInt(waterAmount),
         },
         {
           headers: {
-            accept: "/",
+            accept: "*/*",
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
@@ -121,7 +187,7 @@ useEffect(() => {
       );
       console.log("Water intake logged:", response.data);
       Alert.alert("Success", "Water intake logged successfully.");
-      setWaterAmount(""); // Clear input after submission
+      setWaterAmount("");
     } catch (error) {
       console.error("Error adding water intake:", error);
       Alert.alert("Error", "Failed to log water intake.");
@@ -140,7 +206,7 @@ useEffect(() => {
         },
         {
           headers: {
-            accept: "/",
+            accept: "*/*",
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
@@ -148,7 +214,7 @@ useEffect(() => {
       );
       console.log("Supplement intake logged:", response.data);
       Alert.alert("Success", "Supplement intake logged successfully.");
-      setSupplementName(""); // Clear inputs after submission
+      setSupplementName("");
       setSupplementDosage("");
     } catch (error) {
       console.error("Error adding supplement intake:", error);
@@ -157,319 +223,436 @@ useEffect(() => {
   };
 
   // Handle prenatal appointment submission
- const handlePrenatalAppointmentSubmit = async () => {
-   try {
-     const token = await SecureStore.getItemAsync("accessToken");
-     console.log("token", token);
-     console.log("doctorName", doctorName);
-     console.log("hospitalName", hospitalName);
-     console.log("appointmentDate", appointmentDate);
-     console.log("location", location);
+  const handlePrenatalAppointmentSubmit = async () => {
+    try {
+      const token = await SecureStore.getItemAsync("accessToken");
+      console.log("token", token);
+      console.log("doctorName", doctorName);
+      console.log("hospitalName", hospitalName);
+      console.log("appointmentDate", appointmentDate);
+      console.log("appointmentTime", appointmentTime);
+      console.log("location", location);
 
-     const url = `${process.env.EXPO_PUBLIC_URL}/nutrition-tracker/add-prenatal-appointment`;
-     console.log("url", url);
+      const url = `${process.env.EXPO_PUBLIC_URL}/nutrition-tracker/add-prenatal-appointment`;
+      console.log("url", url);
 
-     const response = await axios.post(
-       url,
-       {
-         doctorName: doctorName,
-         hospitalNamae: hospitalName, // ✅ Corrected key
-         appointmentDate: new Date(appointmentDate).toISOString(), // Optional safety
-         location: location,
-       },
-       {
-         headers: {
-           accept: "/",
-           "Content-Type": "application/json",
-           Authorization: `Bearer ${token}`,
-         },
-       }
-     );
-
-     console.log("Prenatal appointment added:", response.data);
-     Alert.alert("Success", "Prenatal appointment added successfully.");
-     setDoctorName("");
-     setHospitalName("");
-     setAppointmentDate(new Date());
-     setLocation("");
-   } catch (error) {
-     console.error("Error adding prenatal appointment:", error.response?.data || error.message);
-     Alert.alert("Error", "Failed to add prenatal appointment.");
-   }
- };
+const response = await axios.post(
+  url,
+  {
+    doctorName: doctorName,
+    hospitalNamae: hospitalName,
+    appointmentDate: new Date(appointmentDate).toISOString(),
+    appointmentTime: appointmentTime, // <-- added
+    location: location,
+  },
+  {
+    headers: {
+      accept: "*/*",
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  }
+);
 
 
-  const styles = StyleSheet.create({
-    container: {
-      padding: 20,
-      backgroundColor: "#fff",
-      direction: isRTL ? 'rtl' : 'ltr'
-    },
-    backButton: {
-      position: 'absolute',
-      top: 30,
-      left: isRTL ? undefined : 24,
-      right: isRTL ? 24 : undefined,
-    },
-    title: {
-      fontSize: 26,
-      fontWeight: "bold",
-      textAlign: "center",
-      marginBottom: 30,
-      color: "#333",
-    },
-    section: {
-      marginBottom: 35,
-      backgroundColor: "#fff",
-      borderRadius: 10,
-      padding: 15,
-      shadowColor: "#000",
-      shadowOpacity: 0.1,
-      shadowOffset: { width: 0, height: 3 },
-      shadowRadius: 5,
-      elevation: 2,
-    },
-    sectionTitle: {
-      fontSize: 20,
-      fontWeight: "600",
-      marginBottom: 15,
-      color: "#333",
-      textAlign: isRTL ? 'right' : 'left',
-    },
-    input: {
-      borderWidth: 1,
-      borderColor: "#ddd",
-      borderRadius: 8,
-      padding: 12,
-      fontSize: 16,
-      backgroundColor: "#fafafa",
-      marginBottom: 15,
-      textAlign: isRTL ? 'right' : 'left',
-      writingDirection: isRTL ? 'rtl' : 'ltr',
-    },
-    button: {
-      backgroundColor: "#A78BFA",
-      paddingVertical: 12,
-      borderRadius: 8,
-      alignItems: "center",
-      marginTop: 5,
-    },
-    buttonText: {
-      color: "#fff",
-      fontWeight: "600",
-      fontSize: 16,
-    },
-    dateText: {
-      fontSize: 16,
-      marginTop: 10,
-      color: "#555",
-    },
-    dateRow: {
-      flexDirection: isRTL ? 'row-reverse' : 'row',
-      alignItems: "center",
-      paddingVertical: 12,
-      paddingHorizontal: 10,
-      borderRadius: 8,
-      backgroundColor: "#fafafa",
-      borderWidth: 1,
-      borderColor: "#ddd",
-      marginBottom: 15,
-    },
+      console.log("Prenatal appointment added:", response.data);
+      Alert.alert("Success", "Prenatal appointment added successfully.");
+      setDoctorName("");
+      setHospitalName("");
+      setAppointmentDate(new Date());
+      setAppointmentTime("");
+      setLocation("");
+    } catch (error) {
+      console.error("Error adding prenatal appointment:", error.response?.data || error.message);
+      Alert.alert("Error", "Failed to add prenatal appointment.");
+    }
+  };
 
-    dateText: {
-      fontSize: 16,
-      color: "#555",
-    },
+  const handleTimeChange = (event, selectedTime) => {
+    setShowTimePicker(false);
+    if (selectedTime) {
+      const hours = selectedTime.getHours().toString().padStart(2, "0");
+      const minutes = selectedTime.getMinutes().toString().padStart(2, "0");
+      setAppointmentTime(`${hours}:${minutes}`);
+    }
+  };
 
-  });
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 20,
+    backgroundColor: "#F9FAFB",
+    direction: isRTL ? "rtl" : "ltr",
+  },
+
+  backButton: {
+    position: "absolute",
+    top: 50,
+    left: isRTL ? undefined : 30,
+    right: isRTL ? 30 : undefined,
+    backgroundColor: "#A78BFA",
+    borderRadius: 30,
+    padding: 6,
+    zIndex:100,
+  },
+
+titleWrapper: {
+  marginBottom: 30,
+  backgroundColor: "#fff",
+  borderRadius: 18,
+  paddingVertical: 18,
+  paddingHorizontal: 20,
+  shadowColor: "#000",
+  shadowOpacity: 0.08,
+  shadowOffset: { width: 0, height: 5 },
+  shadowRadius: 10,
+  elevation: 4,
+  alignItems: "center",
+  justifyContent: "center",
+},
+
+titleIcon: {
+  marginBottom: 8,
+  backgroundColor: "#A78BFA15",
+  padding: 12,
+  borderRadius: 50,
+},
+
+title: {
+  fontSize: 28,
+  fontWeight: "800",
+  textAlign: "center",
+  color: "#4C1D95", // deep purple for a premium look
+  letterSpacing: 1,
+},
+subtitle: {
+  fontSize: 14,
+  color: "#6B7280",
+  marginTop: 6,
+  textAlign: "center",
+},
+
+  section: {
+    marginBottom: 28,
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 18,
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowOffset: { width: 0, height: 5 },
+    shadowRadius: 10,
+    elevation: 3,
+  },
+
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    marginBottom: 18,
+    color: "#374151",
+    textAlign: isRTL ? "right" : "left",
+    letterSpacing: 0.3,
+  },
+
+  // Redesigned input
+  inputContainer: {
+    flexDirection: isRTL ? "row-reverse" : "row",
+    alignItems: "center",
+    marginBottom: 16,
+    backgroundColor: "#F3F4F6",
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    shadowColor: "#A78BFA",
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+
+  input: {
+    flex: 1,
+    paddingVertical: 12,
+    fontSize: 16,
+    textAlign: isRTL ? "right" : "left",
+    writingDirection: isRTL ? "rtl" : "ltr",
+    color: "#111827",
+  },
+
+  // Glowing mic button
+  voiceButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    justifyContent: "center",
+    alignItems: "center",
+    marginLeft: 8,
+    backgroundColor: "#fff",
+    shadowColor: "#A78BFA",
+    shadowOpacity: 0.6,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+
+  // Gradient-style button
+  button: {
+    backgroundColor: "#A78BFA",
+    paddingVertical: 14,
+    borderRadius: 14,
+    alignItems: "center",
+    marginTop: 8,
+    shadowColor: "#A78BFA",
+    shadowOpacity: 0.5,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 6,
+    elevation: 4,
+  },
+
+  buttonText: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 16,
+    letterSpacing: 0.5,
+  },
+
+  dateRow: {
+    flexDirection: isRTL ? "row-reverse" : "row",
+    alignItems: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 14,
+    backgroundColor: "#F3F4F6",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    marginBottom: 16,
+  },
+
+  dateText: {
+    fontSize: 16,
+    color: "#4B5563",
+    marginLeft: isRTL ? 0 : 8,
+    marginRight: isRTL ? 8 : 0,
+    fontWeight: "500",
+  },
+
+  recognitionStatus: {
+    fontSize: 13,
+    color: "#6B7280",
+    textAlign: "center",
+    fontStyle: "italic",
+    marginBottom: 12,
+  },
+});
+
 
   return (
-     <ScrollView contentContainerStyle={styles.container}>
-       <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-             <Ionicons 
-          name={isRTL ? "chevron-back" : "chevron-forward"} 
-          size={24} 
-          color="black" 
+    <ScrollView contentContainerStyle={styles.container}>
+      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+        <Ionicons
+          name={isRTL ? "chevron-forward" : "chevron-back"}
+          size={24}
+          color="black"
         />
-           </TouchableOpacity>
-       <Text style={styles.title}>{i18n.t('nutritionTracking')}</Text>
-
-       {/* Water Intake Section */}
-       <View style={styles.section}>
-         <Text style={styles.sectionTitle}>{i18n.t('waterIntake')}</Text>
-         <TextInput
-           style={styles.input}
-           placeholder={i18n.t('amountInML')}
-           value={waterAmount}
-           onChangeText={setWaterAmount}
-           keyboardType="numeric"
-         />
-         <TouchableOpacity style={styles.button} onPress={handleWaterIntakeSubmit}>
-           <Text style={styles.buttonText}>{i18n.t('logWaterIntake')}</Text>
-         </TouchableOpacity>
-          <TouchableOpacity onPress={() => startListening("waterAmount")} style={styles.voiceButton}>
-                   <Ionicons name="mic" size={24} color="gray" />
-                 </TouchableOpacity>
-       </View>
-
-       {/* Supplement Intake Section */}
-       <View style={styles.section}>
-         <Text style={styles.sectionTitle}>{i18n.t('supplementIntake')}</Text>
-         <TextInput
-           style={styles.input}
-           placeholder={i18n.t('supplementName')}
-           value={supplementName}
-           onChangeText={setSupplementName}
-         />
-         <TextInput
-           style={styles.input}
-           placeholder={i18n.t('dosage')}
-           value={supplementDosage}
-           onChangeText={setSupplementDosage}
-         />
-         <TouchableOpacity style={styles.button} onPress={handleSupplementSubmit}>
-           <Text style={styles.buttonText}>{i18n.t('logSupplementIntake')}</Text>
-         </TouchableOpacity>
-         <TouchableOpacity onPress={() => startListening("supplementName")} style={styles.voiceButton}>
-                   <Ionicons name="mic" size={24} color="gray" />
-                 </TouchableOpacity>
-       </View>
-
-       {/* Prenatal Appointment Section */}
-       <View style={styles.section}>
-         <Text style={styles.sectionTitle}>{i18n.t('prenatalAppointment')}</Text>
-         <TextInput
-           style={styles.input}
-           placeholder={i18n.t('doctorName')}
-           value={doctorName}
-           onChangeText={setDoctorName}
-         />
-         <TextInput
-           style={styles.input}
-           placeholder={i18n.t('hospitalName')}
-           value={hospitalName}
-           onChangeText={setHospitalName}
-         />
-
-       {/* Appointment Date Picker Styled Row */}
-       <TouchableOpacity style={styles.dateRow} onPress={() => setShowDatePicker(true)}>
-         <Ionicons 
-          name="calendar-outline" 
-          size={22} 
-          color="#A78BFA" 
-          style={{ 
-            marginRight: isRTL ? 0 : 8,
-            marginLeft: isRTL ? 8 : 0 
-          }} 
-        />
-         <Text style={styles.dateText}>
-           {appointmentDate.toLocaleDateString()}
-         </Text>
-       </TouchableOpacity>
-
-       {showDatePicker && (
-         <DateTimePicker
-           value={appointmentDate}
-           mode="date"
-           display="default"
-           onChange={handleDateChange}
-         />
-       )}
+      </TouchableOpacity>
+      <View style={styles.titleWrapper}>
+        <View style={styles.titleIcon}>
+        </View>
+        <Text style={styles.title}>{i18n.t("nutritionTracking")}</Text>
+        <Text style={styles.subtitle}>
+          {i18n.t("trackYourWellness")}
+        </Text>
+      </View>
 
 
-         <TextInput
-           style={styles.input}
-           placeholder={i18n.t('location')}
-           value={location}
-           onChangeText={setLocation}
-         />
+      {recognizedText ? (
+        <Text style={styles.recognitionStatus}>
+          Last recognized: "{recognizedText}"
+        </Text>
+      ) : null}
 
-         <TouchableOpacity style={styles.button} onPress={handlePrenatalAppointmentSubmit}>
-           <Text style={styles.buttonText}>{i18n.t('addPrenatalAppointment')}</Text>
-         </TouchableOpacity>
-          <TouchableOpacity onPress={() => startListening("location")} style={styles.voiceButton}>
-                   <Ionicons name="mic" size={24} color="gray" />
-                 </TouchableOpacity>
-       </View>
-     </ScrollView>
-   );
- }
+      {/* Water Intake Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>{i18n.t('waterIntake')}</Text>
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder={i18n.t('amountInML')}
+            value={waterAmount}
+            onChangeText={setWaterAmount}
+            keyboardType="numeric"
+          />
+          <TouchableOpacity
+            onPress={() => recognizing && currentField === "waterAmount" ? stopListening() : startListening("waterAmount")}
+            style={styles.voiceButton}
+          >
+            <Ionicons
+              name={recognizing && currentField === "waterAmount" ? "stop-circle" : "mic"}
+              size={24}
+              color={recognizing && currentField === "waterAmount" ? "red" : "#A78BFA"}
+            />
+          </TouchableOpacity>
+        </View>
+        <TouchableOpacity style={styles.button} onPress={handleWaterIntakeSubmit}>
+          <Text style={styles.buttonText}>{i18n.t('logWaterIntake')}</Text>
+        </TouchableOpacity>
+      </View>
 
- const styles = StyleSheet.create({
-   container: {
-     padding: 20,
-     backgroundColor: "#fff",
-   },
-     backButton: {
-       position: 'absolute',
-       top: 30,
-       left: 24,
-     },
-   title: {
-     fontSize: 26,
-     fontWeight: "bold",
-     textAlign: "center",
-     marginBottom: 30,
-     color: "#333",
-   },
-   section: {
-     marginBottom: 35,
-     backgroundColor: "#fff",
-     borderRadius: 10,
-     padding: 15,
-     shadowColor: "#000",
-     shadowOpacity: 0.1,
-     shadowOffset: { width: 0, height: 3 },
-     shadowRadius: 5,
-     elevation: 2,
-   },
-   sectionTitle: {
-     fontSize: 20,
-     fontWeight: "600",
-     marginBottom: 15,
-     color: "#333",
-   },
-   input: {
-     borderWidth: 1,
-     borderColor: "#ddd",
-     borderRadius: 8,
-     padding: 12,
-     fontSize: 16,
-     backgroundColor: "#fafafa",
-     marginBottom: 15,
-   },
-   button: {
-     backgroundColor: "#A78BFA",
-     paddingVertical: 12,
-     borderRadius: 8,
-     alignItems: "center",
-     marginTop: 5,
-   },
-   buttonText: {
-     color: "#fff",
-     fontWeight: "600",
-     fontSize: 16,
-   },
-   dateText: {
-     fontSize: 16,
-     marginTop: 10,
-     color: "#555",
-   },
-   dateRow: {
-     flexDirection: "row",
-     alignItems: "center",
-     paddingVertical: 12,
-     paddingHorizontal: 10,
-     borderRadius: 8,
-     backgroundColor: "#fafafa",
-     borderWidth: 1,
-     borderColor: "#ddd",
-     marginBottom: 15,
-   },
+      {/* Supplement Intake Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>{i18n.t('supplementIntake')}</Text>
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder={i18n.t('supplementName')}
+            value={supplementName}
+            onChangeText={setSupplementName}
+          />
+          <TouchableOpacity
+            onPress={() => recognizing && currentField === "supplementName" ? stopListening() : startListening("supplementName")}
+            style={styles.voiceButton}
+          >
+            <Ionicons
+              name={recognizing && currentField === "supplementName" ? "stop-circle" : "mic"}
+              size={24}
+              color={recognizing && currentField === "supplementName" ? "red" : "#A78BFA"}
+            />
+          </TouchableOpacity>
+        </View>
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder={i18n.t('dosage')}
+            value={supplementDosage}
+            onChangeText={setSupplementDosage}
+          />
+          <TouchableOpacity
+            onPress={() => recognizing && currentField === "supplementDosage" ? stopListening() : startListening("supplementDosage")}
+            style={styles.voiceButton}
+          >
+            <Ionicons
+              name={recognizing && currentField === "supplementDosage" ? "stop-circle" : "mic"}
+              size={24}
+              color={recognizing && currentField === "supplementDosage" ? "red" : "#A78BFA"}
+            />
+          </TouchableOpacity>
+        </View>
+        <TouchableOpacity style={styles.button} onPress={handleSupplementSubmit}>
+          <Text style={styles.buttonText}>{i18n.t('logSupplementIntake')}</Text>
+        </TouchableOpacity>
+      </View>
 
-   dateText: {
-     fontSize: 16,
-     color: "#555",
-   },
+      {/* Prenatal Appointment Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>{i18n.t('prenatalAppointment')}</Text>
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder={i18n.t('doctorName')}
+            value={doctorName}
+            onChangeText={setDoctorName}
+          />
+          <TouchableOpacity
+            onPress={() => recognizing && currentField === "doctorName" ? stopListening() : startListening("doctorName")}
+            style={styles.voiceButton}
+          >
+            <Ionicons
+              name={recognizing && currentField === "doctorName" ? "stop-circle" : "mic"}
+              size={24}
+              color={recognizing && currentField === "doctorName" ? "red" : "#A78BFA"}
+            />
+          </TouchableOpacity>
+        </View>
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder={i18n.t('hospitalName')}
+            value={hospitalName}
+            onChangeText={setHospitalName}
+          />
+          <TouchableOpacity
+            onPress={() => recognizing && currentField === "hospitalName" ? stopListening() : startListening("hospitalName")}
+            style={styles.voiceButton}
+          >
+            <Ionicons
+              name={recognizing && currentField === "hospitalName" ? "stop-circle" : "mic"}
+              size={24}
+              color={recognizing && currentField === "hospitalName" ? "red" : "#A78BFA"}
+            />
+          </TouchableOpacity>
+        </View>
 
- });
+        {/* Appointment Date Picker Styled Row */}
+        <TouchableOpacity style={styles.dateRow} onPress={() => setShowDatePicker(true)}>
+          <Ionicons
+            name="calendar-outline"
+            size={22}
+            color="#A78BFA"
+            style={{
+              marginRight: isRTL ? 0 : 8,
+              marginLeft: isRTL ? 8 : 0
+            }}
+          />
+          <Text style={styles.dateText}>
+            {appointmentDate.toLocaleDateString()}
+          </Text>
+        </TouchableOpacity>
+
+        {showDatePicker && (
+          <DateTimePicker
+            value={appointmentDate}
+            mode="date"
+            display="default"
+            onChange={handleDateChange}
+          />
+        )}
+
+    {/* Appointment Time Picker Styled Row */}
+    <TouchableOpacity style={styles.dateRow} onPress={() => setShowTimePicker(true)}>
+      <Ionicons
+        name="time-outline"
+        size={22}
+        color="#A78BFA"
+        style={{
+          marginRight: isRTL ? 0 : 8,
+          marginLeft: isRTL ? 8 : 0,
+        }}
+      />
+      <Text style={styles.dateText}>
+        {appointmentTime ? appointmentTime : i18n.t("selectTime")}
+      </Text>
+    </TouchableOpacity>
+
+    {showTimePicker && (
+      <DateTimePicker
+        value={appointmentDate} // base date, time will be chosen
+        mode="time"
+        display="default"
+        onChange={handleTimeChange}
+      />
+    )}
+
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder={i18n.t('location')}
+            value={location}
+            onChangeText={setLocation}
+          />
+          <TouchableOpacity
+            onPress={() => recognizing && currentField === "location" ? stopListening() : startListening("location")}
+            style={styles.voiceButton}
+          >
+            <Ionicons
+              name={recognizing && currentField === "location" ? "stop-circle" : "mic"}
+              size={24}
+              color={recognizing && currentField === "location" ? "red" : "#A78BFA"}
+            />
+          </TouchableOpacity>
+        </View>
+
+        <TouchableOpacity style={styles.button} onPress={handlePrenatalAppointmentSubmit}>
+          <Text style={styles.buttonText}>{i18n.t('addPrenatalAppointment')}</Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
+  );
+}

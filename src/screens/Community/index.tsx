@@ -81,28 +81,35 @@ useEffect(() => {
     });
   };
 
-  const fetchConversations = async () => {
-    setLoading(true);
-    try {
-      const token = await SecureStore.getItemAsync("accessToken");
-      const storedUser = await SecureStore.getItemAsync("user");
-      const currentUser = JSON.parse(storedUser);
-      const senderId = currentUser.userId;
+const fetchConversations = async () => {
+  setLoading(true);
+  try {
+    const token = await SecureStore.getItemAsync("accessToken");
+    const storedUser = await SecureStore.getItemAsync("user");
+    const currentUser = JSON.parse(storedUser);
+    const senderId = currentUser.userId;
 
-      const response = await axios.get(
-        `${process.env.EXPO_PUBLIC_URL}/communication/get-conversation-by-userid?Id=${senderId}`,
-        {
-          headers: { accept: "/", Authorization: `Bearer ${token}` },
-        }
-      );
-      console.log("get-conversation-by-userid", response.data);
-      setConversations(response.data);
-    } catch (err) {
-      console.error("Error fetching conversations:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    const response = await axios.get(
+      `${process.env.EXPO_PUBLIC_URL}/communication/get-conversation-by-userid?Id=${senderId}`,
+      {
+        headers: { accept: "/", Authorization: `Bearer ${token}` },
+      }
+    );
+    console.log("get-conversation-by-userid", response.data);
+
+    // ✅ filter out conversations where userName === "unknown"
+    const filteredConversations = (response.data || []).filter(
+      (conv: any) => conv.userName?.toLowerCase() !== "unknown"
+    );
+
+    setConversations(filteredConversations);
+  } catch (err) {
+    console.error("Error fetching conversations:", err);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const fetchGroups = async () => {
     setLoading(true);

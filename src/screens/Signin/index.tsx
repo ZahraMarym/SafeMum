@@ -19,6 +19,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useSelector } from 'react-redux';
 
 import {
   ExpoSpeechRecognitionModule,
@@ -74,6 +75,7 @@ export default function LoginScreen() {
   const [locale, setLocale] = useState(i18n.locale as 'en' | 'ur');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const { language, textDirection } = useSelector((state: any) => state.language);
 
   // voice UI state
   const [recognizing, setRecognizing] = useState(false);
@@ -292,7 +294,7 @@ export default function LoginScreen() {
   const canUseVoice = email.length > 0 && password.length > 0;
 
   // Add voice instructions based on locale
-  const voiceInstructions = useMemo(() => 
+  const voiceInstructions = useMemo(() =>
     locale === 'ur' ? UR_INSTRUCTIONS : EN_INSTRUCTIONS,
   [locale]);
 
@@ -346,6 +348,7 @@ export default function LoginScreen() {
   backButton: {
     position: 'absolute',
     top: 60,
+    width:"100%",
     left: isRTL ? undefined : 24,
     right: isRTL ? 24 : undefined,
   },
@@ -359,7 +362,7 @@ export default function LoginScreen() {
     backgroundColor: '#fff', borderRadius: 8, paddingHorizontal: 14, paddingVertical: 12,
     fontSize: 14, borderColor: '#E5E7EB', borderWidth: 1,             textAlign: I18nManager.isRTL ? 'right' : 'left',
   },
-  forgotPassword: { marginTop: 4, alignSelf: isRTL ? 'flex-end' : 'flex-start' },
+  forgotPassword: { marginTop: 4, alignSelf: isRTL ? 'flex-end' : 'flex-start' , width:"100%"},
   forgotText: { color: '#F87171', fontSize: 12 },
   buttonContainer: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', alignSelf: 'center' },
   button: {
@@ -394,9 +397,19 @@ export default function LoginScreen() {
   return (
     <View style={styles.container}>
       {/* Back */}
-      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-        <Ionicons name="chevron-forward" size={24} color="black" style={{ transform: [{ scaleX: isRTL ? -1 : 1 }] }} />
-      </TouchableOpacity>
+      {/* Back Button */}
+            <TouchableOpacity
+              style={[styles.backButton, {
+                alignSelf: isRTL ? 'flex-end' : 'flex-start'
+              }]}
+              onPress={() => router.back()}
+            >
+              <Ionicons
+                name={isRTL ? "chevron-forward" : "chevron-back"}
+                size={24}
+                color="black"
+              />
+            </TouchableOpacity>
 
       <TextBold style={styles.title}>{i18n.t('login')}</TextBold>
 

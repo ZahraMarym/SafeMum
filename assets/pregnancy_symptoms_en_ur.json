@@ -1,0 +1,484 @@
+{
+  "pregnancy_symptoms": {
+    "week_1": {
+      "english": [
+        "Mild cramping with light spotting and fatigue",
+        "Mood swings with hormonal fluctuations beginning early",
+        "Breast tenderness and slight swelling noticeable"
+      ],
+      "urdu": [
+        "ہلکے درد کے ساتھ ہلکی خون آلودگی اور تھکن",
+        "ابتدائی ہارمونی تبدیلیوں سے موڈ میں اتار چڑھاؤ",
+        "چھاتی میں درد اور ہلکی سوجن نمایاں"
+      ]
+    },
+    "week_2": {
+      "english": [
+        "Ovulation signs with increased cervical mucus clarity",
+        "Mild pelvic discomfort during ovulation phase",
+        "Heightened sense of smell with mild nausea"
+      ],
+      "urdu": [
+        "انڈے کے اخراج کی علامات اور گاڑھا بلغم",
+        "اوویولیشن کے دوران ہلکی پیڑو کی تکلیف",
+        "بو کا بڑھا ہوا احساس اور ہلکی متلی"
+      ]
+    },
+    "week_3": {
+      "english": [
+        "Implantation spotting with light abdominal cramps",
+        "Fatigue increases with early hormonal changes",
+        "Mild nausea especially during morning time"
+      ],
+      "urdu": [
+        "ایمپلانٹیشن کے دوران ہلکی خون آلودگی اور درد",
+        "ابتدائی ہارمونی تبدیلیوں سے تھکن میں اضافہ",
+        "خصوصاً صبح کے وقت ہلکی متلی محسوس ہوتی ہے"
+      ]
+    },
+    "week_4": {
+      "english": [
+        "Missed period with strong positive pregnancy test",
+        "Increased urination with mild pelvic pressure",
+        "Heightened emotions and frequent mood changes"
+      ],
+      "urdu": [
+        "ماہواری رک جانا اور ٹیسٹ مثبت آنا",
+        "پیشاب میں اضافہ اور ہلکا پیڑو دباؤ",
+        "جذبات میں اضافہ اور موڈ بار بار بدلنا"
+      ]
+    },
+    "week_5": {
+      "english": [
+        "Morning sickness with frequent nausea and vomiting",
+        "Increased sense of smell and food aversions",
+        "Breast heaviness and noticeable tenderness"
+      ],
+      "urdu": [
+        "صبح کے وقت متلی اور قے کی شکایت",
+        "خوراک کی خوشبو سے نفرت اور حساسیت",
+        "چھاتی بھاری اور نمایاں نرمی محسوس ہوتی ہے"
+      ]
+    },
+    "week_6": {
+      "english": [
+        "Severe morning sickness with nausea throughout day",
+        "Mood swings and emotional sensitivity increase",
+        "Mild weight gain or bloating noticeable"
+      ],
+      "urdu": [
+        "پورے دن متلی اور صبح کی بیماری",
+        "موڈ میں اتار چڑھاؤ اور جذباتی حساسیت",
+        "ہلکا وزن بڑھنا یا پیٹ پھولنا"
+      ]
+    },
+    "week_7": {
+      "english": [
+        "Food cravings or strong aversions appear",
+        "Frequent urination due to hormonal changes",
+        "Fatigue remains persistent and strong"
+      ],
+      "urdu": [
+        "کھانے کی خواہش یا سخت نفرت ظاہر ہونا",
+        "ہارمونی تبدیلیوں کی وجہ سے بار بار پیشاب آنا",
+        "شدید اور مستقل تھکن محسوس ہونا"
+      ]
+    },
+    "week_8": {
+      "english": [
+        "Breast veins become more visible and tender",
+        "Mild headaches and dizziness possible",
+        "Increased salivation in some women"
+      ],
+      "urdu": [
+        "چھاتی کی رگیں زیادہ نمایاں اور حساس ہونا",
+        "ہلکے سر درد اور چکر آنا ممکن",
+        "کچھ خواتین میں زیادہ تھوک بننا"
+      ]
+    },
+    "week_9": {
+      "english": [
+        "Nausea peaks with morning sickness intensity",
+        "Skin changes with mild acne possible",
+        "Increased bloating and indigestion discomfort"
+      ],
+      "urdu": [
+        "صبح کی بیماری میں شدت کے ساتھ متلی",
+        "جلد میں تبدیلیاں اور ہلکی کیل مہاسے ممکن",
+        "پیٹ پھولنا اور بدہضمی میں اضافہ"
+      ]
+    },
+    "week_10": {
+      "english": [
+        "Nausea continues but may stabilize soon",
+        "Hair and nail growth increases noticeably",
+        "Lower abdominal stretching or pulling sensations"
+      ],
+      "urdu": [
+        "متلی جاری رہتی ہے لیکن جلد بہتر ہو سکتی ہے",
+        "بال اور ناخن کی نشوونما میں اضافہ",
+        "پیٹ کے نچلے حصے میں کھچاؤ محسوس ہونا"
+      ]
+    },
+    "week_11": {
+      "english": [
+        "Appetite may increase with reduced nausea",
+        "Emotional changes remain strong and frequent",
+        "Mild weight gain starts becoming visible"
+      ],
+      "urdu": [
+        "متلی کم ہونے کے ساتھ بھوک بڑھ سکتی ہے",
+        "جذباتی تبدیلیاں ابھی بھی نمایاں اور بار بار",
+        "وزن میں ہلکا اضافہ نظر آنا شروع ہوتا ہے"
+      ]
+    },
+    "week_12": {
+      "english": [
+        "Fatigue begins to lessen gradually",
+        "Morning sickness reduces in most women",
+        "Uterus starts rising above pelvic bone"
+      ],
+      "urdu": [
+        "تھکن آہستہ آہستہ کم ہونا شروع",
+        "زیادہ تر خواتین میں صبح کی بیماری کم ہونا",
+        "بچہ دانی ہڈی کے اوپر اٹھنا شروع کرتی ہے"
+      ]
+    },
+    "week_13": {
+      "english": [
+        "Energy levels begin to improve noticeably",
+        "Appetite increases and food tolerance better",
+        "Mild constipation or indigestion possible"
+      ],
+      "urdu": [
+        "توانائی کی سطح نمایاں طور پر بہتر ہونا شروع",
+        "بھوک بڑھنا اور کھانے کی برداشت بہتر ہونا",
+        "ہلکی قبض یا بدہضمی ممکن"
+      ]
+    },
+    "week_14": {
+      "english": [
+        "Second trimester starts with energy boost",
+        "Visible baby bump begins to appear",
+        "Skin glow improves with hormonal balance"
+      ],
+      "urdu": [
+        "دوسری سہ ماہی توانائی میں اضافے کے ساتھ شروع",
+        "پیٹ نمایاں ہونا شروع ہوتا ہے",
+        "ہارمونی توازن سے جلد کی چمک بہتر ہوتی ہے"
+      ]
+    },
+    "week_15": {
+      "english": [
+        "Mild back pain or pelvic discomfort",
+        "Increased appetite and reduced nausea",
+        "Possible nasal congestion due to hormones"
+      ],
+      "urdu": [
+        "ہلکی کمر درد یا پیڑو کی تکلیف",
+        "بھوک میں اضافہ اور متلی میں کمی",
+        "ہارمونی اثرات کی وجہ سے ناک بند ہونا"
+      ]
+    },
+    "week_16": {
+      "english": [
+        "Fetal movements may begin to be felt",
+        "Breasts continue to enlarge with veins visible",
+        "Constipation and heartburn discomfort common"
+      ],
+      "urdu": [
+        "بچے کی حرکت محسوس ہونا شروع ہو سکتی ہے",
+        "چھاتیاں بڑھتی ہیں اور رگیں نمایاں ہوتی ہیں",
+        "قبض اور تیزابیت عام ہونا"
+      ]
+    },
+    "week_17": {
+      "english": [
+        "Round ligament pain with belly stretching",
+        "Increased vaginal discharge is common",
+        "Mild swelling in feet and ankles"
+      ],
+      "urdu": [
+        "پیٹ کھچنے سے ربڑ نما درد ہونا",
+        "اندام نہانی سے رطوبت کا بڑھنا عام",
+        "پیروں اور ٹخنوں میں ہلکی سوجن"
+      ]
+    },
+    "week_18": {
+      "english": [
+        "Stronger fetal movements noticed more clearly",
+        "Backaches and leg cramps increase",
+        "Mild dizziness due to low blood pressure"
+      ],
+      "urdu": [
+        "بچے کی حرکت زیادہ واضح محسوس ہونا",
+        "کمر درد اور ٹانگوں میں کھچاؤ بڑھنا",
+        "کم بلڈ پریشر سے ہلکی چکر آنا"
+      ]
+    },
+    "week_19": {
+      "english": [
+        "Stretch marks may start appearing on skin",
+        "Increased hunger and frequent eating habits",
+        "Mild swelling in hands and face possible"
+      ],
+      "urdu": [
+        "جلد پر اسٹریچ مارکس ظاہر ہونا شروع",
+        "بھوک میں اضافہ اور بار بار کھانا",
+        "ہاتھوں اور چہرے پر ہلکی سوجن ممکن"
+      ]
+    },
+    "week_20": {
+      "english": [
+        "Baby movements strong and frequent now",
+        "Lower back pain becomes more common",
+        "Hair and nails grow faster than usual"
+      ],
+      "urdu": [
+        "اب بچے کی حرکت زیادہ اور بار بار ہوتی ہے",
+        "کمر کے نچلے حصے میں درد عام",
+        "بال اور ناخن معمول سے زیادہ تیزی سے بڑھنا"
+      ]
+    },
+    "week_21": {
+      "english": [
+        "Increased appetite with frequent hunger and cravings",
+        "Backaches worsen as baby bump grows steadily",
+        "Skin may itch due to stretching belly"
+      ],
+      "urdu": [
+        "بھوک میں اضافہ اور بار بار خواہشات",
+        "پیٹھ میں درد جیسے جیسے پیٹ بڑھتا ہے",
+        "پیٹ کھنچنے کی وجہ سے خارش ہو سکتی ہے"
+      ]
+    },
+    "week_22": {
+      "english": [
+        "Baby movements stronger and more noticeable daily",
+        "Leg cramps increase especially during nighttime sleep",
+        "Stretch marks may start becoming more visible"
+      ],
+      "urdu": [
+        "بچے کی حرکتیں روزانہ زیادہ نمایاں ہوتی ہیں",
+        "رات کو ٹانگوں میں کھنچاؤ بڑھ سکتا ہے",
+        "اسٹریچ مارکس زیادہ نمایاں ہونا شروع ہو جاتے ہیں"
+      ]
+    },
+    "week_23": {
+      "english": [
+        "Swelling in ankles and feet becomes common",
+        "Heartburn and indigestion worsen after large meals",
+        "Lower back pain increases with growing uterus"
+      ],
+      "urdu": [
+        "ٹخنوں اور پیروں میں سوجن عام ہو جاتی ہے",
+        "زیادہ کھانے کے بعد تیزابیت اور بدہضمی بڑھ جاتی ہے",
+        "بڑھتی ہوئی بچہ دانی سے کمر کا درد بڑھتا ہے"
+      ]
+    },
+    "week_24": {
+      "english": [
+        "Baby kicks stronger and sometimes rhythmic patterns",
+        "Mild shortness of breath due to uterus expansion",
+        "Backaches worsen with poor posture or standing"
+      ],
+      "urdu": [
+        "بچے کی ککس زیادہ زور دار اور باقاعدہ ہو جاتی ہیں",
+        "بچہ دانی بڑھنے سے سانس میں ہلکی کمی",
+        "خراب کرنسی یا کھڑے رہنے سے کمر درد بڑھتا ہے"
+      ]
+    },
+    "week_25": {
+      "english": [
+        "Swollen hands and feet more noticeable evening",
+        "Braxton Hicks contractions may occasionally appear",
+        "Hair and nails grow faster during pregnancy"
+      ],
+      "urdu": [
+        "شام کو ہاتھوں اور پیروں کی سوجن زیادہ نمایاں",
+        "براکسن ہکس سکڑاؤ کبھی کبھار محسوس ہو سکتے ہیں",
+        "حمل کے دوران بال اور ناخن تیزی سے بڑھتے ہیں"
+      ]
+    },
+    "week_26": {
+      "english": [
+        "Insomnia common due to frequent bathroom trips",
+        "Back and pelvic pain increase with baby’s weight",
+        "Skin changes include dark patches and dryness"
+      ],
+      "urdu": [
+        "بار بار واش روم جانے سے بے خوابی عام",
+        "بچے کے وزن سے کمر اور پیڑو کا درد بڑھتا ہے",
+        "جلد میں تبدیلیاں جیسے سیاہ دھبے اور خشکی"
+      ]
+    },
+    "week_27": {
+      "english": [
+        "Third trimester begins with more body discomfort",
+        "Swelling in legs increases with standing long",
+        "Fatigue and tiredness more frequent throughout day"
+      ],
+      "urdu": [
+        "تیسری سہ ماہی میں جسمانی تکالیف بڑھتی ہیں",
+        "زیادہ دیر کھڑے رہنے سے ٹانگوں میں سوجن بڑھتی ہے",
+        "تھکن اور کمزوری دن بھر زیادہ محسوس ہوتی ہے"
+      ]
+    },
+    "week_28": {
+      "english": [
+        "Shortness of breath worsens as baby grows",
+        "Leaking colostrum from breasts may start appearing",
+        "Backaches worsen during sleep and long sitting"
+      ],
+      "urdu": [
+        "بچے کے بڑھنے سے سانس پھولنا زیادہ ہوتا ہے",
+        "چھاتیوں سے پیلا دودھ نکلنا شروع ہو سکتا ہے",
+        "سونے یا زیادہ دیر بیٹھنے سے کمر درد بڑھتا ہے"
+      ]
+    },
+    "week_29": {
+      "english": [
+        "Frequent urination increases with baby’s pressure",
+        "Swelling in face and hands more visible",
+        "Leg cramps severe especially during nighttime sleep"
+      ],
+      "urdu": [
+        "بچے کے دباؤ سے بار بار پیشاب آنا بڑھتا ہے",
+        "چہرے اور ہاتھوں میں سوجن زیادہ نمایاں ہو جاتی ہے",
+        "رات کو ٹانگوں میں کھنچاؤ زیادہ شدید ہوتا ہے"
+      ]
+    },
+    "week_30": {
+      "english": [
+        "Tiredness and exhaustion increase with heavier belly",
+        "Difficulty finding comfortable sleeping position nightly",
+        "Heartburn and acid reflux worsen after meals"
+      ],
+      "urdu": [
+        "بھاری پیٹ کے ساتھ تھکن اور کمزوری بڑھتی ہے",
+        "رات کو آرام دہ پوزیشن تلاش کرنا مشکل ہو جاتا ہے",
+        "کھانے کے بعد سینے میں جلن اور تیزابیت بڑھتی ہے"
+      ]
+    },
+    "week_31": {
+      "english": [
+        "Braxton Hicks contractions stronger and frequent now",
+        "Lower back pain increases with posture changes",
+        "Swelling in ankles worse after walking long"
+      ],
+      "urdu": [
+        "براکسن ہکس سکڑاؤ زیادہ مضبوط اور بار بار ہوتے ہیں",
+        "کرنسی بدلنے سے کمر کے نچلے حصے میں درد بڑھتا ہے",
+        "زیادہ چلنے کے بعد ٹخنوں میں سوجن زیادہ ہوتی ہے"
+      ]
+    },
+    "week_32": {
+      "english": [
+        "Shortness of breath and chest heaviness worsen",
+        "Pelvic pressure increases as baby moves lower",
+        "Leaking colostrum from breasts continues occasionally"
+      ],
+      "urdu": [
+        "سانس پھولنا اور سینے میں بوجھ زیادہ بڑھ جاتا ہے",
+        "بچہ نیچے آتے ہی پیڑو پر دباؤ بڑھتا ہے",
+        "چھاتیوں سے پیلا دودھ کبھی کبھار نکلتا رہتا ہے"
+      ]
+    },
+    "week_33": {
+      "english": [
+        "Swelling increases with hot weather or salt",
+        "Back and hip pain worsen with baby’s growth",
+        "Insomnia common due to frequent fetal movements"
+      ],
+      "urdu": [
+        "گرمی یا نمک زیادہ لینے سے سوجن بڑھتی ہے",
+        "بچے کی بڑھوتری سے کمر اور کولہوں کا درد بڑھتا ہے",
+        "بچے کی حرکتوں کی وجہ سے بے خوابی عام ہو جاتی ہے"
+      ]
+    },
+    "week_34": {
+      "english": [
+        "Frequent urination increases as baby presses bladder",
+        "Leg cramps painful especially during nighttime rest",
+        "Braxton Hicks contractions more frequent and stronger"
+      ],
+      "urdu": [
+        "بچہ مثانے پر دباؤ ڈالنے سے بار بار پیشاب آتا ہے",
+        "رات کے وقت ٹانگوں میں دردناک کھنچاؤ بڑھتا ہے",
+        "براکسن ہکس سکڑاؤ زیادہ بار بار اور مضبوط ہو جاتے ہیں"
+      ]
+    },
+    "week_35": {
+      "english": [
+        "Fatigue increases with heavier and lower belly",
+        "Swelling in feet worsens at end of day",
+        "Pelvic pressure stronger as body prepares birth"
+      ],
+      "urdu": [
+        "بھاری اور نیچے پیٹ سے تھکن زیادہ ہو جاتی ہے",
+        "دن کے آخر میں پیروں میں سوجن زیادہ ہوتی ہے",
+        "جسم پیدائش کی تیاری میں پیڑو پر دباؤ بڑھاتا ہے"
+      ]
+    },
+    "week_36": {
+      "english": [
+        "Shortness of breath eases as baby drops lower",
+        "Frequent bathroom visits increase with pelvic pressure",
+        "Back pain worse especially during nighttime sleeping"
+      ],
+      "urdu": [
+        "بچہ نیچے آنے سے سانس پھولنا کچھ کم ہو جاتا ہے",
+        "پیڑو کے دباؤ سے واش روم کے دورے بڑھ جاتے ہیں",
+        "رات کو سوتے وقت کمر درد زیادہ بڑھ جاتا ہے"
+      ]
+    },
+    "week_37": {
+      "english": [
+        "Pelvic pressure increases as baby head engages",
+        "Braxton Hicks contractions stronger and more regular",
+        "Fatigue and tiredness increase throughout the day"
+      ],
+      "urdu": [
+        "بچے کا سر نیچے آنے سے پیڑو پر دباؤ بڑھتا ہے",
+        "براکسن ہکس سکڑاؤ زیادہ مضبوط اور باقاعدہ ہوتے ہیں",
+        "تھکن اور کمزوری دن بھر زیادہ بڑھتی ہے"
+      ]
+    },
+    "week_38": {
+      "english": [
+        "Baby movements less frequent but stronger noticeable",
+        "Vaginal discharge increases with mucus plug loss",
+        "Sleep disturbances common due to pelvic discomfort"
+      ],
+      "urdu": [
+        "بچے کی حرکتیں کم لیکن زیادہ طاقتور محسوس ہوتی ہیں",
+        "اندام نہانی سے رطوبت اور بلغم کا اخراج بڑھتا ہے",
+        "پیڑو کی تکلیف سے نیند میں رکاوٹ عام ہو جاتی ہے"
+      ]
+    },
+    "week_39": {
+      "english": [
+        "Strong contractions signal body preparing for labor",
+        "Back pain radiates toward hips and thighs",
+        "Increased pelvic pressure makes walking uncomfortable"
+      ],
+      "urdu": [
+        "مضبوط سکڑاؤ جسم کو پیدائش کی تیاری کا اشارہ دیتے ہیں",
+        "کمر کا درد کولہوں اور رانوں تک پھیلتا ہے",
+        "پیڑو کے دباؤ سے چلنا مشکل ہو جاتا ہے"
+      ]
+    },
+    "week_40": {
+      "english": [
+        "Contractions become regular and stronger indicating labor",
+        "Water breaking may happen anytime before delivery",
+        "Pelvic pain sharp as baby descends lower"
+      ],
+      "urdu": [
+        "سکڑاؤ باقاعدہ اور زیادہ مضبوط ہو جاتے ہیں جو پیدائش کا اشارہ ہیں",
+        "ڈیلیوری سے پہلے کسی بھی وقت پانی کی تھیلی پھٹ سکتی ہے",
+        "بچے کے نیچے آنے سے پیڑو کا درد زیادہ تیز ہو جاتا ہے"
+      ]
+    }
+  }
+}

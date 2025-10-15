@@ -18,6 +18,8 @@
       "supportsTablet": true
     },
     "android": {
+      "googleServicesFile": "./google-services.json",
+      "useNextNotificationsApi": true,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -49,6 +51,14 @@
       "expo-asset",
       "expo-secure-store",
       "expo-audio",
+      "@react-native-firebase/app",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#ffffff"
+        }
+      ],
       "expo-speech-recognition",
       [
         "expo-speech-recognition",
