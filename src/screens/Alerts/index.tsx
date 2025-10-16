@@ -78,40 +78,40 @@ export default function NotificationScreen() {
     }
   };
 
-  const registerDeviceToken = async (token: string) => {
-    try {
-      const storedToken = await SecureStore.getItemAsync('fcmToken');
-      if (storedToken === token) return; // Skip if already stored
+ const registerDeviceToken = async (token: string) => {
+     try {
+       const storedToken = await SecureStore.getItemAsync('fcmToken');
+       if (storedToken === token) return; // Skip if already stored
 
-      const accessToken = await SecureStore.getItemAsync('accessToken');
-      const storedUser = await SecureStore.getItemAsync('user');
-      const currentUser = storedUser ? JSON.parse(storedUser) : null;
-      const senderId = currentUser?.userId;
+       const accessToken = await SecureStore.getItemAsync('accessToken');
+       const storedUser = await SecureStore.getItemAsync('user');
+       const currentUser = storedUser ? JSON.parse(storedUser) : null;
+       const senderId = currentUser?.userId;
 
-      if (!accessToken || !senderId) throw new Error('Missing auth details');
+       if (!accessToken || !senderId) throw new Error('Missing auth details');
 
-      // Use the correct base URL from your notification API
-      const apiUrl = `${process.env.EXPO_PUBLIC_URL_CHAT}/api/notification/register-device-token`;
+       // Use the correct base URL from your notification API
+       const apiUrl = `${process.env.EXPO_PUBLIC_URL_CHAT}/api/notification/register-device-token`;
 
-      const axios = require('axios');
-      const res = await axios.post(
-        apiUrl,
-        { userId: senderId, deviceToken: token },
-        {
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }
-      );
+       const axios = require('axios');
+       const res = await axios.post(
+         apiUrl,
+         { userId: senderId, deviceToken: token },
+         {
+           headers: {
+             Accept: 'application/json',
+             'Content-Type': 'application/json',
+             Authorization: `Bearer ${accessToken}`,
+           },
+         }
+       );
 
-      console.log('✅ Device token registered:', res.status);
-      await SecureStore.setItemAsync('fcmToken', token);
-    } catch (error) {
-      console.error('❌ Error registering token:', error);
-    }
-  };
+       console.log('✅ Device token registered:', res.status);
+       await SecureStore.setItemAsync('fcmToken', token);
+     } catch (error) {
+       console.error('❌ Error registering token:', error);
+     }
+   };
 
   // --------------------- 🚀 INIT HOOK ---------------------
   useEffect(() => {

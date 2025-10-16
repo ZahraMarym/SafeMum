@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "152398810706",
+    "project_id": "safemumfcm",
+    "storage_bucket": "safemumfcm.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:152398810706:android:380f5eced9f6d6c2fa198b",
+        "android_client_info": {
+          "package_name": "com.safemum.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBUuM-pELbIbIUw_9dQD8z-3S9-q1kVZ8I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
