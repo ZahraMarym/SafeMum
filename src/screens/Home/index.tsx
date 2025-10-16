@@ -25,6 +25,9 @@ import MotherImage from "../../../assets/images/motherImage.svg";
 import { setLanguage } from '../../redux/slice/languageSlice';
 import assets from "@/lib/utils/assets";
 import pregnancySymptoms from "../../../assets/pregnancy_symptoms_en_ur.json";
+import messaging from '@react-native-firebase/messaging';
+import notifee, { AndroidImportance } from '@notifee/react-native';
+
 
 const EXPO_PUBLIC_URL = process.env.EXPO_PUBLIC_URL;
 const { width } = Dimensions.get('window');
@@ -38,6 +41,82 @@ export default function SafeMumDashboard() {
   const [loading, setLoading] = useState(true);
   const LOCAL_FILE_PATH = FileSystem.documentDirectory + 'app-data.json';
   const [userName, setUserName] = useState<string>(''); // State to store the user's name
+  const [fcmToken, setFcmToken] = useState<string | null>(null);
+
+
+  // --------------------- 🔥 FCM TOKEN ---------------------
+  const generateDeviceFCMToken = async () => {
+    try {
+      const authStatus = await messaging().requestPermission();
+      if (
+        authStatus !== messaging.AuthorizationStatus.AUTHORIZED &&
+        authStatus !== messaging.AuthorizationStatus.PROVISIONAL
+      ) {
+        console.log('❌ Push notification permission not granted');
+        return null;
+      }
+
+      const token = await messaging().getToken();
+      console.log('🔥 FCM Token generated:', token);
+      return token;
+    } catch (error) {
+      console.error('❌ Error generating FCM token:', error);
+      return null;
+    }
+  };
+
+  const registerDeviceToken = async (token: string) => {
+              console.log('Registering token:', token); // Ensure this logs
+
+    try {
+
+      const accessToken = await SecureStore.getItemAsync('accessToken');
+      const storedUser = await SecureStore.getItemAsync('user');
+      const currentUser = storedUser ? JSON.parse(storedUser) : null;
+      const senderId = currentUser?.userId;
+
+      if (!accessToken || !senderId) throw new Error('Missing auth details');
+
+      // Use the correct base URL from your notification API
+      const apiUrl = `${process.env.EXPO_PUBLIC_URL}/notification/register-device-token`;
+
+
+      const axios = require('axios');
+      const res = await axios.post(
+        apiUrl,
+        { userId: senderId, deviceToken: token },
+        {
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+
+      console.log('✅ Device token registered:', res.status);
+      await SecureStore.setItemAsync('fcmToken', token);
+    } catch (error) {
+      console.error('❌ Error registering token:', error);
+    }
+  };
+
+  // --------------------- 🚀 INIT HOOK ---------------------
+useEffect(() => {
+  const registerFCM = async () => {
+    setLoading(true);
+    const token = await generateDeviceFCMToken();
+    if (token) {
+      setFcmToken(token);
+      await registerDeviceToken(token);
+    }
+    setLoading(false);
+  };
+
+  registerFCM();
+}, []); // <-- empty array ensures it runs only once on mount
+
+
 
   useEffect(() => {
     if (I18nManager.isRTL !== isRTL) {
@@ -158,7 +237,7 @@ const fetchFromAPI = async () => {
 
       // Fetch the dashboard content
       const res = await axios.get(
-        `${EXPO_PUBLIC_URL}/content/dashboard-content?Id=${senderId}`,
+        `${EXPO_PUBLIC_URL}/content/dashboard-content?Id=${senderId}&Language=${language}`,
         {
           headers: {
             Accept: '*/*',
@@ -166,6 +245,8 @@ const fetchFromAPI = async () => {
           },
         }
       );
+
+    console.log("dashboard content",res.data )
 
       const apiData = res.data.data || res.data;
       setData(apiData);
@@ -480,6 +561,6 @@ return (
       </View>
     )}
   </View>
-);
+)
 
 }
