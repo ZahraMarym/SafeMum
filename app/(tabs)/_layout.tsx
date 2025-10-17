@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { AppState, Image, View } from "react-native";
 import { Tabs } from "expo-router";
 import { Redirect } from "expo-router";
@@ -9,11 +9,14 @@ import {
   Users,
   Settings,
 } from "lucide-react-native";
+import { NotificationContext } from "../../src/context/NotificationContext"; // adjust path if needed
+
+
 
 const Layout = () => {
   const [loading, setLoading] = useState(true);
-    // Check token when the app state changes (e.g., resumes from background)
-    const subscription = AppState.addEventListener("change", (state) => {
+  const { unreadCount } = useContext(NotificationContext);
+  const subscription = AppState.addEventListener("change", (state) => {
       if (state === "active") {
         checkAuth();
       }
@@ -59,14 +62,37 @@ const Layout = () => {
       />
 
       {/* Bookings Tab */}
-      <Tabs.Screen
-        name="(alerts)"
-        options={{
-          tabBarIcon: ({ color, focused }) => (
+    <Tabs.Screen
+      name="(alerts)"
+      options={{
+        tabBarIcon: ({ color, focused }) => (
+          <View style={{ position: "relative" }}>
             <AlertCircle size={30} color={focused ? "#825DEF" : color} />
-          ),
-        }}
-      />
+            {unreadCount?.count > 0 && (
+              <View
+                style={{
+                  position: "absolute",
+                  top: -5,
+                  right: -10,
+                  backgroundColor: "#FF3B30",
+                  borderRadius: 10,
+                  minWidth: 18,
+                  height: 18,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  paddingHorizontal: 4,
+                }}
+              >
+                <Text style={{ color: "white", fontSize: 10, fontWeight: "700" }}>
+                  {unreadCount.count > 99 ? "99+" : unreadCount.count}
+                </Text>
+              </View>
+            )}
+          </View>
+        ),
+      }}
+    />
+
 
       {/* Map Icon (Centered) */}
       <Tabs.Screen

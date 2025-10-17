@@ -57,71 +57,12 @@ export default function NotificationScreen() {
     }
   };
 
-  // --------------------- 🔥 FCM TOKEN ---------------------
-  const generateDeviceFCMToken = async () => {
-    try {
-      const authStatus = await messaging().requestPermission();
-      if (
-        authStatus !== messaging.AuthorizationStatus.AUTHORIZED &&
-        authStatus !== messaging.AuthorizationStatus.PROVISIONAL
-      ) {
-        console.log('❌ Push notification permission not granted');
-        return null;
-      }
 
-      const token = await messaging().getToken();
-      console.log('🔥 FCM Token generated:', token);
-      return token;
-    } catch (error) {
-      console.error('❌ Error generating FCM token:', error);
-      return null;
-    }
-  };
-
- const registerDeviceToken = async (token: string) => {
-     try {
-       const storedToken = await SecureStore.getItemAsync('fcmToken');
-       if (storedToken === token) return; // Skip if already stored
-
-       const accessToken = await SecureStore.getItemAsync('accessToken');
-       const storedUser = await SecureStore.getItemAsync('user');
-       const currentUser = storedUser ? JSON.parse(storedUser) : null;
-       const senderId = currentUser?.userId;
-
-       if (!accessToken || !senderId) throw new Error('Missing auth details');
-
-       // Use the correct base URL from your notification API
-       const apiUrl = `${process.env.EXPO_PUBLIC_URL_CHAT}/api/notification/register-device-token`;
-
-       const axios = require('axios');
-       const res = await axios.post(
-         apiUrl,
-         { userId: senderId, deviceToken: token },
-         {
-           headers: {
-             Accept: 'application/json',
-             'Content-Type': 'application/json',
-             Authorization: `Bearer ${accessToken}`,
-           },
-         }
-       );
-
-       console.log('✅ Device token registered:', res.status);
-       await SecureStore.setItemAsync('fcmToken', token);
-     } catch (error) {
-       console.error('❌ Error registering token:', error);
-     }
-   };
 
   // --------------------- 🚀 INIT HOOK ---------------------
   useEffect(() => {
     (async () => {
       setLoading(true);
-      const token = await generateDeviceFCMToken();
-      if (token) {
-        setFcmToken(token);
-        await registerDeviceToken(token);
-      }
       setLoading(false);
     })();
 

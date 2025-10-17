@@ -102,19 +102,44 @@ export default function SafeMumDashboard() {
   };
 
   // --------------------- 🚀 INIT HOOK ---------------------
+
+// --------------------- 🚀 INIT HOOK ---------------------
 useEffect(() => {
+  let hasRegistered = false; // ✅ Prevents multiple duplicate calls
+
   const registerFCM = async () => {
-    setLoading(true);
-    const token = await generateDeviceFCMToken();
-    if (token) {
-      setFcmToken(token);
-      await registerDeviceToken(token);
+    try {
+      setLoading(true);
+      const token = await generateDeviceFCMToken();
+      if (token) {
+        setFcmToken(token);
+        await registerDeviceToken(token);
+      }
+    } catch (err) {
+      console.error("❌ FCM registration failed:", err);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
-  registerFCM();
-}, []); // <-- empty array ensures it runs only once on mount
+  const handleConnectionChange = (state) => {
+    if (state.isConnected && !hasRegistered) {
+      console.log("✅ Internet available. Registering FCM...");
+      hasRegistered = true;
+      registerFCM();
+    } else if (!state.isConnected) {
+      console.log("⚠️ No internet connection. Skipping FCM registration.");
+    }
+  };
+
+  // 🔹 Check immediately on mount
+  NetInfo.fetch().then(handleConnectionChange);
+
+  // 🔹 Listen for reconnection (only once)
+  const unsubscribe = NetInfo.addEventListener(handleConnectionChange);
+
+  return () => unsubscribe();
+}, []);
 
 
 
