@@ -24,6 +24,11 @@ import {
 import { useDispatch, useSelector } from 'react-redux'; // Import Redux hooks
 const screenWidth = Dimensions.get('window').width;
 const { width } = Dimensions.get('window');
+import {
+  calcPercentageHeight,
+  calcPercentageWidth,
+} from "@/lib/utils/dimensions";
+
 
 const MedicalPregnancyInfoScreen = () => {
   const router = useRouter();
@@ -401,115 +406,132 @@ const MedicalPregnancyInfoScreen = () => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: '#F6F6FF',
-    paddingHorizontal: 24,
-    paddingVertical: 60,
-  },
-  content: {
-    paddingBottom: 50,
-  },
-  backButton: {
-    marginBottom: 20,
-  },
-  title: {
-    fontSize: 22,
-    alignSelf: 'center',
-    marginBottom: 30,
-    textAlign: 'center',
-  },
-  fieldContainer: {
-    marginBottom: 15,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#000',
-    width:"100",
-    flex: 1,
-  },
-  rowBetween: {
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-    paddingHorizontal: 4,
-  },
-  datePickerContainer: {
-    alignItems: 'center',
-    backgroundColor: '#ffffff',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 20,
-    borderColor: '#E5E7EB',
-    borderWidth: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-  },
-  dateText: {
-    color: '#333',
-    fontSize: 16,
-  },
-  input: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 14,
-    borderColor: '#E5E7EB',
-    borderWidth: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-  },
-  pickerContainer: {
-    marginBottom: 15,
-  },
-  pickerLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#000',
-  },
-  pickerWrapper: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    borderColor: '#E5E7EB',
-    borderWidth: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-  },
-  picker: {
-    height: 50,
-    color: '#333',
-  },
-  buttonContainer: {
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  nextButton: {
-    width: screenWidth * 0.8,
-    backgroundColor: '#A78BFA',
-    paddingVertical: 14,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 14,
-    shadowColor: '#A78BFA',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: Platform.OS === 'ios' ? 0.3 : 0.6,
-    shadowRadius: 6,
-    elevation: 6,
-    marginBottom:50,
-  },
-  nextButtonText: {
-    color: '#FFFFFF',
-    fontSize: 20,
-    fontWeight: '600',
-    letterSpacing: 0.8,
-  },
+      flex: 1,
+      backgroundColor: "#F6F6FF",
+      paddingHorizontal: calcPercentageWidth(6),
+      paddingVertical: calcPercentageHeight(7),
+    },
+
+    content: {
+      paddingBottom: calcPercentageHeight(6),
+    },
+
+    backButton: {
+      marginBottom: calcPercentageHeight(2.5),
+    },
+
+    title: {
+      fontSize: calcPercentageWidth(5.5),
+      alignSelf: "center",
+      marginBottom: calcPercentageHeight(3.5),
+      textAlign: "center",
+    },
+
+    fieldContainer: {
+      marginBottom: calcPercentageHeight(1.8),
+    },
+
+    label: {
+      fontSize: calcPercentageWidth(4),
+      fontWeight: "600",
+      color: "#000",
+      width: "100%",
+      flex: 1,
+    },
+
+    rowBetween: {
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: calcPercentageHeight(2.5),
+      paddingHorizontal: calcPercentageWidth(1),
+    },
+
+    datePickerContainer: {
+      alignItems: "center",
+      backgroundColor: "#ffffff",
+      padding: calcPercentageHeight(1.6),
+      borderRadius: calcPercentageWidth(2),
+      marginBottom: calcPercentageHeight(2.5),
+      borderColor: "#E5E7EB",
+      borderWidth: 1,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 6,
+    },
+
+    dateText: {
+      color: "#333",
+      fontSize: calcPercentageWidth(4),
+    },
+
+    input: {
+      backgroundColor: "#fff",
+      borderRadius: calcPercentageWidth(2),
+      paddingHorizontal: calcPercentageWidth(4),
+      paddingVertical: calcPercentageHeight(1.5),
+      fontSize: calcPercentageWidth(3.5),
+      borderColor: "#E5E7EB",
+      borderWidth: 1,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 6,
+    },
+
+    pickerContainer: {
+      marginBottom: calcPercentageHeight(1.8),
+    },
+
+    pickerLabel: {
+      fontSize: calcPercentageWidth(4),
+      fontWeight: "600",
+      color: "#000",
+      marginBottom: calcPercentageHeight(1),
+    },
+
+    pickerWrapper: {
+      backgroundColor: "#fff",
+      borderRadius: calcPercentageWidth(2),
+      borderColor: "#E5E7EB",
+      borderWidth: 1,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 6,
+    },
+
+    picker: {
+      height: calcPercentageHeight(6.5),
+      color: "#333",
+    },
+
+    buttonContainer: {
+      alignItems: "center",
+      marginTop: calcPercentageHeight(2.5),
+    },
+
+    nextButton: {
+      width: calcPercentageWidth(80),
+      backgroundColor: "#A78BFA",
+      paddingVertical: calcPercentageHeight(1.8),
+      justifyContent: "center",
+      alignItems: "center",
+      borderRadius: calcPercentageWidth(3.5),
+      shadowColor: "#A78BFA",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: Platform.OS === "ios" ? 0.3 : 0.6,
+      shadowRadius: 6,
+      elevation: 6,
+      marginBottom: calcPercentageHeight(6),
+    },
+
+    nextButtonText: {
+      color: "#FFFFFF",
+      fontSize: calcPercentageWidth(5),
+      fontWeight: "600",
+      letterSpacing: 0.8,
+    },
 });
 
 export default MedicalPregnancyInfoScreen;

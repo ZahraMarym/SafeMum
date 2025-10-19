@@ -126,5 +126,21 @@ export default {
   trimesterFirst: "پہلا",
   trimesterSecond: "دوسرا",
   trimesterThird: "تیسرا",
-  babySize: "بچے کا سائز"
+  babySize: "بچے کا سائز",
+  voice: {
+      button_listening: "سن رہا ہے…",
+      button_default: "آواز کے احکامات",
+      instructions: "آواز سے احکامات دینے کے لیے مائیک پر دبائیں۔",
+      title: "آواز مددگار",
+      subtitle: "اپلیکیشن کو اپنی آواز سے کنٹرول کریں"
+    },
+    dashboard: {
+        header_title: "حمل کا ٹریکر",
+        week: "ہفتہ",
+        content: "ہفتہ {{currentWeek}} میں، آپ کا بچہ تقریباً {{babySize}} کے سائز کا ہے۔",
+        length: "لمبائی: {{length}}",
+        weight: "وزن: {{weight}}",
+
+      },
+    selectTime: "وقت منتخب کریں",
 };

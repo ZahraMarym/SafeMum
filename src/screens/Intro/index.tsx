@@ -18,7 +18,10 @@ import {
   View,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
-
+import {
+  calcPercentageHeight,
+  calcPercentageWidth,
+} from "@/lib/utils/dimensions";
 import {
   ExpoSpeechRecognitionModule,
   useSpeechRecognitionEvent,
@@ -179,14 +182,14 @@ export default function WelcomeScreen() {
 
       {/* Voice Commands */}
       <TouchableOpacity
-        style={[styles.button, recognizing && styles.buttonListening]}
-        onPress={recognizing ? stopListening : startListening}
-      >
-        <Ionicons name={micIcon} size={25} color="#fff" style={styles.icon} />
-        <TextBold style={styles.buttonText}>
-          {recognizing ? "Listening…" : "Voice Commands"}
-        </TextBold>
-      </TouchableOpacity>
+          style={[styles.button, recognizing && styles.buttonListening]}
+          onPress={recognizing ? stopListening : startListening}
+        >
+          <Ionicons name="mic" size={25} color="#fff" style={styles.icon} />
+          <TextBold style={styles.buttonText}>
+            {recognizing ? i18n.t("voice.button_listening") : i18n.t("voice.button_default")}
+          </TextBold>
+        </TouchableOpacity>
 
 
     </View>
@@ -202,32 +205,89 @@ const getSpeechLanguage = (language: 'en' | 'ur') => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F6F6FF", alignItems: "center", justifyContent: "center", paddingHorizontal: 24 },
-  title: { fontSize: 35, color: "#A78BFA", marginTop: 8, letterSpacing: 0.3 },
-  subtitle: { fontSize: 19, fontWeight: "500", color: "#C4B5FD", textAlign: "center" },
-  description: { marginTop: 90, fontSize: 18, fontWeight: "400", lineHeight: 24, color: "#374151", textAlign: "center", paddingHorizontal: 12 },
-  languageContainer: { marginTop: 30, width: "100%", alignItems: "center", justifyContent: "center" },
-  label: { fontSize: 16, color: "#374151", marginBottom: 8 },
-  switchContainer: { flexDirection: "row", alignItems: "center", justifyContent: "center" },
-  switchText: { fontSize: 16, color: "#374151", marginHorizontal: 8 },
-  button: {
-    flexDirection: "row",
-    width: screenWidth * 0.8,
-    marginTop: 16,
-    backgroundColor: "#A78BFA",
-    paddingVertical: 14,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 40,
-    borderRadius: 14,
-    shadowColor: "#A78BFA",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: Platform.OS === "ios" ? 0.3 : 0.6,
-    shadowRadius: 6,
-    elevation: 6,
-  },
-  buttonListening: { backgroundColor: "#10B981" },
-  buttonText: { color: "#FFFFFF", fontSize: 20, fontWeight: "600", letterSpacing: 0.8 },
-  icon: { marginRight: 10 },
-  instructionsText: { marginTop: 20, fontSize: 14, color: "#6B7280", textAlign: "center", fontStyle: "italic", paddingHorizontal: 20 },
+   container: {
+      flex: 1,
+      backgroundColor: "#F6F6FF",
+      alignItems: "center",
+      justifyContent: "center",
+      paddingHorizontal: calcPercentageWidth(6),
+    },
+    title: {
+      fontSize: calcPercentageWidth(9), // scales with width
+      color: "#A78BFA",
+      marginTop: calcPercentageHeight(1.2),
+      letterSpacing: 0.3,
+    },
+    subtitle: {
+      fontSize: calcPercentageWidth(4.5),
+      fontWeight: "500",
+      color: "#C4B5FD",
+      textAlign: "center",
+    },
+    description: {
+      marginTop: calcPercentageHeight(12),
+      fontSize: calcPercentageWidth(4.2),
+      fontWeight: "400",
+      lineHeight: calcPercentageHeight(3.2),
+      color: "#374151",
+      textAlign: "center",
+      paddingHorizontal: calcPercentageWidth(3),
+    },
+    languageContainer: {
+      marginTop: calcPercentageHeight(3),
+      width: "100%",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    label: {
+      fontSize: calcPercentageWidth(3.8),
+      color: "#374151",
+      marginBottom: calcPercentageHeight(1),
+    },
+    switchContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    switchText: {
+      fontSize: calcPercentageWidth(3.8),
+      color: "#374151",
+      marginHorizontal: calcPercentageWidth(2),
+    },
+    button: {
+      flexDirection: "row",
+      width: calcPercentageWidth(80),
+      marginTop: calcPercentageHeight(2),
+      backgroundColor: "#A78BFA",
+      paddingVertical: calcPercentageHeight(1.8),
+      justifyContent: "center",
+      alignItems: "center",
+      paddingHorizontal: calcPercentageWidth(10),
+      borderRadius: calcPercentageWidth(3.5),
+      shadowColor: "#A78BFA",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: Platform.OS === "ios" ? 0.3 : 0.6,
+      shadowRadius: 6,
+      elevation: 6,
+    },
+    buttonListening: {
+      backgroundColor: "#10B981",
+    },
+    buttonText: {
+      color: "#FFFFFF",
+      fontSize: calcPercentageWidth(5),
+      fontWeight: "600",
+      letterSpacing: 0.8,
+    },
+    icon: {
+      marginRight: calcPercentageWidth(2.5),
+    },
+    instructionsText: {
+      marginTop: calcPercentageHeight(2.5),
+      fontSize: calcPercentageWidth(3.4),
+      color: "#6B7280",
+      textAlign: "center",
+      fontStyle: "italic",
+      paddingHorizontal: calcPercentageWidth(5),
+    },
 });

@@ -12,7 +12,10 @@ import { setLanguage } from "@/redux/slice/languageSlice";
 import { useRouter } from "expo-router";
 import NetInfo from "@react-native-community/netinfo";
 import YoutubePlayer from "react-native-youtube-iframe";
-
+import {
+  calcPercentageHeight,
+  calcPercentageWidth,
+} from "@/lib/utils/dimensions";
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -282,137 +285,191 @@ const videosForLang = React.useMemo(
 
 function createStyles(isRTL: boolean) {
   return StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: "#F6F6FF",
-      paddingHorizontal: 24,
-      direction: isRTL ? "rtl" : "ltr",
-    },
-    backButton: {
-      position: "absolute",
-      top: 60,
-      left: isRTL ? undefined : 24,
-      right: isRTL ? 24 : undefined,
-      zIndex: 10,
-    },
-    title: {
-      fontSize: 22,
-      color: "#374151",
-      marginBottom: 12,
-      textAlign: "center",
-    },
-    langBtn: {
-      alignSelf: "center",
-      flexDirection: "row",
-      backgroundColor: "#A78BFA",
-      paddingHorizontal: 14,
-      paddingVertical: 8,
-      borderRadius: 10,
-      marginBottom: 16,
-    },
-    langBtnText: {
-      color: "#fff",
-      fontSize: 14,
-    },
+       container: {
+         flex: 1,
+         backgroundColor: "#F6F6FF",
+         paddingHorizontal: calcPercentageWidth(6),
+         direction: isRTL ? "rtl" : "ltr",
+       },
 
-    // -------- tabs
-    tabs: {
-      backgroundColor: "#ECEBFF",
-      borderRadius: 12,
-      padding: 4,
-      marginBottom: 16,
-    },
-    tabBtn: {
-      flex: 1,
-      paddingVertical: 10,
-      borderRadius: 10,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    tabBtnActive: {
-      backgroundColor: "#7C3AED",
-    },
-    tabText: {
-      fontSize: 14,
-      color: "#4B5563",
-      fontWeight: "600",
-    },
-    tabTextActive: {
-      color: "#fff",
-    },
-pickerWrap: {
-  height: 60,
-  borderWidth: 1,
-  borderColor: "#E5E7EB",
-  borderRadius: 12,
-  overflow: "hidden",
-  backgroundColor: "#fff",
-},
+       backButton: {
+         position: "absolute",
+         top: calcPercentageHeight(7),
+         left: isRTL ? undefined : calcPercentageWidth(6),
+         right: isRTL ? calcPercentageWidth(6) : undefined,
+         zIndex: 10,
+       },
 
-picker: {
-  height: 58,
-  color: "#111827",
-  width: "100%",
-  paddingHorizontal: 12,  // gives breathing room on LTR
-},
+       title: {
+         fontSize: calcPercentageWidth(5.6),
+         color: "#374151",
+         marginBottom: calcPercentageHeight(1.5),
+         textAlign: "center",
+         fontWeight: "bold",
+       },
 
-pickerLtr: Platform.select({
-  ios: { textAlign: "left" },
-  android: { writingDirection: "ltr" },
-}),
+       langBtn: {
+         alignSelf: "center",
+         flexDirection: "row",
+         backgroundColor: "#A78BFA",
+         paddingHorizontal: calcPercentageWidth(3.5),
+         paddingVertical: calcPercentageHeight(1),
+         borderRadius: calcPercentageWidth(3),
+         marginBottom: calcPercentageHeight(2),
+       },
 
-pickerRtl: Platform.select({
-  ios: { textAlign: "right" },
-  android: { writingDirection: "rtl" },
-}),
+       langBtnText: {
+         color: "#fff",
+         fontSize: calcPercentageWidth(3.8),
+         fontWeight: "500",
+       },
 
-    // video
-    videoCard: {
-      marginTop: 18,
-      borderRadius: 16,
-      padding: 20,
-      overflow: "hidden",
-      backgroundColor: "#fff",
-      alignItems: "center",
-      justifyContent: "center",
-      ...Platform.select({
-        ios: { shadowColor: "#000", shadowOpacity: 0.2, shadowRadius: 6, shadowOffset: { width: 0, height: 4 } },
-        android: { elevation: 6 },
-      }),
-    },
-    video: {
-      width: screenWidth - 48,
-      aspectRatio: 16 / 9,
-      margin: 10,
-      backgroundColor: "#000",
-    },
+       // -------- tabs
+       tabs: {
+         backgroundColor: "#ECEBFF",
+         borderRadius: calcPercentageWidth(3),
+         padding: calcPercentageWidth(1.2),
+         marginBottom: calcPercentageHeight(2),
+         flexDirection: "row",
+       },
 
-    // simple card for placeholders
-    card: {
-      marginTop: 12,
-      backgroundColor: "#fff",
-      borderRadius: 12,
-      padding: 16,
-      ...Platform.select({
-        ios: { shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 4, shadowOffset: { width: 0, height: 2 } },
-        android: { elevation: 3 },
-      }),
-    },
-    cardText: { color: "#111827", fontSize: 14, textAlign: "center" },
-  offlineCard: {
-    marginTop: 12,
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 16,
-    alignItems: "center",
-    ...Platform.select({
-      ios: { shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 4, shadowOffset: { width: 0, height: 2 } },
-      android: { elevation: 3 },
-    }),
-  },
-  offlineText: { color: "#B91C1C", fontSize: 14, textAlign: "center", marginBottom: 8 },
-  retryBtn: { backgroundColor: "#7C3AED", paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8 },
-  retryText: { color: "#fff", fontWeight: "600" },
+       tabBtn: {
+         flex: 1,
+         paddingVertical: calcPercentageHeight(1.3),
+         borderRadius: calcPercentageWidth(3),
+         alignItems: "center",
+         justifyContent: "center",
+       },
 
+       tabBtnActive: {
+         backgroundColor: "#7C3AED",
+       },
+
+       tabText: {
+         fontSize: calcPercentageWidth(3.5),
+         color: "#4B5563",
+         fontWeight: "600",
+       },
+
+       tabTextActive: {
+         color: "#fff",
+       },
+
+       // -------- Picker
+       pickerWrap: {
+         height: calcPercentageHeight(7),
+         borderWidth: 1,
+         borderColor: "#E5E7EB",
+         borderRadius: calcPercentageWidth(3),
+         overflow: "hidden",
+         backgroundColor: "#fff",
+       },
+
+       picker: {
+         height: calcPercentageHeight(6.8),
+         color: "#111827",
+         width: "100%",
+         paddingHorizontal: calcPercentageWidth(3),
+       },
+
+       pickerLtr: Platform.select({
+         ios: { textAlign: "left" },
+         android: { writingDirection: "ltr" },
+       }),
+
+       pickerRtl: Platform.select({
+         ios: { textAlign: "right" },
+         android: { writingDirection: "rtl" },
+       }),
+
+       // -------- Video
+       videoCard: {
+         marginTop: calcPercentageHeight(2),
+         borderRadius: calcPercentageWidth(4),
+         padding: calcPercentageWidth(5),
+         overflow: "hidden",
+         backgroundColor: "#fff",
+         alignItems: "center",
+         justifyContent: "center",
+         ...Platform.select({
+           ios: {
+             shadowColor: "#000",
+             shadowOpacity: 0.2,
+             shadowRadius: 6,
+             shadowOffset: { width: 0, height: 4 },
+           },
+           android: { elevation: 6 },
+         }),
+       },
+
+       video: {
+         width: screenWidth - calcPercentageWidth(12),
+         aspectRatio: 16 / 9,
+         margin: calcPercentageHeight(1.5),
+         backgroundColor: "#000",
+         borderRadius: calcPercentageWidth(3),
+       },
+
+       // -------- Card
+       card: {
+         marginTop: calcPercentageHeight(1.5),
+         backgroundColor: "#fff",
+         borderRadius: calcPercentageWidth(3),
+         padding: calcPercentageWidth(4),
+         ...Platform.select({
+           ios: {
+             shadowColor: "#000",
+             shadowOpacity: 0.1,
+             shadowRadius: 4,
+             shadowOffset: { width: 0, height: 2 },
+           },
+           android: { elevation: 3 },
+         }),
+       },
+
+       cardText: {
+         color: "#111827",
+         fontSize: calcPercentageWidth(3.5),
+         textAlign: "center",
+       },
+
+       // -------- Offline Card
+       offlineCard: {
+         marginTop: calcPercentageHeight(1.5),
+         backgroundColor: "#fff",
+         borderRadius: calcPercentageWidth(3),
+         padding: calcPercentageWidth(4),
+         alignItems: "center",
+         ...Platform.select({
+           ios: {
+             shadowColor: "#000",
+             shadowOpacity: 0.1,
+             shadowRadius: 4,
+             shadowOffset: { width: 0, height: 2 },
+           },
+           android: { elevation: 3 },
+         }),
+       },
+
+       offlineText: {
+         color: "#B91C1C",
+         fontSize: calcPercentageWidth(3.5),
+         textAlign: "center",
+         marginBottom: calcPercentageHeight(1),
+         fontWeight: "500",
+       },
+
+       retryBtn: {
+         backgroundColor: "#7C3AED",
+         paddingHorizontal: calcPercentageWidth(3),
+         paddingVertical: calcPercentageHeight(1),
+         borderRadius: calcPercentageWidth(2.2),
+       },
+
+       retryText: {
+         color: "#fff",
+         fontWeight: "600",
+         fontSize: calcPercentageWidth(3.8),
+       },
   });
 }

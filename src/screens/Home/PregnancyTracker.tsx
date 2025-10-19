@@ -21,6 +21,10 @@ import {
 } from 'react-native';
 import { useSelector } from 'react-redux';
 import fallbackData from '../../../assets/fallBackData.json';
+import {
+  calcPercentageHeight,
+  calcPercentageWidth,
+} from "@/lib/utils/dimensions";
 
 const EXPO_PUBLIC_URL = process.env.EXPO_PUBLIC_URL;
 const LOCAL_FILE_PATH = FileSystem.documentDirectory + 'pregnancy-track.json';
@@ -414,13 +418,15 @@ export default function HomeScreen() {
   const cards = data
     ? [
         {
-                title: i18n.t('babySize') || 'Baby Size',
-                content: `In week ${currentWeek}, your baby is about the size of a ${babySize.size}.
-Length: ${babySize.length}
-Weight: ${babySize.weight}`,
-                icon: 'body-outline',
-                type: 'babySize',
-              },
+          title: i18n.t('babySize') || 'Baby Size',
+          content: `${i18n.t("dashboard.content", {
+            currentWeek,
+            babySize: babySize.size
+          })} - ${i18n.t("dashboard.length", { length: babySize.length })} - ${i18n.t("dashboard.weight", { weight: babySize.weight })}`,
+          icon: "body-outline",
+          type: "babySize",
+        },
+
         { title: i18n.t('babyDevelopment'), content: data.babyDevelopment, icon: 'happy-outline', type: 'babyDevelopment' },
         { title: i18n.t('dangerSigns'), content: data.dangerSigns, icon: 'alert-circle-outline', type: 'dangerSigns' },
         { title: i18n.t('motherChanges'), content: data.motherChanges, icon: 'female-outline', type: 'motherChanges' },
@@ -492,9 +498,9 @@ Weight: ${babySize.weight}`,
           ]}
         >
           <View style={styles.weekBadge}>
-            <Text style={styles.headerTitle}>Pregnancy Tracker</Text>
+              <Text style={styles.headerTitle}>{i18n.t("dashboard.header_title")}</Text>
           </View>
-          <Text style={styles.headerSubtitle}>Week {weekNumber || '...'}</Text>
+          <Text style={styles.headerSubtitle}> {i18n.t("dashboard.week")} {weekNumber || '...'}</Text>
         </Animated.View>
 
         {/* Header decorative elements */}
@@ -548,287 +554,287 @@ Weight: ${babySize.weight}`,
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FFF8F8',
-  },
+ container: {
+     flex: 1,
+     backgroundColor: "#FFF8F8",
+   },
 
-  // Floating elements
-  floatingElement: {
-    position: 'absolute',
-    zIndex: 1,
-  },
+   // Floating elements
+   floatingElement: {
+     position: "absolute",
+     zIndex: 1,
+   },
 
-  // Enhanced Header
-  header: {
-    paddingTop: 60,
-    paddingBottom: 30,
-    paddingHorizontal: 24,
-    backgroundColor: '#7C3AED',
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-    overflow: 'hidden',
-    position: 'relative',
-    zIndex: 10,
-  },
+   // Enhanced Header
+   header: {
+     paddingTop: calcPercentageHeight(7),
+     paddingBottom: calcPercentageHeight(3.5),
+     paddingHorizontal: calcPercentageWidth(6),
+     backgroundColor: "#7C3AED",
+     borderBottomLeftRadius: calcPercentageWidth(8),
+     borderBottomRightRadius: calcPercentageWidth(8),
+     overflow: "hidden",
+     position: "relative",
+     zIndex: 10,
+   },
 
-  headerGradientOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(124, 58, 237, 0.1)',
-  },
+   headerGradientOverlay: {
+     position: "absolute",
+     top: 0,
+     left: 0,
+     right: 0,
+     bottom: 0,
+     backgroundColor: "rgba(124, 58, 237, 0.1)",
+   },
 
-  headerDecoration1: {
-    position: 'absolute',
-    top: -50,
-    right: -50,
-    width: 150,
-    height: 150,
-    borderRadius: 75,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-  },
+   headerDecoration1: {
+     position: "absolute",
+     top: calcPercentageHeight(-6),
+     right: calcPercentageWidth(-12),
+     width: calcPercentageWidth(40),
+     height: calcPercentageWidth(40),
+     borderRadius: calcPercentageWidth(20),
+     backgroundColor: "rgba(255, 255, 255, 0.1)",
+   },
 
-  headerDecoration2: {
-    position: 'absolute',
-    bottom: -30,
-    left: -30,
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-  },
+   headerDecoration2: {
+     position: "absolute",
+     bottom: calcPercentageHeight(-3),
+     left: calcPercentageWidth(-8),
+     width: calcPercentageWidth(26),
+     height: calcPercentageWidth(26),
+     borderRadius: calcPercentageWidth(13),
+     backgroundColor: "rgba(255, 255, 255, 0.05)",
+   },
 
-  backButton: {
-    position: 'absolute',
-    top: 60,
-    left: 24,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-  },
+   backButton: {
+     position: "absolute",
+     top: calcPercentageHeight(7),
+     left: calcPercentageWidth(6),
+     width: calcPercentageWidth(11),
+     height: calcPercentageWidth(11),
+     borderRadius: calcPercentageWidth(5.5),
+     backgroundColor: "rgba(255, 255, 255, 0.2)",
+     alignItems: "center",
+     justifyContent: "center",
+     borderWidth: 1,
+     borderColor: "rgba(255, 255, 255, 0.3)",
+   },
 
-  headerContent: {
-    alignItems: 'center',
-    marginTop: 20,
-    zIndex: 2,
-  },
+   headerContent: {
+     alignItems: "center",
+     marginTop: calcPercentageHeight(2.2),
+     zIndex: 2,
+   },
 
-  weekBadge: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginBottom: 10,
-  },
+   weekBadge: {
+     backgroundColor: "rgba(255, 255, 255, 0.2)",
+     paddingHorizontal: calcPercentageWidth(5),
+     paddingVertical: calcPercentageHeight(1),
+     borderRadius: calcPercentageWidth(6),
+     marginBottom: calcPercentageHeight(1.2),
+   },
 
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: 'white',
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 3,
-  },
+   headerTitle: {
+     fontSize: calcPercentageWidth(7.2),
+     fontWeight: "bold",
+     color: "white",
+     textShadowColor: "rgba(0, 0, 0, 0.3)",
+     textShadowOffset: { width: 1, height: 1 },
+     textShadowRadius: 3,
+   },
 
-  headerSubtitle: {
-    fontSize: 18,
-    color: 'rgba(255,255,255,0.9)',
-    fontWeight: '600',
-  },
+   headerSubtitle: {
+     fontSize: calcPercentageWidth(4.5),
+     color: "rgba(255,255,255,0.9)",
+     fontWeight: "600",
+   },
 
-  // Enhanced Cards
-  cardList: {
-    padding: 20,
-    paddingBottom: 140,
-    paddingTop: 40,
-  },
+   // Enhanced Cards
+   cardList: {
+     paddingHorizontal: calcPercentageWidth(5),
+     paddingTop: calcPercentageHeight(5),
+     paddingBottom: calcPercentageHeight(16),
+   },
 
-  timelineRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginVertical: 25,
-    position: 'relative',
-  },
+   timelineRow: {
+     flexDirection: "row",
+     alignItems: "center",
+     marginVertical: calcPercentageHeight(3),
+     position: "relative",
+   },
 
-  timelineDotContainer: {
-    width: 50,
-    alignItems: "center",
-    position: 'relative',
-  },
+   timelineDotContainer: {
+     width: calcPercentageWidth(14),
+     alignItems: "center",
+     position: "relative",
+   },
 
-  timelineDot: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: "#7C3AED",
-    marginBottom: 4,
-    borderWidth: 3,
-    borderColor: '#FFF',
-    shadowColor: '#7C3AED',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.5,
-    shadowRadius: 4,
-    elevation: 5,
-  },
+   timelineDot: {
+     width: calcPercentageWidth(4.5),
+     height: calcPercentageWidth(4.5),
+     borderRadius: calcPercentageWidth(2.3),
+     backgroundColor: "#7C3AED",
+     marginBottom: calcPercentageHeight(0.5),
+     borderWidth: 3,
+     borderColor: "#FFF",
+     shadowColor: "#7C3AED",
+     shadowOffset: { width: 0, height: 2 },
+     shadowOpacity: 0.5,
+     shadowRadius: 4,
+     elevation: 5,
+   },
 
-  timelineDotGlow: {
-    position: 'absolute',
-    top: -5,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#7C3AED',
-    opacity: 0.3,
-  },
+   timelineDotGlow: {
+     position: "absolute",
+     top: calcPercentageHeight(-0.6),
+     width: calcPercentageWidth(7),
+     height: calcPercentageWidth(7),
+     borderRadius: calcPercentageWidth(3.5),
+     backgroundColor: "#7C3AED",
+     opacity: 0.3,
+   },
 
-  timelineLine: {
-    flex: 1,
-    width: 3,
-    backgroundColor: "#E0E0E0",
-    borderRadius: 1.5,
-  },
+   timelineLine: {
+     flex: 1,
+     width: calcPercentageWidth(0.8),
+     backgroundColor: "#E0E0E0",
+     borderRadius: calcPercentageWidth(0.4),
+   },
 
-  card: {
-    width: screenWidth * 0.75,
-    borderRadius: 25,
-    padding: 24,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.2,
-    shadowRadius: 16,
-    elevation: 12,
-    position: 'relative',
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.5)',
-  },
+   card: {
+     width: calcPercentageWidth(75),
+     borderRadius: calcPercentageWidth(6.5),
+     padding: calcPercentageWidth(6),
+     shadowColor: "#000",
+     shadowOffset: { width: 0, height: 8 },
+     shadowOpacity: 0.2,
+     shadowRadius: 16,
+     elevation: 12,
+     position: "relative",
+     overflow: "hidden",
+     borderWidth: 1,
+     borderColor: "rgba(255, 255, 255, 0.5)",
+   },
 
-  cardGlow: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 40,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    borderRadius: 25,
-  },
+   cardGlow: {
+     position: "absolute",
+     top: 0,
+     left: 0,
+     right: 0,
+     height: calcPercentageHeight(5),
+     backgroundColor: "rgba(255, 255, 255, 0.3)",
+     borderRadius: calcPercentageWidth(6.5),
+   },
 
-  cardAccent: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    width: 4,
-    height: '100%',
-    borderTopRightRadius: 25,
-    borderBottomRightRadius: 25,
-  },
+   cardAccent: {
+     position: "absolute",
+     top: 0,
+     right: 0,
+     width: calcPercentageWidth(1),
+     height: "100%",
+     borderTopRightRadius: calcPercentageWidth(6.5),
+     borderBottomRightRadius: calcPercentageWidth(6.5),
+   },
 
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
+   cardHeader: {
+     flexDirection: "row",
+     alignItems: "center",
+     marginBottom: calcPercentageHeight(2),
+   },
 
-  iconContainer: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 16,
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.5)',
-  },
+   iconContainer: {
+     width: calcPercentageWidth(14),
+     height: calcPercentageWidth(14),
+     borderRadius: calcPercentageWidth(7),
+     alignItems: "center",
+     justifyContent: "center",
+     marginRight: calcPercentageWidth(4),
+     borderWidth: 2,
+     borderColor: "rgba(255, 255, 255, 0.5)",
+   },
 
-  cardTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#2C3E50',
-    flex: 1,
-    lineHeight: 24,
-  },
+   cardTitle: {
+     fontSize: calcPercentageWidth(5),
+     fontWeight: "700",
+     color: "#2C3E50",
+     flex: 1,
+     lineHeight: calcPercentageHeight(3),
+   },
 
-  cardContent: {
-    fontSize: 16,
-    color: '#5A6C7D',
-    lineHeight: 26,
-    fontWeight: '400',
-  },
+   cardContent: {
+     fontSize: calcPercentageWidth(4),
+     color: "#5A6C7D",
+     lineHeight: calcPercentageHeight(3.2),
+     fontWeight: "400",
+   },
 
-  // Enhanced Bottom Button
-  nextButtonContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'white',
-    paddingVertical: 24,
-    paddingHorizontal: 20,
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 10,
-  },
+   // Enhanced Bottom Button
+   nextButtonContainer: {
+     position: "absolute",
+     bottom: 0,
+     left: 0,
+     right: 0,
+     backgroundColor: "white",
+     paddingVertical: calcPercentageHeight(3),
+     paddingHorizontal: calcPercentageWidth(5),
+     borderTopLeftRadius: calcPercentageWidth(8),
+     borderTopRightRadius: calcPercentageWidth(8),
+     shadowColor: "#000",
+     shadowOffset: { width: 0, height: -4 },
+     shadowOpacity: 0.15,
+     shadowRadius: 12,
+     elevation: 10,
+   },
 
-  button: {
-    backgroundColor: '#7C3AED',
-    borderRadius: 28,
-    flexDirection: 'row',
-    paddingVertical: 18,
-    paddingHorizontal: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
-    overflow: 'hidden',
-    shadowColor: '#7C3AED',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
-  },
+   button: {
+     backgroundColor: "#7C3AED",
+     borderRadius: calcPercentageWidth(7),
+     flexDirection: "row",
+     paddingVertical: calcPercentageHeight(2),
+     paddingHorizontal: calcPercentageWidth(8),
+     alignItems: "center",
+     justifyContent: "center",
+     position: "relative",
+     overflow: "hidden",
+     shadowColor: "#7C3AED",
+     shadowOffset: { width: 0, height: 4 },
+     shadowOpacity: 0.3,
+     shadowRadius: 8,
+     elevation: 6,
+   },
 
-  buttonGlow: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: 28,
-  },
+   buttonGlow: {
+     position: "absolute",
+     top: 0,
+     left: 0,
+     right: 0,
+     bottom: 0,
+     backgroundColor: "rgba(255, 255, 255, 0.2)",
+     borderRadius: calcPercentageWidth(7),
+   },
 
-  buttonIcon: {
-    marginRight: 10,
-  },
+   buttonIcon: {
+     marginRight: calcPercentageWidth(2.5),
+   },
 
-  buttonText: {
-    color: 'white',
-    fontSize: 17,
-    fontWeight: '600',
-    letterSpacing: 0.5,
-    flex: 1,
-    textAlign: 'center',
-  },
+   buttonText: {
+     color: "white",
+     fontSize: calcPercentageWidth(4.5),
+     fontWeight: "600",
+     letterSpacing: 0.5,
+     flex: 1,
+     textAlign: "center",
+   },
 
-  buttonArrow: {
-    marginLeft: 8,
-    opacity: 0.8,
-  },
-  babySize: {
-    backgroundColor: '#FFF9E6',
-    iconColor: '#F4B400',
-    gradient: ['#FFF9E6', '#FFEFC1']
-  },
+   buttonArrow: {
+     marginLeft: calcPercentageWidth(2),
+     opacity: 0.8,
+   },
 
+   babySize: {
+     backgroundColor: "#FFF9E6",
+     iconColor: "#F4B400",
+     gradient: ["#FFF9E6", "#FFEFC1"],
+   },
 });

@@ -127,6 +127,22 @@ loading: "Loading...",
   trimesterSecond: "Second",
   trimesterThird: "Third",
   babySize: "Baby Size",
+   voice: {
+   button_listening: "Listening…",
+   button_default: "Voice Commands",
+   instructions: "Press the mic to start giving voice commands.",
+   title: "Voice Assistant",
+   subtitle: "Control the app with your voice"
+    },
+    dashboard: {
+        header_title: "Pregnancy Tracker",
+        week: "Week",
+        content: "In week {{currentWeek}}, your baby is about the size of a {{babySize}}.",
+        length: "لمبائی : {{length}}",
+        weight: "وزن : {{weight}}",
+      },
+    selectTime: "Select Time",
+
 
 
 };
