@@ -18,6 +18,10 @@ import {
 } from "react-native";
 import { useSelector } from "react-redux";
 import { Audio } from "expo-av";
+import {
+  calcPercentageHeight,
+  calcPercentageWidth,
+} from "@/lib/utils/dimensions";
 
 // Voice Message Component
 const VoiceMessage = ({ uri, isPlaying, onTogglePlay, duration = 0 }) => {
@@ -885,256 +889,303 @@ export default function GroupChatScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 10,
-    backgroundColor: "#fff"
-  },
-  backButton: {
-    position: "absolute",
-    top: "60%",
-    zIndex: 1
-  },
-  addButton: {
-    position: "absolute",
-    top: "60%",
-    zIndex: 1
-  },
-  header: {
-    height: "10%",
-    width: "100%",
-    backgroundColor: "#825DEF",
-    alignItems: "flex-start",
-    justifyContent: "center",
-    padding: 20,
-    borderRadius: 5,
-  },
-  name: {
-    marginLeft: "10%",
-    color: "#fff",
-    fontSize: 18
-  },
-  messagesList: {
-    flex: 1,
-    paddingVertical: 10,
-  },
-  messageItem: {
-    marginBottom: 12,
-    padding: 15,
-    borderRadius: 25,
-    maxWidth: "80%",
-    minWidth: "30%",
-  },
-  sentMessage: {
-    alignSelf: "flex-end",
-    backgroundColor: "#e5e5e5",
-    marginRight: 10,
-  },
-  receivedMessage: {
-    alignSelf: "flex-start",
-    backgroundColor: "#A78BFA",
-    marginLeft: 10,
-  },
-  senderName: {
-    fontWeight: "bold",
-    marginBottom: 5,
-    color: "#128C7E"
-  },
-  messageContent: {
-    marginTop: 5,
-    fontSize: 16
-  },
+    container: {
+      flex: 1,
+      padding: calcPercentageWidth(3),
+      backgroundColor: "#fff",
+    },
 
-  timestamp: { fontSize: 11, color: "#888", textAlign: "right" },
-  inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: "#ddd",
-    paddingTop: 10,
-  },
-  input: {
-    flex: 1,
-    backgroundColor: "#ECE5DD",
-    padding: 10,
-    borderRadius: 25,
-    borderWidth: 1,
-    borderColor: "#ddd",
-    marginRight: 10,
-  },
-  loading: { textAlign: "center", fontSize: 16, color: "#888", marginTop: 20 },
-   // Modal Styling
-     modalOverlay: {
-       flex: 1,
-       justifyContent: "center",
-       alignItems: "center",
-       backgroundColor: "rgba(0, 0, 0, 0.5)", // Semi-transparent background
-     },
-     modalContainer: {
-       backgroundColor: "#fff",
-       width: "85%",
-       maxWidth: 400,
-       padding: 20,
-       borderRadius: 10,
-       elevation: 5, // Add shadow on Android
-       shadowColor: "#000", // Shadow on iOS
-       shadowOffset: { width: 0, height: 3 },
-       shadowOpacity: 0.2,
-       shadowRadius: 5,
-     },
-     modalTitle: {
-       fontSize: 24,
-       fontWeight: "bold",
-       marginBottom: 15,
-       color: "#333", // Dark text for better readability
-       textAlign: "center",
-     },
-     userItem: {
-       padding: 15,
-       borderBottomWidth: 1,
-       borderBottomColor: "#eee",
-       width: "100%",
-       backgroundColor: "#F9F9F9", // Light background for each user item
-       marginBottom: 10,
-       borderRadius: 8,
-     },
-     userItemText: {
-       fontSize: 16,
-       color: "#333", // Dark text for readability
-     },
-     addButtonContainer: {
-       marginTop: 20,
-       alignItems: "center",
-     },
-     closeButton: {
-       marginTop: 15,
-       backgroundColor: "#A78BFA",
-       paddingVertical: 10,
-       paddingHorizontal: 20,
-       borderRadius: 10,
-     },
-     closeButtonText: {
-       color: "#fff",
-       fontSize: 16,
-     },
- crossButton: {
-   position: 'absolute',
-   top: 10,
-   right: 10,
-   zIndex: 1,
-   padding: 8,
- },
-sendButton: {
-    backgroundColor: '#825DEF',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 25,
-  },
-  sendButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  voiceButton: {
-    width: 45,
-    height: 45,
-    borderRadius: 22.5,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 10,
-    elevation: 3,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-  },
-  sendVoiceButton: {
-    width: 45,
-    height: 45,
-    borderRadius: 22.5,
-    backgroundColor: '#128C7E',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 10,
-  },
-  loading: {
-    textAlign: 'center',
-    fontSize: 16,
-    color: '#888',
-    marginTop: 20,
-  },
-  recordingIndicator: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 10,
-    backgroundColor: '#ff4444',
-    borderRadius: 25,
-    marginTop: 10,
-  },
-  recordingDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: 'white',
-    marginRight: 8,
-  },
-  recordingText: {
-    color: 'white',
-    fontWeight: 'bold',
-  },
-  recordingPreview: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f0f0f0',
-    padding: 12,
-    borderRadius: 25,
-    marginRight: 10,
-  },
-  recordingPreviewText: {
-    color: '#666',
-    fontWeight: '500',
-  },
-  cancelButton: {
-    marginLeft: 'auto',
-    padding: 5,
-  },
-  // Voice Message Styles
-  voiceMessageContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 20,
-    padding: 10,
-    minWidth: 180,
-  },
-  playButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255,255,255,0.9)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 10,
-  },
-  audioWaveform: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-    height: 25,
-    marginHorizontal: 5,
-  },
-  waveformBar: {
-    width: 3,
-    backgroundColor: '#825DEF',
-    marginHorizontal: 1,
-    borderRadius: 1.5,
-  },
-  audioDuration: {
-    fontSize: 11,
-    color: '#666',
-    fontWeight: '500',
-    minWidth: 25,
-    textAlign: 'center',
-  },
+    backButton: {
+      position: "absolute",
+      top: calcPercentageHeight(60),
+      zIndex: 1,
+    },
+
+    addButton: {
+      position: "absolute",
+      top: calcPercentageHeight(60),
+      zIndex: 1,
+    },
+
+    header: {
+      height: calcPercentageHeight(10),
+      width: "100%",
+      backgroundColor: "#825DEF",
+      alignItems: "flex-start",
+      justifyContent: "center",
+      padding: calcPercentageWidth(5),
+      borderRadius: calcPercentageWidth(1.5),
+    },
+
+    name: {
+      marginLeft: calcPercentageWidth(10),
+      color: "#fff",
+      fontSize: calcPercentageWidth(4.5),
+    },
+
+    messagesList: {
+      flex: 1,
+      paddingVertical: calcPercentageHeight(1.5),
+    },
+
+    messageItem: {
+      marginBottom: calcPercentageHeight(1.5),
+      padding: calcPercentageWidth(4),
+      borderRadius: calcPercentageWidth(6),
+      maxWidth: "80%",
+      minWidth: "30%",
+    },
+
+    sentMessage: {
+      alignSelf: "flex-end",
+      backgroundColor: "#e5e5e5",
+      marginRight: calcPercentageWidth(2.5),
+    },
+
+    receivedMessage: {
+      alignSelf: "flex-start",
+      backgroundColor: "#A78BFA",
+      marginLeft: calcPercentageWidth(2.5),
+    },
+
+    senderName: {
+      fontWeight: "bold",
+      marginBottom: calcPercentageHeight(0.5),
+      color: "#128C7E",
+      fontSize: calcPercentageWidth(3.8),
+    },
+
+    messageContent: {
+      marginTop: calcPercentageHeight(0.6),
+      fontSize: calcPercentageWidth(3.8),
+    },
+
+    timestamp: {
+      fontSize: calcPercentageWidth(2.8),
+      color: "#888",
+      textAlign: "right",
+    },
+
+    inputContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginTop: calcPercentageHeight(1.5),
+      borderTopWidth: 1,
+      borderTopColor: "#ddd",
+      paddingTop: calcPercentageHeight(1.2),
+    },
+
+    input: {
+      flex: 1,
+      backgroundColor: "#ECE5DD",
+      padding: calcPercentageWidth(3),
+      borderRadius: calcPercentageWidth(6),
+      borderWidth: 1,
+      borderColor: "#ddd",
+      marginRight: calcPercentageWidth(2.5),
+      fontSize: calcPercentageWidth(3.8),
+    },
+
+    loading: {
+      textAlign: "center",
+      fontSize: calcPercentageWidth(4),
+      color: "#888",
+      marginTop: calcPercentageHeight(2.5),
+    },
+
+    /** ---------------- Modal ---------------- */
+    modalOverlay: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      backgroundColor: "rgba(0, 0, 0, 0.5)",
+    },
+
+    modalContainer: {
+      backgroundColor: "#fff",
+      width: "85%",
+      maxWidth: calcPercentageWidth(90),
+      padding: calcPercentageWidth(5),
+      borderRadius: calcPercentageWidth(3),
+      elevation: 5,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 3 },
+      shadowOpacity: 0.2,
+      shadowRadius: 5,
+    },
+
+    modalTitle: {
+      fontSize: calcPercentageWidth(6),
+      fontWeight: "bold",
+      marginBottom: calcPercentageHeight(1.8),
+      color: "#333",
+      textAlign: "center",
+    },
+
+    userItem: {
+      padding: calcPercentageWidth(4),
+      borderBottomWidth: 1,
+      borderBottomColor: "#eee",
+      width: "100%",
+      backgroundColor: "#F9F9F9",
+      marginBottom: calcPercentageHeight(1.2),
+      borderRadius: calcPercentageWidth(2),
+    },
+
+    userItemText: {
+      fontSize: calcPercentageWidth(4),
+      color: "#333",
+    },
+
+    addButtonContainer: {
+      marginTop: calcPercentageHeight(2),
+      alignItems: "center",
+    },
+
+    closeButton: {
+      marginTop: calcPercentageHeight(2),
+      backgroundColor: "#A78BFA",
+      paddingVertical: calcPercentageHeight(1.2),
+      paddingHorizontal: calcPercentageWidth(5),
+      borderRadius: calcPercentageWidth(3),
+    },
+
+    closeButtonText: {
+      color: "#fff",
+      fontSize: calcPercentageWidth(4),
+    },
+
+    crossButton: {
+      position: "absolute",
+      top: calcPercentageHeight(1),
+      right: calcPercentageWidth(2),
+      zIndex: 1,
+      padding: calcPercentageWidth(2),
+    },
+
+    /** ---------------- Send + Voice Buttons ---------------- */
+    sendButton: {
+      backgroundColor: "#825DEF",
+      paddingVertical: calcPercentageHeight(1.5),
+      paddingHorizontal: calcPercentageWidth(5),
+      borderRadius: calcPercentageWidth(6),
+    },
+
+    sendButtonText: {
+      color: "#fff",
+      fontWeight: "bold",
+      fontSize: calcPercentageWidth(3.8),
+    },
+
+    voiceButton: {
+      width: calcPercentageWidth(12),
+      height: calcPercentageWidth(12),
+      borderRadius: calcPercentageWidth(6),
+      justifyContent: "center",
+      alignItems: "center",
+      marginRight: calcPercentageWidth(2),
+      elevation: 3,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.2,
+      shadowRadius: 3,
+    },
+
+    sendVoiceButton: {
+      width: calcPercentageWidth(12),
+      height: calcPercentageWidth(12),
+      borderRadius: calcPercentageWidth(6),
+      backgroundColor: "#128C7E",
+      justifyContent: "center",
+      alignItems: "center",
+      marginRight: calcPercentageWidth(2),
+    },
+
+    /** ---------------- Recording ---------------- */
+    recordingIndicator: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: calcPercentageWidth(3),
+      backgroundColor: "#ff4444",
+      borderRadius: calcPercentageWidth(6),
+      marginTop: calcPercentageHeight(1.2),
+    },
+
+    recordingDot: {
+      width: calcPercentageWidth(2),
+      height: calcPercentageWidth(2),
+      borderRadius: calcPercentageWidth(1),
+      backgroundColor: "white",
+      marginRight: calcPercentageWidth(2),
+    },
+
+    recordingText: {
+      color: "white",
+      fontWeight: "bold",
+      fontSize: calcPercentageWidth(3.6),
+    },
+
+    recordingPreview: {
+      flex: 1,
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: "#f0f0f0",
+      padding: calcPercentageWidth(3),
+      borderRadius: calcPercentageWidth(6),
+      marginRight: calcPercentageWidth(2),
+    },
+
+    recordingPreviewText: {
+      color: "#666",
+      fontWeight: "500",
+      fontSize: calcPercentageWidth(3.6),
+    },
+
+    cancelButton: {
+      marginLeft: "auto",
+      padding: calcPercentageWidth(1.5),
+    },
+
+    /** ---------------- Voice Message ---------------- */
+    voiceMessageContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: "rgba(255,255,255,0.1)",
+      borderRadius: calcPercentageWidth(5),
+      padding: calcPercentageWidth(2.5),
+      minWidth: calcPercentageWidth(45),
+    },
+
+    playButton: {
+      width: calcPercentageWidth(8),
+      height: calcPercentageWidth(8),
+      borderRadius: calcPercentageWidth(4),
+      backgroundColor: "rgba(255,255,255,0.9)",
+      justifyContent: "center",
+      alignItems: "center",
+      marginRight: calcPercentageWidth(2),
+    },
+
+    audioWaveform: {
+      flexDirection: "row",
+      alignItems: "center",
+      flex: 1,
+      height: calcPercentageHeight(3),
+      marginHorizontal: calcPercentageWidth(1.5),
+    },
+
+    waveformBar: {
+      width: calcPercentageWidth(0.8),
+      backgroundColor: "#825DEF",
+      marginHorizontal: calcPercentageWidth(0.3),
+      borderRadius: calcPercentageWidth(0.4),
+    },
+
+    audioDuration: {
+      fontSize: calcPercentageWidth(3),
+      color: "#666",
+      fontWeight: "500",
+      minWidth: calcPercentageWidth(8),
+      textAlign: "center",
+    },
 });

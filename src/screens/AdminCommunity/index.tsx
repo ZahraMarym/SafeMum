@@ -18,6 +18,10 @@ import {
   View,
 } from "react-native";
 import { useSelector } from "react-redux";
+import {
+  calcPercentageHeight,
+  calcPercentageWidth,
+} from "@/lib/utils/dimensions";
 
 export default function CommunityScreen() {
   const { language, textDirection } = useSelector((state: any) => state.language);
@@ -192,142 +196,186 @@ useEffect(() => {
 
   // Move StyleSheet inside component to access isRTL
   const styles = StyleSheet.create({
-    container: { 
-      flex: 1, 
-      padding: 20, 
-      backgroundColor: "#F9FAFB",
-      direction: isRTL ? 'rtl' : 'ltr'
-    },
-    addButton: {
-      flexDirection: isRTL ? "row-reverse" : "row",
-      alignItems: "center",
-      gap: 10,
-      paddingVertical: 14,
-      paddingHorizontal: 20,
-      borderRadius: 12,
-      backgroundColor: "#825DEF",
-      marginBottom: 10,
-    },
-    addButtonText: { fontSize: 18, color: "#fff", fontWeight: "600" },
-    splitContainer: { flex: 1 },
-    halfContainer: { flex: 0.8, marginBottom: 10 },
-    sectionTitle: { 
-      fontSize: 18, 
-      color: "#000", 
-      marginBottom: 5,
-      textAlign: isRTL ? 'right' : 'left',
-    },
-    conversationItem: {
-      flexDirection: isRTL ? "row-reverse" : "row",
-      alignItems: "center",
-      paddingVertical: 10,
-      borderBottomWidth: 1,
-      borderBottomColor: "#E5E7EB",
-    },
-    avatar: {
-      width: 48,
-      height: 48,
-      borderRadius: 24,
-      backgroundColor: "#A78BFA",
-      alignItems: "center",
-      justifyContent: "center",
-      marginRight: isRTL ? 0 : 12,
-      marginLeft: isRTL ? 12 : 0,
-    },
-    avatarText: { color: "#fff", fontSize: 18, fontWeight: "bold" },
-    chatInfo: { 
-      flex: 1,
-      alignItems: isRTL ? 'flex-end' : 'flex-start' 
-    },
-    chatName: { 
-      fontSize: 16, 
-      fontWeight: "600", 
-      color: "#111827",
-      textAlign: isRTL ? 'right' : 'left',
-    },
-    lastMessage: { 
-      fontSize: 14, 
-      color: "#6B7280",
-      textAlign: isRTL ? 'right' : 'left',
-    },
-    groupItem: {
-      paddingVertical: 10,
-      paddingHorizontal: isRTL ? 15 : 10,
-      borderBottomWidth: 1,
-      borderBottomColor: "#E5E7EB",
-      backgroundColor: "#F9FAFB",
-      borderRadius: 8,
-      marginBottom: 5,
-      alignItems: isRTL ? 'flex-end' : 'flex-start',
-    },
-    modalContainer: { flex: 1, padding: 20, backgroundColor: "#fff" },
-    searchBar: {
-      borderWidth: 1,
-      borderColor: "#D1D5DB",
-      borderRadius: 10,
-      paddingHorizontal: 16,
-      paddingVertical: 10,
-      fontSize: 16,
-      backgroundColor: "#F3F4F6",
-      marginBottom: 16,
-      textAlign: isRTL ? 'right' : 'left',
-    },
-    userItem: {
-      flexDirection: isRTL ? "row-reverse" : "row",
-      justifyContent: 'space-between',
-      paddingVertical: 14,
-      paddingHorizontal: 12,
-      borderBottomWidth: 1,
-      borderBottomColor: "#E5E7EB",
-      backgroundColor: "#F9FAFB",
-      borderRadius: 8,
-      marginBottom: 8,
-    },
-    input: {
-      height: 50,
-      borderColor: "#b7b7b7",
-      borderWidth: 1,
-      color: "black",
-      paddingHorizontal: 16,
-      borderRadius: 10,
-      marginBottom: 16,
-      backgroundColor: "#F3F4F6",
-      textAlign: isRTL ? 'right' : 'left',
-    },
-    createGroupButton: {
-      backgroundColor: "#10BE56",
-      paddingVertical: 12,
-      borderRadius: 10,
-      alignItems: "center",
-      marginTop: 16,
-    },
-    createGroupText: { color: "#fff", fontSize: 16, fontWeight: "600" },
-    closeBtn: {
-      marginTop: 24,
-      alignSelf: "center",
-      backgroundColor: "#E5E7EB",
-      paddingHorizontal: 24,
-      paddingVertical: 10,
-      borderRadius: 8,
-    },
-    closeText: { fontSize: 16, color: "#1E40AF", fontWeight: "600" },
-    userText: {
-      fontSize: 16,
-      color: "#111827",
-    },
+       container: {
+         flex: 1,
+         padding: calcPercentageWidth(5),
+         backgroundColor: "#F9FAFB",
+         direction: isRTL ? "rtl" : "ltr",
+       },
 
-    groupName: {
-      fontSize: 16,
-      fontWeight: "600",
-      color: "#111827",
-      textAlign: isRTL ? "right" : "left",
-    },
+       addButton: {
+         flexDirection: isRTL ? "row-reverse" : "row",
+         alignItems: "center",
+         gap: calcPercentageWidth(2.5),
+         paddingVertical: calcPercentageHeight(1.6),
+         paddingHorizontal: calcPercentageWidth(5),
+         borderRadius: calcPercentageWidth(3),
+         backgroundColor: "#825DEF",
+         marginBottom: calcPercentageHeight(1),
+       },
 
-    lastMessageTime: {
-      fontSize: 12,
-      color: "#9CA3AF",
-      textAlign: isRTL ? "right" : "left",
-    },
+       addButtonText: {
+         fontSize: calcPercentageWidth(4.5),
+         color: "#fff",
+         fontWeight: "600",
+       },
+
+       splitContainer: { flex: 1 },
+
+       halfContainer: { flex: 0.8, marginBottom: calcPercentageHeight(1) },
+
+       sectionTitle: {
+         fontSize: calcPercentageWidth(4.3),
+         color: "#000",
+         marginBottom: calcPercentageHeight(0.6),
+         textAlign: isRTL ? "right" : "left",
+         fontWeight: "600",
+       },
+
+       conversationItem: {
+         flexDirection: isRTL ? "row-reverse" : "row",
+         alignItems: "center",
+         paddingVertical: calcPercentageHeight(1.2),
+         borderBottomWidth: 1,
+         borderBottomColor: "#E5E7EB",
+       },
+
+       avatar: {
+         width: calcPercentageWidth(12),
+         height: calcPercentageWidth(12),
+         borderRadius: calcPercentageWidth(6),
+         backgroundColor: "#A78BFA",
+         alignItems: "center",
+         justifyContent: "center",
+         marginRight: isRTL ? 0 : calcPercentageWidth(3),
+         marginLeft: isRTL ? calcPercentageWidth(3) : 0,
+       },
+
+       avatarText: {
+         color: "#fff",
+         fontSize: calcPercentageWidth(4.5),
+         fontWeight: "bold",
+       },
+
+       chatInfo: {
+         flex: 1,
+         alignItems: isRTL ? "flex-end" : "flex-start",
+       },
+
+       chatName: {
+         fontSize: calcPercentageWidth(4),
+         fontWeight: "600",
+         color: "#111827",
+         textAlign: isRTL ? "right" : "left",
+       },
+
+       lastMessage: {
+         fontSize: calcPercentageWidth(3.5),
+         color: "#6B7280",
+         textAlign: isRTL ? "right" : "left",
+         marginTop: calcPercentageHeight(0.3),
+       },
+
+       groupItem: {
+         paddingVertical: calcPercentageHeight(1.2),
+         paddingHorizontal: isRTL ? calcPercentageWidth(4) : calcPercentageWidth(3),
+         borderBottomWidth: 1,
+         borderBottomColor: "#E5E7EB",
+         backgroundColor: "#F9FAFB",
+         borderRadius: calcPercentageWidth(2),
+         marginBottom: calcPercentageHeight(0.6),
+         alignItems: isRTL ? "flex-end" : "flex-start",
+       },
+
+       modalContainer: {
+         flex: 1,
+         padding: calcPercentageWidth(5),
+         backgroundColor: "#fff",
+       },
+
+       searchBar: {
+         borderWidth: 1,
+         borderColor: "#D1D5DB",
+         borderRadius: calcPercentageWidth(3),
+         paddingHorizontal: calcPercentageWidth(4),
+         paddingVertical: calcPercentageHeight(1.2),
+         fontSize: calcPercentageWidth(4),
+         backgroundColor: "#F3F4F6",
+         marginBottom: calcPercentageHeight(1.8),
+         textAlign: isRTL ? "right" : "left",
+       },
+
+       userItem: {
+         flexDirection: isRTL ? "row-reverse" : "row",
+         justifyContent: "space-between",
+         paddingVertical: calcPercentageHeight(1.5),
+         paddingHorizontal: calcPercentageWidth(3),
+         borderBottomWidth: 1,
+         borderBottomColor: "#E5E7EB",
+         backgroundColor: "#F9FAFB",
+         borderRadius: calcPercentageWidth(2),
+         marginBottom: calcPercentageHeight(0.8),
+       },
+
+       input: {
+         height: calcPercentageHeight(6),
+         borderColor: "#b7b7b7",
+         borderWidth: 1,
+         color: "black",
+         paddingHorizontal: calcPercentageWidth(4),
+         borderRadius: calcPercentageWidth(3),
+         marginBottom: calcPercentageHeight(2),
+         backgroundColor: "#F3F4F6",
+         textAlign: isRTL ? "right" : "left",
+         fontSize: calcPercentageWidth(3.8),
+       },
+
+       createGroupButton: {
+         backgroundColor: "#10BE56",
+         paddingVertical: calcPercentageHeight(1.5),
+         borderRadius: calcPercentageWidth(3),
+         alignItems: "center",
+         marginTop: calcPercentageHeight(2),
+       },
+
+       createGroupText: {
+         color: "#fff",
+         fontSize: calcPercentageWidth(4),
+         fontWeight: "600",
+       },
+
+       closeBtn: {
+         marginTop: calcPercentageHeight(3),
+         alignSelf: "center",
+         backgroundColor: "#E5E7EB",
+         paddingHorizontal: calcPercentageWidth(6),
+         paddingVertical: calcPercentageHeight(1.2),
+         borderRadius: calcPercentageWidth(2.5),
+       },
+
+       closeText: {
+         fontSize: calcPercentageWidth(4),
+         color: "#1E40AF",
+         fontWeight: "600",
+       },
+
+       userText: {
+         fontSize: calcPercentageWidth(4),
+         color: "#111827",
+       },
+
+       groupName: {
+         fontSize: calcPercentageWidth(4),
+         fontWeight: "600",
+         color: "#111827",
+         textAlign: isRTL ? "right" : "left",
+       },
+
+       lastMessageTime: {
+         fontSize: calcPercentageWidth(3),
+         color: "#9CA3AF",
+         textAlign: isRTL ? "right" : "left",
+       },
 
   });
 

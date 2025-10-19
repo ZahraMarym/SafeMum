@@ -13,7 +13,10 @@ import messaging from '@react-native-firebase/messaging';
 import notifee, { AndroidImportance } from '@notifee/react-native';
 import * as SecureStore from 'expo-secure-store';
 import { NotificationContext } from '../../context/NotificationContext';
-
+import {
+  calcPercentageHeight,
+  calcPercentageWidth,
+} from "@/lib/utils/dimensions";
 export default function NotificationScreen() {
   const {
     notifications,
@@ -233,46 +236,104 @@ export default function NotificationScreen() {
 
 // --------------------- 💅 STYLES ---------------------
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F6F6FF', padding: 20 },
-  header: {
-    marginTop: 30,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    width: '100%',
-    paddingBottom: 20,
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#333',
-  },
-  markAll: {
-    color: '#007BFF',
-    fontWeight: '600',
-  },
-  card: {
-    padding: 14,
-    borderRadius: 10,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 2,
-  },
-  rowBetween: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 4,
-  },
-  title: { fontWeight: '700', fontSize: 16, flex: 1, marginRight: 10 },
-  time: { fontSize: 12, color: '#777' },
-  message: { fontSize: 14, color: '#444', marginTop: 4 },
-  actions: { flexDirection: 'row', marginTop: 10 },
-  readBtn: { color: '#007BFF', marginRight: 20, fontWeight: '600' },
-  deleteBtn: { color: '#FF3B30', fontWeight: '600' },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', marginTop: 50 },
-  loadingText: { marginTop: 10, color: '#555' },
-  emptyText: { color: '#777', fontSize: 16 },
+    container: {
+      flex: 1,
+      backgroundColor: "#F6F6FF",
+      padding: calcPercentageWidth(5),
+    },
+
+    header: {
+      marginTop: calcPercentageHeight(3),
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      width: "100%",
+      paddingBottom: calcPercentageHeight(2),
+    },
+
+    headerTitle: {
+      fontSize: calcPercentageWidth(5.5),
+      fontWeight: "700",
+      color: "#333",
+    },
+
+    markAll: {
+      color: "#007BFF",
+      fontWeight: "600",
+      fontSize: calcPercentageWidth(3.8),
+    },
+
+    card: {
+      padding: calcPercentageWidth(4),
+      borderRadius: calcPercentageWidth(3),
+      marginBottom: calcPercentageHeight(1.5),
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 3,
+      elevation: 2,
+      backgroundColor: "#fff",
+    },
+
+    rowBetween: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      marginBottom: calcPercentageHeight(0.5),
+    },
+
+    title: {
+      fontWeight: "700",
+      fontSize: calcPercentageWidth(4),
+      flex: 1,
+      marginRight: calcPercentageWidth(2),
+      color: "#000",
+    },
+
+    time: {
+      fontSize: calcPercentageWidth(3),
+      color: "#777",
+    },
+
+    message: {
+      fontSize: calcPercentageWidth(3.6),
+      color: "#444",
+      marginTop: calcPercentageHeight(0.6),
+      lineHeight: calcPercentageHeight(2.8),
+    },
+
+    actions: {
+      flexDirection: "row",
+      marginTop: calcPercentageHeight(1),
+    },
+
+    readBtn: {
+      color: "#007BFF",
+      marginRight: calcPercentageWidth(4),
+      fontWeight: "600",
+      fontSize: calcPercentageWidth(3.6),
+    },
+
+    deleteBtn: {
+      color: "#FF3B30",
+      fontWeight: "600",
+      fontSize: calcPercentageWidth(3.6),
+    },
+
+    centered: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      marginTop: calcPercentageHeight(6),
+    },
+
+    loadingText: {
+      marginTop: calcPercentageHeight(1),
+      color: "#555",
+      fontSize: calcPercentageWidth(3.8),
+    },
+
+    emptyText: {
+      color: "#777",
+      fontSize: calcPercentageWidth(4),
+    },
 });
