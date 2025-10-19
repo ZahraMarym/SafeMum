@@ -12,7 +12,10 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Alert, Dimensions, Platform, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 const EXPO_PUBLIC_URL = process.env.EXPO_PUBLIC_URL;
-
+import {
+  calcPercentageHeight,
+  calcPercentageWidth,
+} from "@/lib/utils/dimensions";
 import {
   ExpoSpeechRecognitionModule,
   useSpeechRecognitionEvent,
@@ -93,117 +96,117 @@ const CreateAccountScreen = () => {
   }, []);
 
 const handleSignUp = useCallback(async () => {
-//   if (!isFieldsComplete) {
-//     Alert.alert('Error', 'All fields are required.');
-//     speak(voiceMsgIncomplete);
-//     return;
-//   }
-//
-//   // Normalize inputs
-//   const clean = {
-//     firstName: firstName.trim(),
-//     lastName:  lastName.trim(),
-//     email:     email.trim().toLowerCase(),
-//     password, // keep exact
-//     userType:  isAdmin
-//       ? userType.trim().charAt(0).toUpperCase() + userType.trim().slice(1).toLowerCase() // Capital Case
-//       : 'User',
-//     role:      isAdmin ? 'Admin' : 'User',
-//   };
-//
-//   const payload = {
-//     email: clean.email,
-//     password: clean.password,
-//     username: `${clean.firstName}${clean.lastName}`.replace(/\s+/g, ''),
-//     firstName: clean.firstName,
-//     lastName: clean.lastName,
-//     userType: clean.userType,
-//     role: clean.role,
-//   };
-//
-//   try {
-//     // 1) REGISTER
-//     const reg = await axios.post(`${EXPO_PUBLIC_URL}/users/register`, payload, {
-//       headers: { 'Content-Type': 'application/json', Accept: '*/*' },
-//       validateStatus: () => true,
-//     });
-//     console.log('REGISTER status:', reg.status, 'data:', reg.data);
-//
-//     const regSuccess =
-//       (reg.status === 200 || reg.status === 201) &&
-//       (reg.data?.success === true || reg.data?.id || reg.data?._id);
-//
-//     if (!regSuccess) {
-//       const serverMsg = extractApiError(reg.data.errorMessage || reg.data.errorMessage.key);
-//       const msg = buildStatusAwareMessage(reg.status, serverMsg, locale);
-//       Alert.alert('Register Failed', msg);
-//       speak(msg);
-//       return;
-//     }
-//
-//     Alert.alert(
-//       'Success',
-//       locale === 'ur' ? 'اکاؤنٹ کامیابی سے بن گیا!' : 'Account created successfully!'
-//     );
-//
-//     // small pause to avoid any eventual consistency issues
-//     await new Promise((r) => setTimeout(r, 250));
-//
-//     // 2) LOGIN — email first
-//     let loginResp = await axios.post(
-//       `${EXPO_PUBLIC_URL}/users/login`,
-//       { email: clean.email, password: clean.password /*, role: clean.role */ },
-//       { headers: { 'Content-Type': 'application/json', Accept: '*/*' }, validateStatus: () => true }
-//     );
-//     console.log('LOGIN(email) status:', loginResp.status, 'data:', loginResp.data);
-//
-//     // Fallback: username login if email flow failed
-//     if (!(loginResp.status === 200 && loginResp.data?.success)) {
-//       const fb = await axios.post(
-//         `${EXPO_PUBLIC_URL}/users/login`,
-//         { username: payload.username, password: clean.password /*, role: clean.role */ },
-//         { headers: { 'Content-Type': 'application/json', Accept: '*/*' }, validateStatus: () => true }
-//       );
-//       console.log('LOGIN(username) status:', fb.status, 'data:', fb.data);
-//       if (fb.status === 200 && fb.data?.success) loginResp = fb;
-//     }
-//
-//     if (loginResp.status === 401 || loginResp.status === 403) {
-//       const serverMsg = extractApiError(loginResp.data);
-//       const msg = serverMsg || (locale === 'ur' ? 'براہِ مہربانی پہلے تصدیق کریں۔' : 'Please verify your email/OTP first.');
-//       Alert.alert('Verification Required', msg);
-//       speak(msg);
-//       return;
-//     }
-//
-//     if (!(loginResp.status === 200 && loginResp.data?.success)) {
-//       const serverMsg = extractApiError(loginResp.data);
-//       const msg = buildStatusAwareMessage(loginResp.status, serverMsg, locale);
-//       Alert.alert('Login Failed', msg);
-//       speak(msg);
-//       return;
-//     }
-//
-//     // 3) SAVE + NAVIGATE
-//     await SecureStore.setItemAsync('accessToken', loginResp.data.token);
-//     await SecureStore.setItemAsync('user', JSON.stringify(loginResp.data));
-//     if (loginResp.data.refreshToken) {
-//       await SecureStore.setItemAsync('refreshToken', loginResp.data.refreshToken);
-//     }
-//
-//     if (loginResp.data.role === 'Admin') {
-//       router.push('/(admin-tabs)/(admin-home)');
-//     } else {
+  if (!isFieldsComplete) {
+    Alert.alert('Error', 'All fields are required.');
+    speak(voiceMsgIncomplete);
+    return;
+  }
+
+  // Normalize inputs
+  const clean = {
+    firstName: firstName.trim(),
+    lastName:  lastName.trim(),
+    email:     email.trim().toLowerCase(),
+    password, // keep exact
+    userType:  isAdmin
+      ? userType.trim().charAt(0).toUpperCase() + userType.trim().slice(1).toLowerCase() // Capital Case
+      : 'User',
+    role:      isAdmin ? 'Admin' : 'User',
+  };
+
+  const payload = {
+    email: clean.email,
+    password: clean.password,
+    username: `${clean.firstName}${clean.lastName}`.replace(/\s+/g, ''),
+    firstName: clean.firstName,
+    lastName: clean.lastName,
+    userType: clean.userType,
+    role: clean.role,
+  };
+
+  try {
+    // 1) REGISTER
+    const reg = await axios.post(`${EXPO_PUBLIC_URL}/users/register`, payload, {
+      headers: { 'Content-Type': 'application/json', Accept: '*/*' },
+      validateStatus: () => true,
+    });
+    console.log('REGISTER status:', reg.status, 'data:', reg.data);
+
+    const regSuccess =
+      (reg.status === 200 || reg.status === 201) &&
+      (reg.data?.success === true || reg.data?.id || reg.data?._id);
+
+    if (!regSuccess) {
+      const serverMsg = extractApiError(reg.data.errorMessage || reg.data.errorMessage.key);
+      const msg = buildStatusAwareMessage(reg.status, serverMsg, locale);
+      Alert.alert('Register Failed', msg);
+      speak(msg);
+      return;
+    }
+
+    Alert.alert(
+      'Success',
+      locale === 'ur' ? 'اکاؤنٹ کامیابی سے بن گیا!' : 'Account created successfully!'
+    );
+
+    // small pause to avoid any eventual consistency issues
+    await new Promise((r) => setTimeout(r, 250));
+
+    // 2) LOGIN — email first
+    let loginResp = await axios.post(
+      `${EXPO_PUBLIC_URL}/users/login`,
+      { email: clean.email, password: clean.password /*, role: clean.role */ },
+      { headers: { 'Content-Type': 'application/json', Accept: '*/*' }, validateStatus: () => true }
+    );
+    console.log('LOGIN(email) status:', loginResp.status, 'data:', loginResp.data);
+
+    // Fallback: username login if email flow failed
+    if (!(loginResp.status === 200 && loginResp.data?.success)) {
+      const fb = await axios.post(
+        `${EXPO_PUBLIC_URL}/users/login`,
+        { username: payload.username, password: clean.password /*, role: clean.role */ },
+        { headers: { 'Content-Type': 'application/json', Accept: '*/*' }, validateStatus: () => true }
+      );
+      console.log('LOGIN(username) status:', fb.status, 'data:', fb.data);
+      if (fb.status === 200 && fb.data?.success) loginResp = fb;
+    }
+
+    if (loginResp.status === 401 || loginResp.status === 403) {
+      const serverMsg = extractApiError(loginResp.data);
+      const msg = serverMsg || (locale === 'ur' ? 'براہِ مہربانی پہلے تصدیق کریں۔' : 'Please verify your email/OTP first.');
+      Alert.alert('Verification Required', msg);
+      speak(msg);
+      return;
+    }
+
+    if (!(loginResp.status === 200 && loginResp.data?.success)) {
+      const serverMsg = extractApiError(loginResp.data);
+      const msg = buildStatusAwareMessage(loginResp.status, serverMsg, locale);
+      Alert.alert('Login Failed', msg);
+      speak(msg);
+      return;
+    }
+
+    // 3) SAVE + NAVIGATE
+    await SecureStore.setItemAsync('accessToken', loginResp.data.token);
+    await SecureStore.setItemAsync('user', JSON.stringify(loginResp.data));
+    if (loginResp.data.refreshToken) {
+      await SecureStore.setItemAsync('refreshToken', loginResp.data.refreshToken);
+    }
+
+    if (loginResp.data.role === 'Admin') {
+      router.push('/(admin-tabs)/(admin-home)');
+    } else {
       router.push('/(signup)/medical-information');
-//     }
-//   } catch (err: any) {
-//     const status = err?.response?.status;
-//     const serverMsg = extractApiError(err?.response?.data);
-//     const msg = buildStatusAwareMessage(status, serverMsg, locale);
-//     console.log('SIGNUP/LOGIN error:', status, err?.response?.data, err?.message);
-//     Alert.alert('Error', msg);
-//     speak(msg.errorMessage);
-//   }
+    }
+  } catch (err: any) {
+    const status = err?.response?.status;
+    const serverMsg = extractApiError(err?.response?.data);
+    const msg = buildStatusAwareMessage(status, serverMsg, locale);
+    console.log('SIGNUP/LOGIN error:', status, err?.response?.data, err?.message);
+    Alert.alert('Error', msg);
+    speak(msg.errorMessage);
+  }
 }, [
   isFieldsComplete,
   isAdmin,
@@ -616,115 +619,136 @@ const buildStatusAwareMessage = (
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    backgroundColor: '#F6F6FF',
-    paddingHorizontal: 24,
-    paddingTop: 60,
-  },
-  backButton: {
-    marginBottom: 20,
-    width:"100%",
-  },
-  title: {
-    fontSize: 22,
-    alignSelf: 'center',
-    marginBottom: 20,
-    textAlign: 'center'
-  },
-  subtitle: {
-    textAlign: 'center',
-    marginTop: 3,
-    marginBottom: 20,
-    fontSize: 16,
-    color: '#000'
-  },
-  fieldContainer: {
-    marginBottom: 16,
-  },
-  label: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 8,
-    width:"100",
-    color: '#000',
-  },
-  input: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 14,
-    borderColor: '#E5E7EB',
-    borderWidth: 1,
-  },
-  linkContainer: {
-    marginBottom: 16,
-    width: '100%',
-  },
-  linkText: {
-    color: '#8877F5',
-    fontWeight: '500',
-  },
-  buttonContainer: {
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  button: {
-    width: screenWidth * 0.8,
-    backgroundColor: '#A78BFA',
-    paddingVertical: 14,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 14,
-    shadowColor: '#A78BFA',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: Platform.OS === 'ios' ? 0.3 : 0.6,
-    shadowRadius: 6,
-    elevation: 6,
-  },
-  buttonText: {
-    color: '#FFFFFF',
-    fontSize: 20,
-    fontWeight: '600',
-    letterSpacing: 0.8
-  },
-  voiceBtn: {
-    alignSelf: 'center',
-    marginBottom: 16,
-    backgroundColor: '#6D28D9',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  voiceBtnOn: {
-    backgroundColor: '#10B981'
-  },
-  voiceBtnDisabled: {
-    opacity: 0.4
-  },
-  voiceText: {
-    color: '#fff',
-    fontSize: 16
-  },
-  heardText: {
-    marginBottom: 16,
-    fontSize: 12,
-    color: '#6B7280',
-    fontStyle: 'italic'
-  },
-  footerContainer: {
-    marginBottom: 20,
-  },
-  footerText: {
-    fontSize: 14,
-    color: '#7D7D7D'
-  },
-  loginLink: {
-    color: '#8877F5',
-    fontWeight: '500'
-  },
+   container: {
+      flexGrow: 1,
+      backgroundColor: "#F6F6FF",
+      paddingHorizontal: calcPercentageWidth(6),
+      paddingTop: calcPercentageHeight(7),
+    },
+
+    backButton: {
+      marginBottom: calcPercentageHeight(2.5),
+      width: "100%",
+    },
+
+    title: {
+      fontSize: calcPercentageWidth(5.5),
+      alignSelf: "center",
+      marginBottom: calcPercentageHeight(2.5),
+      textAlign: "center",
+    },
+
+    subtitle: {
+      textAlign: "center",
+      marginTop: calcPercentageHeight(0.5),
+      marginBottom: calcPercentageHeight(2.5),
+      fontSize: calcPercentageWidth(4),
+      color: "#000",
+    },
+
+    fieldContainer: {
+      marginBottom: calcPercentageHeight(2),
+    },
+
+    label: {
+      fontSize: calcPercentageWidth(4.2),
+      fontWeight: "600",
+      marginBottom: calcPercentageHeight(1),
+      width: "100%",
+      color: "#000",
+    },
+
+    input: {
+      backgroundColor: "#fff",
+      borderRadius: calcPercentageWidth(2),
+      paddingHorizontal: calcPercentageWidth(4),
+      paddingVertical: calcPercentageHeight(1.5),
+      fontSize: calcPercentageWidth(3.6),
+      borderColor: "#E5E7EB",
+      borderWidth: 1,
+    },
+
+    linkContainer: {
+      marginBottom: calcPercentageHeight(2),
+      width: "100%",
+    },
+
+    linkText: {
+      color: "#8877F5",
+      fontWeight: "500",
+      fontSize: calcPercentageWidth(3.5),
+    },
+
+    buttonContainer: {
+      alignItems: "center",
+      marginBottom: calcPercentageHeight(2),
+    },
+
+    button: {
+      width: calcPercentageWidth(80),
+      backgroundColor: "#A78BFA",
+      paddingVertical: calcPercentageHeight(1.8),
+      justifyContent: "center",
+      alignItems: "center",
+      borderRadius: calcPercentageWidth(3.5),
+      shadowColor: "#A78BFA",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: Platform.OS === "ios" ? 0.3 : 0.6,
+      shadowRadius: 6,
+      elevation: 6,
+    },
+
+    buttonText: {
+      color: "#FFFFFF",
+      fontSize: calcPercentageWidth(5),
+      fontWeight: "600",
+      letterSpacing: 0.8,
+    },
+
+    voiceBtn: {
+      alignSelf: "center",
+      marginBottom: calcPercentageHeight(2),
+      backgroundColor: "#6D28D9",
+      paddingVertical: calcPercentageHeight(1.3),
+      paddingHorizontal: calcPercentageWidth(4),
+      borderRadius: calcPercentageWidth(3),
+      alignItems: "center",
+    },
+
+    voiceBtnOn: {
+      backgroundColor: "#10B981",
+    },
+
+    voiceBtnDisabled: {
+      opacity: 0.4,
+    },
+
+    voiceText: {
+      color: "#fff",
+      fontSize: calcPercentageWidth(4),
+    },
+
+    heardText: {
+      marginBottom: calcPercentageHeight(2),
+      fontSize: calcPercentageWidth(3.2),
+      color: "#6B7280",
+      fontStyle: "italic",
+    },
+
+    footerContainer: {
+      marginBottom: calcPercentageHeight(2.5),
+    },
+
+    footerText: {
+      fontSize: calcPercentageWidth(3.5),
+      color: "#7D7D7D",
+    },
+
+    loginLink: {
+      color: "#8877F5",
+      fontWeight: "500",
+      fontSize: calcPercentageWidth(3.5),
+    },
 });
 
 export default CreateAccountScreen;

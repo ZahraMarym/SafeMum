@@ -18,7 +18,10 @@ import { useRouter } from 'expo-router';
 import i18n from '@/i18n';
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
-
+import {
+  calcPercentageHeight,
+  calcPercentageWidth,
+} from "@/lib/utils/dimensions";
 const isRTL = I18nManager.isRTL;
 
 export default function SettingsScreen() {
@@ -153,72 +156,87 @@ export default function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F6F6FF',
-    paddingHorizontal: 24,
-    paddingTop: 60,
-  },
-  backButton: {
-    position: 'absolute',
-    top: 60,
-    left: isRTL ? 24 : undefined,
-    right: isRTL ? undefined : 24,
-    transform: [{ scaleX: isRTL ? -1 : 1 }],
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-  },
-  cardButton: {
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    borderRadius: 8,
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    marginBottom: 12,
-  },
-  cardContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#000',
-  },
-  cardSubtitle: {
-    fontSize: 13,
-    color: '#666',
-    marginTop: 4,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    width: '80%',
-    padding: 20,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  modalOption: {
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-  modalOptionText: {
-    fontSize: 16,
-    color: '#000',
-  },
+ container: {
+      flex: 1,
+      backgroundColor: "#F6F6FF",
+      paddingHorizontal: calcPercentageWidth(6),
+      paddingTop: calcPercentageHeight(7),
+    },
+
+    backButton: {
+      position: "absolute",
+      top: calcPercentageHeight(7),
+      left: isRTL ? calcPercentageWidth(6) : undefined,
+      right: isRTL ? undefined : calcPercentageWidth(6),
+      transform: [{ scaleX: isRTL ? -1 : 1 }],
+    },
+
+    title: {
+      fontSize: calcPercentageWidth(6),
+      fontWeight: "bold",
+      marginBottom: calcPercentageHeight(2.5),
+      textAlign: isRTL ? "right" : "left",
+    },
+
+    cardButton: {
+      backgroundColor: "#fff",
+      borderWidth: 1,
+      borderColor: "#E0E0E0",
+      borderRadius: calcPercentageWidth(2),
+      paddingVertical: calcPercentageHeight(2),
+      paddingHorizontal: calcPercentageWidth(5),
+      marginBottom: calcPercentageHeight(1.5),
+    },
+
+    cardContent: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+    },
+
+    cardTitle: {
+      fontSize: calcPercentageWidth(4),
+      fontWeight: "600",
+      color: "#000",
+      textAlign: isRTL ? "right" : "left",
+    },
+
+    cardSubtitle: {
+      fontSize: calcPercentageWidth(3.4),
+      color: "#666",
+      marginTop: calcPercentageHeight(0.5),
+      textAlign: isRTL ? "right" : "left",
+    },
+
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: "rgba(0,0,0,0.5)",
+      justifyContent: "center",
+      alignItems: "center",
+    },
+
+    modalContainer: {
+      backgroundColor: "#fff",
+      borderRadius: calcPercentageWidth(3),
+      width: "80%",
+      padding: calcPercentageWidth(5),
+    },
+
+    modalTitle: {
+      fontSize: calcPercentageWidth(4.6),
+      fontWeight: "bold",
+      marginBottom: calcPercentageHeight(2),
+      textAlign: "center",
+    },
+
+    modalOption: {
+      paddingVertical: calcPercentageHeight(1.8),
+      alignItems: "center",
+    },
+
+    modalOptionText: {
+      fontSize: calcPercentageWidth(4),
+      color: "#000",
+      textAlign: "center",
+    },
 });

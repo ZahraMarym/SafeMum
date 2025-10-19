@@ -27,7 +27,10 @@ import assets from "@/lib/utils/assets";
 import pregnancySymptoms from "../../../assets/pregnancy_symptoms_en_ur.json";
 import messaging from '@react-native-firebase/messaging';
 import notifee, { AndroidImportance } from '@notifee/react-native';
-
+import {
+  calcPercentageHeight,
+  calcPercentageWidth,
+} from "@/lib/utils/dimensions";
 
 const EXPO_PUBLIC_URL = process.env.EXPO_PUBLIC_URL;
 const { width } = Dimensions.get('window');
@@ -290,178 +293,209 @@ const fetchFromAPI = async () => {
   };
 
   const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: '#F8FAFC',
-    },
-    header: {
-      backgroundColor: '#FFFFFF',
-      paddingTop: StatusBar.currentHeight ? StatusBar.currentHeight + 20 : 60,
-      paddingBottom: 20,
-      paddingHorizontal: 24,
-      borderBottomWidth: 1,
-      borderBottomColor: '#E2E8F0',
-    },
-    loadingContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    loadingText: {
-      fontSize: 18,
-      color: '#64748B',
-      marginTop: 16,
-      fontWeight: '500',
-    },
-    dashboardContent: {
-      flex: 1,
-    },
-    scrollContainer: {
-      paddingHorizontal: 24,
-      paddingVertical: 24,
-      paddingBottom: 100,
-    },
-    welcomeCard: {
-      backgroundColor: '#8B5CF6',
-      borderRadius: 20,
-      paddingHorizontal: 20,
-      paddingVertical: 5,
-      marginTop: 24,
-      marginBottom:10,
-    },
-    welcomeTitle: {
-      fontSize: 24,
-      fontWeight: '700',
-      color: '#FFFFFF',
-      marginBottom: 8,
-    },
-    welcomeSubtitle: {
-      fontSize: 16,
-      color: '#FFFFFF',
-      opacity: 0.9,
-    },
-   weekCard: {
-       flexDirection: "row",
-       backgroundColor: "#FFFFFF",
-       borderRadius: 20,
-       padding: 5,
-       borderWidth: 1.5,
-       borderColor: "#C7B7F5",
-       alignItems: "center",
-       marginBottom: 20,
-     },
-     weekInfo: {
-       marginLeft: 20,
-     },
-     weekTitle: {
-       fontSize: 30,
-       fontWeight: "700",
-       color: "#8B5CF6",
-       marginBottom: 6,
-     },
-     subText: {
-       fontSize: 20,
-       color: "#64748B",
-       marginBottom: 4,
-     },
-     timeText: {
-       fontSize: 40,
-       fontWeight: "700",
-       color: "#8B5CF6",
-     },
-     infoRow: {
-       flexDirection: "row",
-       justifyContent: "space-between",
-       marginBottom: 10,
-     },
-     infoBox: {
-       flex: 1,
-       backgroundColor: "#FFFFFF",
-       borderRadius: 16,
-       padding: 16,
-       alignItems: "center",
-       marginHorizontal: 4,
-       borderWidth: 1,
-       borderColor: "#C7B7F5",
-     },
-     infoIcon: {
-       width: 28,
-       height: 28,
-       marginBottom: 6,
-     },
-     infoText: {
-       fontSize: 16,
-       fontWeight: "700",
-       color: "#1E293B",
-     },
-     infoLabel: {
-       fontSize: 13,
-       color: "#64748B",
-       marginTop: 4,
-     },
-     symptomContainer: {
-       marginBottom: 20,
-     },
-     sectionTitle: {
-       fontSize: 18,
-       fontWeight: "700",
-       color: "#1E293B",
-       marginBottom: 12,
-     },
-     symptomBox: {
-       backgroundColor: "#C7B7F5",
-       borderWidth: 1,
-       borderColor: "#C7B7F5",
-       borderRadius: 20,
-       paddingVertical: 12,
-       paddingHorizontal: 16,
-       marginBottom: 10,
-     },
-     symptomText: {
-       fontSize: 15,
-       color: "#475569",
-     },
-     nextButtonContainer: {
-       padding: 20,
-       backgroundColor: "#F6F5FF",
-     },
-     nextButton: {
-       backgroundColor: "#7C3AED",
-       paddingVertical: 16,
-       borderRadius: 16,
-       alignItems: "center",
-     },
-     nextButtonText: {
-       color: "#FFFFFF",
-       fontSize: 18,
-       fontWeight: "700",
-     },
- timeTextWeek:{
-     fontSize: 24,
-     fontWeight: "700",
-     color: "#7C3AED",},
-     actionContainer: {
-       flexDirection: "row",
-       backgroundColor: "#FEF2F2",
-       borderWidth: 1,
-       borderColor: "#FCA5A5",
-       borderRadius: 16,
-       padding: 16,
-       marginBottom: 10,
-       alignItems: "flex-start",
-     },
-     actionTitle: {
-       fontSize: 16,
-       fontWeight: "700",
-       color: "#B91C1C",
-       marginBottom: 10,
-     },
-     actionText: {
-       fontSize: 14,
-       color: "#1E293B",
-       lineHeight: 20,
-     },
+      container: {
+        flex: 1,
+        backgroundColor: "#F8FAFC",
+      },
 
+      header: {
+        backgroundColor: "#FFFFFF",
+        paddingTop: (StatusBar.currentHeight
+          ? StatusBar.currentHeight + calcPercentageHeight(2.5)
+          : calcPercentageHeight(7)),
+        paddingBottom: calcPercentageHeight(2.5),
+        paddingHorizontal: calcPercentageWidth(6),
+        borderBottomWidth: 1,
+        borderBottomColor: "#E2E8F0",
+      },
+
+      loadingContainer: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+      },
+
+      loadingText: {
+        fontSize: calcPercentageWidth(4.5),
+        color: "#64748B",
+        marginTop: calcPercentageHeight(2),
+        fontWeight: "500",
+      },
+
+      dashboardContent: {
+        flex: 1,
+      },
+
+      scrollContainer: {
+        paddingHorizontal: calcPercentageWidth(6),
+        paddingVertical: calcPercentageHeight(3),
+        paddingBottom: calcPercentageHeight(12),
+      },
+
+      welcomeCard: {
+        backgroundColor: "#8B5CF6",
+        borderRadius: calcPercentageWidth(5),
+        paddingHorizontal: calcPercentageWidth(5),
+        paddingVertical: calcPercentageHeight(1),
+        marginTop: calcPercentageHeight(3),
+        marginBottom: calcPercentageHeight(1.2),
+      },
+
+      welcomeTitle: {
+        fontSize: calcPercentageWidth(6),
+        fontWeight: "700",
+        color: "#FFFFFF",
+        marginBottom: calcPercentageHeight(1),
+      },
+
+      welcomeSubtitle: {
+        fontSize: calcPercentageWidth(4),
+        color: "#FFFFFF",
+        opacity: 0.9,
+      },
+
+      weekCard: {
+        flexDirection: "row",
+        backgroundColor: "#FFFFFF",
+        borderRadius: calcPercentageWidth(5),
+        padding: calcPercentageHeight(0.8),
+        borderWidth: 1.5,
+        borderColor: "#C7B7F5",
+        alignItems: "center",
+        marginBottom: calcPercentageHeight(2.5),
+      },
+
+      weekInfo: {
+        marginLeft: calcPercentageWidth(5),
+      },
+
+      weekTitle: {
+        fontSize: calcPercentageWidth(7.5),
+        fontWeight: "700",
+        color: "#8B5CF6",
+        marginBottom: calcPercentageHeight(0.8),
+      },
+
+      subText: {
+        fontSize: calcPercentageWidth(5),
+        color: "#64748B",
+        marginBottom: calcPercentageHeight(0.5),
+      },
+
+      timeText: {
+        fontSize: calcPercentageWidth(9.5),
+        fontWeight: "700",
+        color: "#8B5CF6",
+      },
+
+      timeTextWeek: {
+        fontSize: calcPercentageWidth(6),
+        fontWeight: "700",
+        color: "#7C3AED",
+      },
+
+      infoRow: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        marginBottom: calcPercentageHeight(1.2),
+      },
+
+      infoBox: {
+        flex: 1,
+        backgroundColor: "#FFFFFF",
+        borderRadius: calcPercentageWidth(4),
+        padding: calcPercentageHeight(2),
+        alignItems: "center",
+        marginHorizontal: calcPercentageWidth(1),
+        borderWidth: 1,
+        borderColor: "#C7B7F5",
+      },
+
+      infoIcon: {
+        width: calcPercentageWidth(7),
+        height: calcPercentageWidth(7),
+        marginBottom: calcPercentageHeight(0.8),
+      },
+
+      infoText: {
+        fontSize: calcPercentageWidth(4),
+        fontWeight: "700",
+        color: "#1E293B",
+      },
+
+      infoLabel: {
+        fontSize: calcPercentageWidth(3.2),
+        color: "#64748B",
+        marginTop: calcPercentageHeight(0.5),
+      },
+
+      symptomContainer: {
+        marginBottom: calcPercentageHeight(2.5),
+      },
+
+      sectionTitle: {
+        fontSize: calcPercentageWidth(4.5),
+        fontWeight: "700",
+        color: "#1E293B",
+        marginBottom: calcPercentageHeight(1.2),
+      },
+
+      symptomBox: {
+        backgroundColor: "#C7B7F5",
+        borderWidth: 1,
+        borderColor: "#C7B7F5",
+        borderRadius: calcPercentageWidth(5),
+        paddingVertical: calcPercentageHeight(1.5),
+        paddingHorizontal: calcPercentageWidth(4),
+        marginBottom: calcPercentageHeight(1.2),
+      },
+
+      symptomText: {
+        fontSize: calcPercentageWidth(3.8),
+        color: "#475569",
+      },
+
+      nextButtonContainer: {
+        padding: calcPercentageHeight(2.5),
+        backgroundColor: "#F6F5FF",
+      },
+
+      nextButton: {
+        backgroundColor: "#7C3AED",
+        paddingVertical: calcPercentageHeight(2),
+        borderRadius: calcPercentageWidth(4),
+        alignItems: "center",
+      },
+
+      nextButtonText: {
+        color: "#FFFFFF",
+        fontSize: calcPercentageWidth(4.8),
+        fontWeight: "700",
+      },
+
+      actionContainer: {
+        flexDirection: "row",
+        backgroundColor: "#FEF2F2",
+        borderWidth: 1,
+        borderColor: "#FCA5A5",
+        borderRadius: calcPercentageWidth(4),
+        padding: calcPercentageHeight(2),
+        marginBottom: calcPercentageHeight(1.2),
+        alignItems: "flex-start",
+      },
+
+      actionTitle: {
+        fontSize: calcPercentageWidth(4),
+        fontWeight: "700",
+        color: "#B91C1C",
+        marginBottom: calcPercentageHeight(1.2),
+      },
+
+      actionText: {
+        fontSize: calcPercentageWidth(3.6),
+        color: "#1E293B",
+        lineHeight: calcPercentageHeight(2.5),
+      },
   });
 
 const getTrimester = (week: number, language: string): string => {

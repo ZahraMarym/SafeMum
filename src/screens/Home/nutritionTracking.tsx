@@ -14,6 +14,11 @@ import { useRouter } from 'expo-router';
 import { Text } from '../../components/Text';
 import { TextInput } from '../../components/TextInput';
 import i18n from '../../i18n';
+import {
+  calcPercentageHeight,
+  calcPercentageWidth,
+} from "@/lib/utils/dimensions";
+
 
 export default function NutritionTrackingScreen() {
   const router = useRouter();
@@ -279,168 +284,167 @@ const response = await axios.post(
 
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 20,
-    backgroundColor: "#F9FAFB",
-    direction: isRTL ? "rtl" : "ltr",
-  },
+    container: {
+      padding: calcPercentageWidth(5),
+      backgroundColor: "#F9FAFB",
+      direction: isRTL ? "rtl" : "ltr",
+    },
 
-  backButton: {
-    position: "absolute",
-    top: 50,
-    left: isRTL ? undefined : 30,
-    right: isRTL ? 30 : undefined,
-    backgroundColor: "#A78BFA",
-    borderRadius: 30,
-    padding: 6,
-    zIndex:100,
-  },
+    backButton: {
+      position: "absolute",
+      top: calcPercentageHeight(6),
+      left: isRTL ? undefined : calcPercentageWidth(8),
+      right: isRTL ? calcPercentageWidth(8) : undefined,
+      backgroundColor: "#A78BFA",
+      borderRadius: calcPercentageWidth(8),
+      padding: calcPercentageWidth(1.5),
+      zIndex: 100,
+    },
 
-titleWrapper: {
-  marginBottom: 30,
-  backgroundColor: "#fff",
-  borderRadius: 18,
-  paddingVertical: 18,
-  paddingHorizontal: 20,
-  shadowColor: "#000",
-  shadowOpacity: 0.08,
-  shadowOffset: { width: 0, height: 5 },
-  shadowRadius: 10,
-  elevation: 4,
-  alignItems: "center",
-  justifyContent: "center",
-},
+    titleWrapper: {
+      marginBottom: calcPercentageHeight(4),
+      backgroundColor: "#fff",
+      borderRadius: calcPercentageWidth(5),
+      paddingVertical: calcPercentageHeight(2.2),
+      paddingHorizontal: calcPercentageWidth(5),
+      shadowColor: "#000",
+      shadowOpacity: 0.08,
+      shadowOffset: { width: 0, height: 5 },
+      shadowRadius: 10,
+      elevation: 4,
+      alignItems: "center",
+      justifyContent: "center",
+    },
 
-titleIcon: {
-  marginBottom: 8,
-  backgroundColor: "#A78BFA15",
-  padding: 12,
-  borderRadius: 50,
-},
+    titleIcon: {
+      marginBottom: calcPercentageHeight(1),
+      backgroundColor: "#A78BFA15",
+      padding: calcPercentageWidth(3),
+      borderRadius: calcPercentageWidth(12),
+    },
 
-title: {
-  fontSize: 28,
-  fontWeight: "800",
-  textAlign: "center",
-  color: "#4C1D95", // deep purple for a premium look
-  letterSpacing: 1,
-},
-subtitle: {
-  fontSize: 14,
-  color: "#6B7280",
-  marginTop: 6,
-  textAlign: "center",
-},
+    title: {
+      fontSize: calcPercentageWidth(7),
+      fontWeight: "800",
+      textAlign: "center",
+      color: "#4C1D95",
+      letterSpacing: 1,
+    },
 
-  section: {
-    marginBottom: 28,
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    padding: 18,
-    shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowOffset: { width: 0, height: 5 },
-    shadowRadius: 10,
-    elevation: 3,
-  },
+    subtitle: {
+      fontSize: calcPercentageWidth(3.6),
+      color: "#6B7280",
+      marginTop: calcPercentageHeight(0.8),
+      textAlign: "center",
+    },
 
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: "700",
-    marginBottom: 18,
-    color: "#374151",
-    textAlign: isRTL ? "right" : "left",
-    letterSpacing: 0.3,
-  },
+    section: {
+      marginBottom: calcPercentageHeight(3.5),
+      backgroundColor: "#fff",
+      borderRadius: calcPercentageWidth(4),
+      padding: calcPercentageWidth(4),
+      shadowColor: "#000",
+      shadowOpacity: 0.08,
+      shadowOffset: { width: 0, height: 5 },
+      shadowRadius: 10,
+      elevation: 3,
+    },
 
-  // Redesigned input
-  inputContainer: {
-    flexDirection: isRTL ? "row-reverse" : "row",
-    alignItems: "center",
-    marginBottom: 16,
-    backgroundColor: "#F3F4F6",
-    borderRadius: 14,
-    paddingHorizontal: 12,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    shadowColor: "#A78BFA",
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 2,
-  },
+    sectionTitle: {
+      fontSize: calcPercentageWidth(5),
+      fontWeight: "700",
+      marginBottom: calcPercentageHeight(2),
+      color: "#374151",
+      textAlign: isRTL ? "right" : "left",
+      letterSpacing: 0.3,
+    },
 
-  input: {
-    flex: 1,
-    paddingVertical: 12,
-    fontSize: 16,
-    textAlign: isRTL ? "right" : "left",
-    writingDirection: isRTL ? "rtl" : "ltr",
-    color: "#111827",
-  },
+    inputContainer: {
+      flexDirection: isRTL ? "row-reverse" : "row",
+      alignItems: "center",
+      marginBottom: calcPercentageHeight(2),
+      backgroundColor: "#F3F4F6",
+      borderRadius: calcPercentageWidth(4),
+      paddingHorizontal: calcPercentageWidth(3),
+      borderWidth: 1,
+      borderColor: "#E5E7EB",
+      shadowColor: "#A78BFA",
+      shadowOpacity: 0.05,
+      shadowRadius: 6,
+      elevation: 2,
+    },
 
-  // Glowing mic button
-  voiceButton: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    justifyContent: "center",
-    alignItems: "center",
-    marginLeft: 8,
-    backgroundColor: "#fff",
-    shadowColor: "#A78BFA",
-    shadowOpacity: 0.6,
-    shadowRadius: 8,
-    elevation: 4,
-  },
+    input: {
+      flex: 1,
+      paddingVertical: calcPercentageHeight(1.5),
+      fontSize: calcPercentageWidth(4),
+      textAlign: isRTL ? "right" : "left",
+      writingDirection: isRTL ? "rtl" : "ltr",
+      color: "#111827",
+    },
 
-  // Gradient-style button
-  button: {
-    backgroundColor: "#A78BFA",
-    paddingVertical: 14,
-    borderRadius: 14,
-    alignItems: "center",
-    marginTop: 8,
-    shadowColor: "#A78BFA",
-    shadowOpacity: 0.5,
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 6,
-    elevation: 4,
-  },
+    voiceButton: {
+      width: calcPercentageWidth(10),
+      height: calcPercentageWidth(10),
+      borderRadius: calcPercentageWidth(5),
+      justifyContent: "center",
+      alignItems: "center",
+      marginLeft: isRTL ? 0 : calcPercentageWidth(2),
+      marginRight: isRTL ? calcPercentageWidth(2) : 0,
+      backgroundColor: "#fff",
+      shadowColor: "#A78BFA",
+      shadowOpacity: 0.6,
+      shadowRadius: 8,
+      elevation: 4,
+    },
 
-  buttonText: {
-    color: "#fff",
-    fontWeight: "700",
-    fontSize: 16,
-    letterSpacing: 0.5,
-  },
+    button: {
+      backgroundColor: "#A78BFA",
+      paddingVertical: calcPercentageHeight(1.8),
+      borderRadius: calcPercentageWidth(4),
+      alignItems: "center",
+      marginTop: calcPercentageHeight(1),
+      shadowColor: "#A78BFA",
+      shadowOpacity: 0.5,
+      shadowOffset: { width: 0, height: 4 },
+      shadowRadius: 6,
+      elevation: 4,
+    },
 
-  dateRow: {
-    flexDirection: isRTL ? "row-reverse" : "row",
-    alignItems: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    borderRadius: 14,
-    backgroundColor: "#F3F4F6",
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    marginBottom: 16,
-  },
+    buttonText: {
+      color: "#fff",
+      fontWeight: "700",
+      fontSize: calcPercentageWidth(4),
+      letterSpacing: 0.5,
+    },
 
-  dateText: {
-    fontSize: 16,
-    color: "#4B5563",
-    marginLeft: isRTL ? 0 : 8,
-    marginRight: isRTL ? 8 : 0,
-    fontWeight: "500",
-  },
+    dateRow: {
+      flexDirection: isRTL ? "row-reverse" : "row",
+      alignItems: "center",
+      paddingVertical: calcPercentageHeight(1.5),
+      paddingHorizontal: calcPercentageWidth(4),
+      borderRadius: calcPercentageWidth(4),
+      backgroundColor: "#F3F4F6",
+      borderWidth: 1,
+      borderColor: "#E5E7EB",
+      marginBottom: calcPercentageHeight(2),
+    },
 
-  recognitionStatus: {
-    fontSize: 13,
-    color: "#6B7280",
-    textAlign: "center",
-    fontStyle: "italic",
-    marginBottom: 12,
-  },
+    dateText: {
+      fontSize: calcPercentageWidth(4),
+      color: "#4B5563",
+      marginLeft: isRTL ? 0 : calcPercentageWidth(2),
+      marginRight: isRTL ? calcPercentageWidth(2) : 0,
+      fontWeight: "500",
+    },
+
+    recognitionStatus: {
+      fontSize: calcPercentageWidth(3.2),
+      color: "#6B7280",
+      textAlign: "center",
+      fontStyle: "italic",
+      marginBottom: calcPercentageHeight(1.5),
+    },
 });
 
 

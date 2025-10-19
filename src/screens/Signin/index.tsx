@@ -20,7 +20,10 @@ import {
   View,
 } from 'react-native';
 import { useSelector } from 'react-redux';
-
+import {
+  calcPercentageHeight,
+  calcPercentageWidth,
+} from "@/lib/utils/dimensions";
 import {
   ExpoSpeechRecognitionModule,
   useSpeechRecognitionEvent,
@@ -344,53 +347,145 @@ export default function LoginScreen() {
 
 
   const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F6F6FF', paddingHorizontal: 24, paddingTop: 60 },
-  backButton: {
-    position: 'absolute',
-    top: 60,
-    width:"100%",
-    left: isRTL ? undefined : 24,
-    right: isRTL ? 24 : undefined,
+  container: {
+    flex: 1,
+    backgroundColor: "#F6F6FF",
+    paddingHorizontal: calcPercentageWidth(6),
+    paddingTop: calcPercentageHeight(7),
   },
-  title: { fontSize: 22, alignSelf: 'center', marginTop: 10, marginBottom: 40, textAlign: 'center' },
-  label: {
-    fontSize: 18, fontWeight: '600', marginBottom: 8, color: '#000',
-    textAlign: isRTL ? 'right' : 'left', alignSelf: isRTL ? 'flex-end' : 'flex-start',
-  },
-  inputContainer: { marginBottom: 28 },
-  input: {
-    backgroundColor: '#fff', borderRadius: 8, paddingHorizontal: 14, paddingVertical: 12,
-    fontSize: 14, borderColor: '#E5E7EB', borderWidth: 1,             textAlign: I18nManager.isRTL ? 'right' : 'left',
-  },
-  forgotPassword: { marginTop: 4, alignSelf: isRTL ? 'flex-end' : 'flex-start' , width:"100%"},
-  forgotText: { color: '#F87171', fontSize: 12 },
-  buttonContainer: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', alignSelf: 'center' },
-  button: {
-    flexDirection: 'row', width: screenWidth * 0.8, marginTop: 16, backgroundColor: '#A78BFA',
-    paddingVertical: 14, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 40,
-    borderRadius: 14, shadowColor: '#A78BFA', shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: Platform.OS === 'ios' ? 0.3 : 0.6, shadowRadius: 6, elevation: 6,
-  },
-  buttonText: { color: '#FFFFFF', fontSize: 20, fontWeight: '600', letterSpacing: 0.8 },
 
-  // Voice button
-  voiceBtn: {
-    flexDirection: 'row', alignSelf: 'center', marginTop: 14, backgroundColor: '#6D28D9',
-    paddingVertical: 10, paddingHorizontal: 16, borderRadius: 12, alignItems: 'center', gap: 8,
+  backButton: {
+    position: "absolute",
+    top: calcPercentageHeight(7),
+    width: "100%",
+    left: isRTL ? undefined : calcPercentageWidth(6),
+    right: isRTL ? calcPercentageWidth(6) : undefined,
   },
-  voiceBtnOn: { backgroundColor: '#10B981' },
-  voiceBtnDisabled: { opacity: 0.4 }, // visually disabled until fields complete
-  voiceText: { color: '#fff', fontSize: 16, marginLeft: 8 },
-  heardText: { marginTop: 8, fontSize: 12, color: '#6B7280', textAlign: 'center', fontStyle: 'italic' },
+
+  title: {
+    fontSize: calcPercentageWidth(5.5),
+    alignSelf: "center",
+    marginTop: calcPercentageHeight(1),
+    marginBottom: calcPercentageHeight(5),
+    textAlign: "center",
+  },
+
+  label: {
+    fontSize: calcPercentageWidth(4.3),
+    fontWeight: "600",
+    marginBottom: calcPercentageHeight(1),
+    color: "#000",
+    textAlign: isRTL ? "right" : "left",
+    alignSelf: isRTL ? "flex-end" : "flex-start",
+  },
+
+  inputContainer: {
+    marginBottom: calcPercentageHeight(3.5),
+  },
+
+  input: {
+    backgroundColor: "#fff",
+    borderRadius: calcPercentageWidth(2),
+    paddingHorizontal: calcPercentageWidth(4),
+    paddingVertical: calcPercentageHeight(1.5),
+    fontSize: calcPercentageWidth(3.6),
+    borderColor: "#E5E7EB",
+    borderWidth: 1,
+    textAlign: I18nManager.isRTL ? "right" : "left",
+  },
+
+  forgotPassword: {
+    marginTop: calcPercentageHeight(0.8),
+    alignSelf: isRTL ? "flex-end" : "flex-start",
+    width: "100%",
+  },
+
+  forgotText: {
+    color: "#F87171",
+    fontSize: calcPercentageWidth(3.2),
+  },
+
+  buttonContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    alignSelf: "center",
+  },
+
+  button: {
+    flexDirection: "row",
+    width: calcPercentageWidth(80),
+    marginTop: calcPercentageHeight(2),
+    backgroundColor: "#A78BFA",
+    paddingVertical: calcPercentageHeight(1.8),
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: calcPercentageWidth(10),
+    borderRadius: calcPercentageWidth(3.5),
+    shadowColor: "#A78BFA",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: Platform.OS === "ios" ? 0.3 : 0.6,
+    shadowRadius: 6,
+    elevation: 6,
+  },
+
+  buttonText: {
+    color: "#FFFFFF",
+    fontSize: calcPercentageWidth(5),
+    fontWeight: "600",
+    letterSpacing: 0.8,
+  },
+
+  // 🎤 Voice button
+  voiceBtn: {
+    flexDirection: "row",
+    alignSelf: "center",
+    marginTop: calcPercentageHeight(1.8),
+    backgroundColor: "#6D28D9",
+    paddingVertical: calcPercentageHeight(1.3),
+    paddingHorizontal: calcPercentageWidth(4),
+    borderRadius: calcPercentageWidth(3),
+    alignItems: "center",
+    gap: calcPercentageWidth(2.2),
+  },
+
+  voiceBtnOn: { backgroundColor: "#10B981" },
+  voiceBtnDisabled: { opacity: 0.4 },
+
+  voiceText: {
+    color: "#fff",
+    fontSize: calcPercentageWidth(4),
+    marginLeft: calcPercentageWidth(2),
+  },
+
+  heardText: {
+    marginTop: calcPercentageHeight(1),
+    fontSize: calcPercentageWidth(3.3),
+    color: "#6B7280",
+    textAlign: "center",
+    fontStyle: "italic",
+  },
 
   signupRow: {
-    flexDirection: isRTL ? 'row-reverse' : 'row',
-    justifyContent: 'center',
-    marginTop: 20,
-    alignItems: 'center',
+    flexDirection: isRTL ? "row-reverse" : "row",
+    justifyContent: "center",
+    marginTop: calcPercentageHeight(2.2),
+    alignItems: "center",
   },
-  signupText: { fontSize: 14, color: '#6B7280', marginHorizontal: 4, textAlign: isRTL ? 'right' : 'left' },
-  signupLink: { fontSize: 14, color: '#8B5CF6', fontWeight: '600', textAlign: isRTL ? 'right' : 'left' },
+
+  signupText: {
+    fontSize: calcPercentageWidth(3.4),
+    color: "#6B7280",
+    marginHorizontal: calcPercentageWidth(1.2),
+    textAlign: isRTL ? "right" : "left",
+  },
+
+  signupLink: {
+    fontSize: calcPercentageWidth(3.4),
+    color: "#8B5CF6",
+    fontWeight: "600",
+    textAlign: isRTL ? "right" : "left",
+  },
 });
 
 
