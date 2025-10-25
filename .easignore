@@ -43,7 +43,7 @@ jest.config.js
 *.rar
 *.ai
 *.mov
-*.mp4
+
 
 # Optional: exclude large fallback file if not needed in production
 assets/fallBackData.json
