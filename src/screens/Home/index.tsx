@@ -31,7 +31,7 @@ import {
   calcPercentageHeight,
   calcPercentageWidth,
 } from "@/lib/utils/dimensions";
-
+import { setDashboardData } from "../../redux/slice/dashboardSlice";
 const EXPO_PUBLIC_URL = process.env.EXPO_PUBLIC_URL;
 const { width } = Dimensions.get('window');
 
@@ -276,8 +276,11 @@ const fetchFromAPI = async () => {
 
     console.log("dashboard content",res.data )
 
+
       const apiData = res.data.data || res.data;
       setData(apiData);
+          dispatch(setDashboardData(apiData));
+
 
       // Save the fetched data to local storage
       await FileSystem.writeAsStringAsync(
@@ -424,7 +427,7 @@ const fetchFromAPI = async () => {
       },
 
       infoLabel: {
-        fontSize: calcPercentageWidth(3.2),
+        fontSize: calcPercentageWidth(2.5),
         color: "#64748B",
         marginTop: calcPercentageHeight(0.5),
       },
