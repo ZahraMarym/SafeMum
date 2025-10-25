@@ -132,7 +132,7 @@ export default function LoginScreen() {
 
   const handleLogin = useCallback(async () => {
     if (!email || !password) {
-      Alert.alert(i18n.t('error'), i18n.t('emailPasswordRequired') || 'Email and password are required.');
+      Alert.alert('Email and password are required.');
       // Also speak for accessibility
       speak(voiceMsgIncomplete);
       return;
@@ -140,8 +140,8 @@ export default function LoginScreen() {
 
     const online = await checkConnection();
     if (!online) {
-      const msg = i18n.t('noInternet') || 'No Internet Connection';
-      Alert.alert(i18n.t('error'), msg);
+      const msg = 'No Internet Connection';
+      Alert.alert('error', msg);
       speak(msg as string);
       return;
     }
@@ -157,7 +157,7 @@ export default function LoginScreen() {
       );
 
       if (response.status === 200 && response.data.success) {
-        Alert.alert(i18n.t('success'), response.data.message);
+        Alert.alert('success', response.data.message);
 
         await SecureStore.setItemAsync('accessToken', response.data.token);
         await SecureStore.setItemAsync('user', JSON.stringify(response.data));
@@ -172,12 +172,12 @@ export default function LoginScreen() {
         }
       } else {
         const msg = response.data?.message || 'Invalid credentials.';
-        Alert.alert(i18n.t('loginFailed') || 'Login Failed', msg);
+        Alert.alert('Login Failed', msg);
         speak(msg);
       }
     } catch (error: any) {
-      const msg = (i18n.t('tryAgain') as string) || 'Something went wrong. Please try again.';
-      Alert.alert(i18n.t('loginError') || 'Login Error', msg);
+      const msg = 'Something went wrong. Please try again.';
+      Alert.alert('Login Error', msg);
       speak(msg);
     }
   }, [email, password, router, checkConnection, speak, voiceMsgIncomplete]);
@@ -255,7 +255,7 @@ export default function LoginScreen() {
     if (code === 'service-not-allowed') msg = (i18n.t('serviceUnavailable') as string) || 'Speech service not available.';
     if (code === 'language-not-supported') msg = (i18n.t('langNotSupported') as string) || 'Selected language not supported.';
 
-    Alert.alert((i18n.t('speechError') as string) || 'Speech Error', msg, [
+    Alert.alert('Speech Error', msg, [
       { text: 'OK', onPress: () => (alertShownRef.current = false) },
     ]);
     speak(msg);
@@ -284,7 +284,7 @@ export default function LoginScreen() {
         const msg =
           (i18n.t('installGoogleSpeech') as string) ||
           "Speech recognition isn't available. Ensure Google Speech Services are installed/enabled.";
-        Alert.alert((i18n.t('unavailable') as string) || 'Unavailable', msg);
+        Alert.alert('Unavailable', msg);
         speak(msg);
         return false;
       }
@@ -328,7 +328,7 @@ export default function LoginScreen() {
       if (!alertShownRef.current) {
         alertShownRef.current = true;
         const msg = (i18n.t('cantStartSpeech') as string) || 'Could not start speech recognition.';
-        Alert.alert((i18n.t('error') as string) || 'Error', msg, [
+        Alert.alert( 'Error', msg, [
           { text: 'OK', onPress: () => (alertShownRef.current = false) },
         ]);
         speak(msg);

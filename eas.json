@@ -11,7 +11,9 @@
     "preview": {
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_URL": "https://safemum-app-5f503b88629c.herokuapp.com/api"
+        "EXPO_PUBLIC_URL": "https://safemum-app-5f503b88629c.herokuapp.com/api",
+        "EXPO_PUBLIC_URL_CHAT": "https://safemum-test-4ee37ee784d9.herokuapp.com",
+        "EXPO_PUBLIC_NOTIFICATION_URL_CHAT": "https://notificationservice-7d207063a980.herokuapp.com"
       }
     },
     "production": {

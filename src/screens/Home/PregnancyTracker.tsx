@@ -26,6 +26,7 @@ import {
   calcPercentageWidth,
 } from "@/lib/utils/dimensions";
 
+
 const EXPO_PUBLIC_URL = process.env.EXPO_PUBLIC_URL;
 const LOCAL_FILE_PATH = FileSystem.documentDirectory + 'pregnancy-track.json';
 
@@ -37,8 +38,11 @@ export default function HomeScreen() {
   const isRTL = textDirection === 'rtl';
   const [data, setData] = useState<any | null>(null);
   const params = useLocalSearchParams();
-  const weekNumber = params.weekNumber;
   console.log("weekNumber",weekNumber);
+  const dashboardData = useSelector(state => state.dashboard.dashboardData);
+
+  console.log("User Dashboard Data:", dashboardData);
+  const weekNumber = params?.weekNumber || dashboardData?.currentWeek;
 
   // Animation refs
   const animatedValues = useRef<Animated.Value[]>([]).current;

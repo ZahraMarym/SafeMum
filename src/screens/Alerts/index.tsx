@@ -104,7 +104,7 @@ export default function NotificationScreen() {
       // Import the API function
       const { getNotifications } = require('../../api/notificationApi');
       const res = await getNotifications();
-      console.log('📩 Notifications refreshed:', res.data);
+      console.log('Notifications refreshed:', res.data);
       setNotifications(res.data);
 
       // Also refresh unread count
@@ -112,12 +112,16 @@ export default function NotificationScreen() {
         await fetchUnreadCount();
       }
     } catch (err) {
-      console.error('❌ Fetch notifications error:', err);
+      console.error('Fetch notifications error:', err);
       Alert.alert('Error', 'Unable to fetch notifications. Please try again later.');
     } finally {
       setRefreshing(false);
     }
   };
+
+  useEffect(() => {
+   handleRefresh();
+  }, []);
 
   // --------------------- 🎯 SIGNALR LISTENER HOOK ---------------------
   useEffect(() => {
@@ -138,69 +142,75 @@ export default function NotificationScreen() {
     );
   }
 
-  const renderItem = ({ item }) => {
-    console.log('📋 Rendering notification item:', JSON.stringify(item, null, 2));
+const renderItem = ({ item }) => {
+  console.log('📋 Rendering notification item:', JSON.stringify(item, null, 2));
 
-    // Use notificationId or id, whichever is available
-    const itemId = item.notificationId || item.id;
+  const itemId = item.notificationId || item.id;
+  const isRead = item.isRead === true; // <- normalize
 
-    return (
-      <TouchableOpacity
-        style={[
-          styles.card,
-          { backgroundColor: item.isRead ? '#f4f4f4' : '#d9fdd3' },
-        ]}
-        onPress={() => {
-          // Mark as read when tapped if unread
-          if (!item.isRead && itemId) {
-            markOneAsRead(itemId);
-          }
-        }}
-      >
-        <View style={styles.rowBetween}>
-          <Text style={styles.title}>{item.title || 'Untitled'}</Text>
-          <Text style={styles.time}>
-            {new Date(item.createdAt || Date.now()).toLocaleString()}
-          </Text>
-        </View>
-        <Text style={styles.message}>{item.message || 'No message body'}</Text>
+  return (
+    <TouchableOpacity
+      style={[
+        styles.card,
+        { backgroundColor: isRead ? '#f4f4f4' : '#d9fdd3' },
+      ]}
+      onPress={() => {
+        if (!isRead && itemId) {
+          console.log('🔵 Marking as read, ID:', itemId);
+          markOneAsRead(itemId);
+        }
+      }}
+    >
+      <View style={styles.rowBetween}>
+        <Text style={styles.title}>{item.title || 'Untitled'}</Text>
 
-        <View style={styles.actions}>
-          {!item.isRead && itemId && (
-            <TouchableOpacity
-              onPress={() => {
-                console.log('🔵 Marking as read, ID:', itemId);
-                markOneAsRead(itemId);
-              }}
-            >
-              <Text style={styles.readBtn}>Mark Read</Text>
-            </TouchableOpacity>
-          )}
-          {itemId && (
-            <TouchableOpacity
-              onPress={() => {
-                console.log('🔴 Deleting, ID:', itemId);
-                Alert.alert(
-                  'Delete Notification',
-                  'Are you sure you want to delete this notification?',
-                  [
-                    { text: 'Cancel', style: 'cancel' },
-                    {
-                      text: 'Delete',
-                      style: 'destructive',
-                      onPress: () => removeNotification(itemId)
-                    },
-                  ]
-                );
-              }}
-            >
-              <Text style={styles.deleteBtn}>Delete</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      </TouchableOpacity>
-    );
-  };
+        <Text style={styles.time}>
+          {new Date(item.createdAt || Date.now()).toLocaleString()}
+        </Text>
+      </View>
+
+      <Text style={styles.message}>
+        {item.message || 'No message body'}
+      </Text>
+
+      <View style={styles.actions}>
+        {!isRead && itemId && (
+          <TouchableOpacity
+            onPress={() => {
+              console.log('🔵 Marking as read, ID:', itemId);
+              markOneAsRead(itemId);
+            }}
+          >
+            <Text style={styles.readBtn}>Mark Read</Text>
+          </TouchableOpacity>
+        )}
+
+        {itemId && (
+          <TouchableOpacity
+            onPress={() => {
+              console.log('🔴 Deleting, ID:', itemId);
+              Alert.alert(
+                'Delete Notification',
+                'Are you sure you want to delete this notification?',
+                [
+                  { text: 'Cancel', style: 'cancel' },
+                  {
+                    text: 'Delete',
+                    style: 'destructive',
+                    onPress: () => removeNotification(itemId),
+                  },
+                ]
+              );
+            }}
+          >
+            <Text style={styles.deleteBtn}>Delete</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    </TouchableOpacity>
+  );
+};
+
 
   return (
     <View style={styles.container}>
