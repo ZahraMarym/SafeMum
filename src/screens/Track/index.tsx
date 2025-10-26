@@ -20,12 +20,12 @@ import {
 const screenWidth = Dimensions.get("window").width;
 
 // videos...
-import t1en from "../../../../assets/videos/eng/trimester1.mp4";
-import t2en from "../../../../assets/videos/eng/trimester2.mp4";
-import t3en from "../../../../assets/videos/eng/trimester3.mp4";
-import t1ur from "../../../../assets/videos/ur/trimester1.mp4";
-import t2ur from "../../../../assets/videos/ur/trimester2.mp4";
-import t3ur from "../../../../assets/videos/ur/trimester3.mp4";
+import t1en from "../../../assets/videos/eng/trimester1.mp4";
+import t2en from "../../../assets/videos/eng/trimester2.mp4";
+import t3en from "../../../assets/videos/eng/trimester3.mp4";
+import t1ur from "../../../assets/videos/ur/trimester1.mp4";
+import t2ur from "../../../assets/videos/ur/trimester2.mp4";
+import t3ur from "../../../assets/videos/ur/trimester3.mp4";
 
 const VIDEO_ASSETS: Record<"en" | "ur", Record<"1" | "2" | "3", any[]>> = {
   en: { "1": [t1en, t2en], "2": [t2en], "3": [t3en] },

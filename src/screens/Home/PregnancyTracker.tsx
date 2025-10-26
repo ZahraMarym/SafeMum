@@ -128,67 +128,87 @@ export default function HomeScreen() {
     }
   };
 
-  const copyAssetToFileSystem = async () => {
-    try {
-      const asset = Asset.fromModule(require('../../../assets/fallBackData.json'));
-      await asset.downloadAsync();
-      const sourceUri = asset.localUri || asset.uri;
-      await FileSystem.copyAsync({ from: sourceUri, to: LOCAL_FILE_PATH });
-      const content = await FileSystem.readAsStringAsync(LOCAL_FILE_PATH);
-      setData(JSON.parse(content));
-    } catch (e) {
-      console.log('⚠️ Failed to load fallback asset:', e);
-    }
-  };
+   useEffect(() => {
+      const initializePregnancyData = async () => {
+        try {
+          const fileInfo = await FileSystem.getInfoAsync(LOCAL_FILE_PATH);
+          const fileExists = fileInfo.exists;
+          const netState = await NetInfo.fetch();
+          const online = netState.isConnected && netState.isInternetReachable;
 
-  const loadLocalData = async () => {
-    try {
-      const file = await FileSystem.readAsStringAsync(LOCAL_FILE_PATH);
-      const parsed = JSON.parse(file);
-      setData(parsed);
-    } catch (e) {
-      await copyAssetToFileSystem();
-    }
-  };
-
-  const fetchFromAPI = async () => {
-    try {
-      const token = await SecureStore.getItemAsync("accessToken");
-      const response = await axios.get(
-        `${EXPO_PUBLIC_URL}/pregnancy-tracker/weekly-pregnancy-profile?Language=${language}`,
-        {
-          headers: {
-            'Accept': '*/*',
-            'Authorization': `Bearer ${token}`,
-          },
+          // ✅ Online → fetch from API + update fallback
+          if (online) {
+            console.log("Internet available. Fetching pregnancy data...");
+            const token = await SecureStore.getItemAsync("accessToken");
+            if (!token) {
+              console.warn(" No token found. Using cached data.");
+              if (fileExists) await loadLocalData();
+              else await copyAssetToFileSystem();
+              return;
+            }
+            await fetchFromAPI();
+          }
+          // 🔴 Offline → load cached or fallback
+          else {
+            console.log("📴 Offline mode: loading cached data...");
+            if (fileExists) await loadLocalData();
+            else await copyAssetToFileSystem();
+          }
+        } catch (err) {
+          console.error(" Initialization failed:", err);
+          await copyAssetToFileSystem();
         }
-      );
-      const apiData = response.data.data || response.data;
-      setData(apiData);
-      await FileSystem.writeAsStringAsync(LOCAL_FILE_PATH, JSON.stringify(apiData));
-    } catch (err) {
-      await loadLocalData();
-    }
-  };
+      };
+      initializePregnancyData();
+    }, [language]);
 
-  useEffect(() => {
-    const init = async () => {
-      const fileInfo = await FileSystem.getInfoAsync(LOCAL_FILE_PATH);
-      if (fileInfo.exists) {
-        await loadLocalData();
-      } else {
-        await copyAssetToFileSystem();
-      }
-      const netState = await NetInfo.fetch();
-      if (netState.isConnected && netState.isInternetReachable) {
-        const token = await SecureStore.getItemAsync("accessToken");
-        if (token) {
-          await fetchFromAPI();
-        }
+    // 🔁 Copy default fallback (asset → file system)
+    const copyAssetToFileSystem = async () => {
+      try {
+        console.log("Copying fallback pregnancy data...");
+        const asset = Asset.fromModule(require('../../../assets/fallBackData.json'));
+        await asset.downloadAsync();
+        const sourceUri = asset.localUri || asset.uri;
+        await FileSystem.copyAsync({ from: sourceUri, to: LOCAL_FILE_PATH });
+        const content = await FileSystem.readAsStringAsync(LOCAL_FILE_PATH);
+        setData(JSON.parse(content));
+      } catch (e) {
+        console.log(" Failed to copy fallback asset:", e);
       }
     };
-    init();
-  }, []);
+
+    // 📂 Load locally saved fallback file
+    const loadLocalData = async () => {
+      try {
+        console.log("Loading cached pregnancy data...");
+        const file = await FileSystem.readAsStringAsync(LOCAL_FILE_PATH);
+        const parsed = JSON.parse(file);
+        setData(parsed);
+      } catch (e) {
+        console.log("Failed to load local data, using default fallback...");
+        await copyAssetToFileSystem();
+      }
+    };
+
+    // 🌍 Fetch API + store fallback
+    const fetchFromAPI = async () => {
+      try {
+        const token = await SecureStore.getItemAsync("accessToken");
+        const res = await axios.get(
+          `${EXPO_PUBLIC_URL}/pregnancy-tracker/weekly-pregnancy-profile?Language=${language}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        const apiData = res.data?.data || res.data;
+        console.log("✅ API pregnancy data fetched");
+        setData(apiData);
+        await FileSystem.writeAsStringAsync(LOCAL_FILE_PATH, JSON.stringify(apiData));
+        console.log("💾 Pregnancy fallback updated");
+      } catch (err) {
+        console.log("⚠️ API fetch failed, loading fallback:", err.message);
+        await loadLocalData();
+      }
+    };
 
 
   // 🍼 Determine baby size based on week ranges

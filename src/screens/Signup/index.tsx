@@ -123,6 +123,7 @@ const handleSignUp = useCallback(async () => {
     userType: clean.userType,
     role: clean.role,
   };
+  console.log("payload", payload)
 
   try {
     // 1) REGISTER

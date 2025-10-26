@@ -8,6 +8,7 @@ import {
   House,
   Users,
   Settings,
+  PlayCircle,
 } from "lucide-react-native";
 import { NotificationContext } from "../../src/context/NotificationContext"; // adjust path if needed
 
@@ -56,7 +57,7 @@ const Layout = () => {
         name="(track)"
         options={{
           tabBarIcon: ({ color, focused }) => (
-            <Baby size={32} color={focused ? "#825DEF" : color} />
+            <PlayCircle size={32} color={focused ? "#825DEF" : color} />
           ),
         }}
       />

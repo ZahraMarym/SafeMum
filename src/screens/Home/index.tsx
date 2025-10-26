@@ -55,15 +55,15 @@ export default function SafeMumDashboard() {
         authStatus !== messaging.AuthorizationStatus.AUTHORIZED &&
         authStatus !== messaging.AuthorizationStatus.PROVISIONAL
       ) {
-        console.log('❌ Push notification permission not granted');
+        console.log(' Push notification permission not granted');
         return null;
       }
 
       const token = await messaging().getToken();
-      console.log('🔥 FCM Token generated:', token);
+      console.log(' FCM Token generated:', token);
       return token;
     } catch (error) {
-      console.error('❌ Error generating FCM token:', error);
+      console.error(' Error generating FCM token:', error);
       return null;
     }
   };
@@ -97,55 +97,44 @@ export default function SafeMumDashboard() {
         }
       );
 
-      console.log('✅ Device token registered:', res.status);
+      console.log(' Device token registered:', res.status);
       await SecureStore.setItemAsync('fcmToken', token);
     } catch (error) {
-      console.error('❌ Error registering token:', error);
+      console.error(' Error registering token:', error);
     }
   };
 
   // --------------------- 🚀 INIT HOOK ---------------------
-
-// --------------------- 🚀 INIT HOOK ---------------------
-useEffect(() => {
-  let hasRegistered = false; // ✅ Prevents multiple duplicate calls
-
-  const registerFCM = async () => {
-    try {
-      setLoading(true);
-      const token = await generateDeviceFCMToken();
-      if (token) {
-        setFcmToken(token);
-        await registerDeviceToken(token);
+  useEffect(() => {
+    let hasRegistered = false;
+    const registerFCM = async () => {
+      try {
+        const token = await generateDeviceFCMToken();
+        if (token) {
+          setFcmToken(token);
+          await registerDeviceToken(token);
+        }
+      } catch (err) {
+        console.error(" FCM registration failed:", err);
       }
-    } catch (err) {
-      console.error("❌ FCM registration failed:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
-  const handleConnectionChange = (state) => {
-    if (state.isConnected && !hasRegistered) {
-      console.log("✅ Internet available. Registering FCM...");
-      hasRegistered = true;
-      registerFCM();
-    } else if (!state.isConnected) {
-      console.log("⚠️ No internet connection. Skipping FCM registration.");
-    }
-  };
+    const handleConnectionChange = (state) => {
+      if (state.isConnected && !hasRegistered) {
+        console.log("✅ Internet available. Registering FCM...");
+        hasRegistered = true;
+        registerFCM();
+      } else if (!state.isConnected) {
+        console.log("No internet connection. Skipping FCM registration.");
+      }
+    };
 
-  // 🔹 Check immediately on mount
-  NetInfo.fetch().then(handleConnectionChange);
+    NetInfo.fetch().then(handleConnectionChange);
+    const unsubscribe = NetInfo.addEventListener(handleConnectionChange);
+    return () => unsubscribe();
+  }, []);
 
-  // 🔹 Listen for reconnection (only once)
-  const unsubscribe = NetInfo.addEventListener(handleConnectionChange);
-
-  return () => unsubscribe();
-}, []);
-
-
-
+  // --------------------- RTL Setup ---------------------
   useEffect(() => {
     if (I18nManager.isRTL !== isRTL) {
       I18nManager.allowRTL(isRTL);
@@ -153,81 +142,100 @@ useEffect(() => {
     }
   }, [isRTL]);
 
-  const safeNavigateBack = useCallback(() => {
-    try {
-      if (router.canGoBack()) {
-        router.back();
-      } else {
-        router.replace('/(signin)');
-      }
-    } catch (error) {
-      console.warn('Navigation error:', error);
-      router.replace('/(signin)');
-    }
-  }, [router]);
-
+  // --------------------- Navigation ---------------------
   const safeNavigateNext = useCallback(() => {
     try {
-        console.log("current week", data?.currentWeek)
-router.push({
-  pathname: "/(tabs)/(home)/pregnancy-tracker",
-  params: { weekNumber: data?.currentWeek },
-});
+      router.push({
+        pathname: "/(tabs)/(home)/pregnancy-tracker",
+        params: { weekNumber: data?.currentWeek },
+      });
     } catch (error) {
-      console.warn('Navigation error:', error);
       Alert.alert('Navigation Error', 'Unable to navigate');
     }
-  }, [router]);
+  }, [router, data]);
 
   const changeLanguage = async (lang: string) => {
     dispatch(setLanguage(lang));
     i18n.locale = lang;
   };
 
+  // --------------------- 🌐 INIT DATA ---------------------
   useEffect(() => {
-    const init = async () => {
+    const initializeDashboard = async () => {
       try {
-        const fileInfo = await FileSystem.getInfoAsync(LOCAL_FILE_PATH);
-        if (fileInfo.exists) {
-          await loadLocalData();
-        } else {
-          await copyAssetToFileSystem();
-        }
+        setLoading(true);
 
+        const fileInfo = await FileSystem.getInfoAsync(LOCAL_FILE_PATH);
+        const fileExists = fileInfo.exists;
         const netState = await NetInfo.fetch();
+
+        const token = await SecureStore.getItemAsync("accessToken");
+        const storedUser = await SecureStore.getItemAsync("user");
+        const currentUser = storedUser ? JSON.parse(storedUser) : null;
+        const senderId = currentUser?.userId;
+
+        // Online Mode
         if (netState.isConnected && netState.isInternetReachable) {
-          const token = await SecureStore.getItemAsync('accessToken');
-          if (token) {
-            await fetchFromAPI();
-          } else {
-            console.warn('🔐 No token found. Skipping API fetch.');
+          console.log(" Internet available. Fetching latest data...");
+
+          if (!token || !senderId) {
+            console.warn(" Missing auth. Loading fallback...");
+            if (fileExists) await loadLocalData();
+            else await copyAssetToFileSystem();
+            return;
           }
-        } else {
-          console.log('📴 Offline mode: showing cached data.');
+
+          const [userRes, dashboardRes] = await Promise.all([
+            axios.get(`${EXPO_PUBLIC_URL}/communication/get-user-by-id?Id=${senderId}`, {
+              headers: { Authorization: `Bearer ${token}` },
+            }),
+            axios.get(`${EXPO_PUBLIC_URL}/content/dashboard-content?Id=${senderId}&Language=${language}`, {
+              headers: { Authorization: `Bearer ${token}` },
+            }),
+          ]);
+
+          const name = userRes.data?.name || "Unknown";
+          setUserName(name);
+
+          const apiData = dashboardRes.data?.data || dashboardRes.data;
+          setData(apiData);
+          dispatch(setDashboardData(apiData));
+
+          await FileSystem.writeAsStringAsync(LOCAL_FILE_PATH, JSON.stringify(apiData));
+          console.log(fileExists ? " Updated fallback file" : " Created fallback file");
+        }
+        // Offline Mode
+        else {
+          console.log(" Offline mode: Loading cached fallback data...");
+          if (fileExists) await loadLocalData();
+          else await copyAssetToFileSystem();
         }
       } catch (error) {
-        console.error('Error during initialization:', error);
-        Alert.alert('Error', 'Initialization failed');
+        console.error(" Error initializing dashboard:", error);
+        Alert.alert("Error", "Failed to initialize data");
       } finally {
         setLoading(false);
       }
     };
 
-    init();
-  }, []);
+    initializeDashboard();
+  }, [language]);
 
-  const copyAssetToFileSystem = async () => {
-    try {
-      const asset = Asset.fromModule(require('../../../assets/fallBackData.json'));
-      await asset.downloadAsync();
-      const sourceUri = asset.localUri || asset.uri;
-      await FileSystem.copyAsync({ from: sourceUri, to: LOCAL_FILE_PATH });
-      const content = await FileSystem.readAsStringAsync(LOCAL_FILE_PATH);
-      setData(JSON.parse(content));
-    } catch (e) {
-      console.log('⚠️ Failed to load fallback asset:', e);
-    }
-  };
+  // --------------------- File Helpers ---------------------
+const copyAssetToFileSystem = async () => {
+  try {
+    const asset = Asset.fromModule(require('../../../assets/fallBackData.json'));
+    await asset.downloadAsync();
+    const sourceUri = asset.localUri || asset.uri;
+    await FileSystem.copyAsync({ from: sourceUri, to: LOCAL_FILE_PATH });
+    const content = await FileSystem.readAsStringAsync(LOCAL_FILE_PATH);
+    const parsed = JSON.parse(content);
+    setData(parsed);
+    dispatch(setDashboardData(parsed)); // ✅ dispatch fallback data
+  } catch (e) {
+    console.log('⚠️ Failed to load fallback asset:', e);
+  }
+};
 
   const loadLocalData = async () => {
     try {
@@ -237,61 +245,6 @@ router.push({
     } catch (e) {
       Alert.alert('Error', 'Failed to load local data');
       await copyAssetToFileSystem();
-    }
-  };
-
-const fetchFromAPI = async () => {
-    try {
-      setLoading(true);
-      const token = await SecureStore.getItemAsync('accessToken');
-      const storedUser = await SecureStore.getItemAsync('user');
-      const currentUser = JSON.parse(storedUser);
-      const senderId = currentUser.userId;
-
-      // API call to get user details
-      const response = await axios.get(
-        `${EXPO_PUBLIC_URL}/communication/get-user-by-id?Id=${senderId}`,
-        {
-          headers: {
-            Accept: '*/*',
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      // Extract the name from the response
-      const name = response.data?.name || "Unknown";
-      setUserName(name);  // Set the user's name in the state
-
-      // Fetch the dashboard content
-      const res = await axios.get(
-        `${EXPO_PUBLIC_URL}/content/dashboard-content?Id=${senderId}&Language=${language}`,
-        {
-          headers: {
-            Accept: '*/*',
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-    console.log("dashboard content",res.data )
-
-
-      const apiData = res.data.data || res.data;
-      setData(apiData);
-          dispatch(setDashboardData(apiData));
-
-
-      // Save the fetched data to local storage
-      await FileSystem.writeAsStringAsync(
-        LOCAL_FILE_PATH,
-        JSON.stringify(apiData)
-      );
-    } catch (err) {
-      console.warn('⚠️ Failed to fetch from API, loading local data.', err.message);
-      await loadLocalData();
-    } finally {
-      setLoading(false);
     }
   };
 
