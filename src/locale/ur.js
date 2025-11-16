@@ -143,4 +143,9 @@ export default {
 
       },
     selectTime: "وقت منتخب کریں",
+    profile: "پروفائل",
+   logout: "لاگ آؤٹ",
+    loggedOutMessage: "آپ کامیابی سے لاگ آؤٹ ہو گئے۔",
+    error: "غلطی",
+    failedToLogout: "لاگ آؤٹ نہیں ہو سکا۔ دوبارہ کوشش کریں۔"
 };

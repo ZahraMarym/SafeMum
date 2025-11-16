@@ -109,8 +109,8 @@ const handleSignUp = useCallback(async () => {
     email:     email.trim().toLowerCase(),
     password, // keep exact
     userType:  isAdmin
-      ? userType.trim().charAt(0).toUpperCase() + userType.trim().slice(1).toLowerCase() // Capital Case
-      : 'User',
+      ? 'Doctor'
+      : 'Pregnant',
     role:      isAdmin ? 'Admin' : 'User',
   };
 

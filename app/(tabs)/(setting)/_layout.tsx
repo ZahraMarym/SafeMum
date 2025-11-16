@@ -10,7 +10,7 @@ export default function Layout() {
       }}
       >
         <Stack.Screen name="index" options={{ headerShown: false }} />
-
+        <Stack.Screen name="profile-screen" options={{ headerShown: false }} />
       </Stack>
   );
 }

@@ -93,6 +93,14 @@ export default function SettingsScreen() {
         <TextBold style={styles.title}>{i18n.t('settings')}</TextBold>
       </View>
 
+         {/* 🔹 New Profile Card */}
+            <TouchableOpacity style={styles.cardButton} onPress={() => router.push('/(tabs)/(setting)/profile-screen')}>
+              <View style={styles.cardContent}>
+                <TextBold style={styles.cardTitle}>{i18n.t('profile')}</TextBold>
+                <Ionicons name="chevron-forward" size={20} color="#000" />
+              </View>
+            </TouchableOpacity>
+
       {/* Language Preference Card */}
       <TouchableOpacity style={styles.cardButton} onPress={() => setLanguageModalVisible(true)}>
         <View style={styles.cardContent}>

@@ -10,7 +10,7 @@ import {
   Settings,
   PlayCircle,
 } from "lucide-react-native";
-import { NotificationContext } from "../../src/context/NotificationContext"; // adjust path if needed
+import { NotificationContext } from "../../src/context/NotificationContext";
 
 
 

@@ -142,6 +142,11 @@ loading: "Loading...",
         weight: "وزن : {{weight}}",
       },
     selectTime: "Select Time",
+    profile: "Profile",
+    logout: "Logout",
+   loggedOutMessage: "You have been logged out successfully.",
+    error: "Error",
+    failedToLogout: "Failed to logout. Please try again."
 
 
 
