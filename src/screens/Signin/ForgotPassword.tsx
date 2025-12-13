@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, TouchableOpacity, StyleSheet, Dimensions, I18nManager, Platform, Alert } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, Dimensions, I18nManager, Platform, Alert, ActivityIndicator, Keyboard } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { TextBold } from '@/components/TextBold';
@@ -13,25 +13,44 @@ const isRTL = I18nManager.isRTL;
 
 const ForgotPasswordScreen = () => {
   const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
   const [locale, setLocale] = useState(i18n.locale);
 
   const submitForgot = async () => {
+    Keyboard.dismiss();
+
     if (!email) {
       Alert.alert("Error", "Please enter your email");
       return;
     }
 
+
+    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+    if (!emailRegex.test(email)) {
+      Alert.alert("Error", "Please enter a valid email address");
+      return;
+    }
+
+    setLoading(true);
     try {
-      const res = await axios.post(`${process.env.EXPO_PUBLIC_URL}/users/forgot-password`, {
+        const url=`${process.env.EXPO_PUBLIC_URL}/users/forgot-password`
+        console.log("url", url)
+      const res = await axios.post(url, {
         email: email
       });
-console.log("res", res.data)
-      Alert.alert("Success", "Reset link sent to your email");
-     router.push("/(signin)/reset-password")
+
+      console.log("Response:", res.data);
+      if (res.data.success) {
+        Alert.alert("Success", "A password reset link has been sent to your email.");
+      } else {
+        Alert.alert("Error", res.data.message || "Unable to send reset link.");
+      }
     } catch (err) {
       console.log(err);
-      Alert.alert("Error", "Unable to send link");
+      Alert.alert("Error", "Unable to send the reset link. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -59,11 +78,15 @@ console.log("res", res.data)
         <TouchableOpacity
           style={styles.button}
           onPress={submitForgot}
+          disabled={loading}
         >
-          <TextBold style={styles.buttonText}>Send Link</TextBold>
+          {loading ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <TextBold style={styles.buttonText}>Send Link</TextBold>
+          )}
         </TouchableOpacity>
       </View>
-
     </View>
   );
 };

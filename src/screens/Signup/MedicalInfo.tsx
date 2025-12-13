@@ -102,7 +102,7 @@ const MedicalPregnancyInfoScreen = () => {
     try {
       const token = await SecureStore.getItemAsync("accessToken");
       const response = await axios.post(
-        'https://safemum-app-5f503b88629c.herokuapp.com/api/user-pregnancy-information/create-user-pregnancy-information',
+        `${process.env.EXPO_PUBLIC_URL}/user-pregnancy-information/create-user-pregnancy-information`,
         formData,
         {
           headers: {

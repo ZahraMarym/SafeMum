@@ -158,7 +158,9 @@ export default function WelcomeScreen() {
     <View style={styles.container}>
       <TextBold style={styles.title}>{i18n.t("appName")}</TextBold>
       <Text style={styles.subtitle}>{i18n.t("subtitle")}</Text>
-      <Text style={styles.description}>{i18n.t("description")}</Text>
+{/*
+  <Text style={styles.description}>{i18n.t("description")}</Text>
+*/}
 
       {/* Language Toggle */}
       <View style={styles.languageContainer}>

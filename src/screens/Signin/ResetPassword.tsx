@@ -7,135 +7,141 @@ import {
   Platform,
   I18nManager,
   Alert,
+  ActivityIndicator,
+  Keyboard,
 } from 'react-native';
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { TextBold } from '@/components/TextBold';
 import { Text } from '@/components/Text';
 import { TextInput } from '@/components/TextInput';
-import i18n from '@/i18n';
-import * as Linking from "expo-linking";
 import axios from "axios";
 
 const screenWidth = Dimensions.get('window').width;
 const isRTL = I18nManager.isRTL;
 
-function extractToken(url) {
-  if (!url) return "";
-
-  try {
-    // If URL has hash (#access_token=...)
-    if (url.includes("#")) {
-      const hash = url.split("#")[1];
-      const params = new URLSearchParams(hash);
-      if (params.get("access_token")) return params.get("access_token");
-      if (params.get("token")) return params.get("token");
-    }
-
-    // Query params (?token=...)
-    const query = url.split("?")[1];
-    const params = new URLSearchParams(query);
-    return params.get("access_token") || params.get("token") || "";
-  } catch {
-    return "";
-  }
-}
-
-
 const ResetPasswordScreen = () => {
   const router = useRouter();
-   const [password, setPassword] = useState("");
-   const [confirmPassword, setConfirmPassword] = useState("");
-   const [token, setToken] = useState("");
 
-   // 🔥 Listen for deep-links
-   useEffect(() => {
-     // App opened from killed state
-     Linking.getInitialURL().then(url => {
-       console.log("INITIAL URL =>", url);
-       const t = extractToken(url);
-       console.log("TOKEN (cold) =>", t);
-       if (t) setToken(t);
-     });
+  // 🔥 Get access_token and refresh_token from deep link
+  const { access_token, refresh_token } = useLocalSearchParams();
 
-     // App already running
-     const sub = Linking.addEventListener("url", ({ url }) => {
-       console.log("EVENT URL =>", url);
-       const t = extractToken(url);
-       console.log("TOKEN (event) =>", t);
-       if (t) setToken(t);
-     });
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
-     return () => sub.remove();
-   }, []);
+  useEffect(() => {
+    console.log("🎟️ Access Token received:", access_token);
+    console.log("🔄 Refresh Token received:", refresh_token);
 
-   const handleSetPassword = async () => {
-     if (!token) {
-       Alert.alert("Error", "Missing reset token");
-       return;
-     }
+    if (!access_token) {
+      Alert.alert("Error", "Missing reset token! Please request a new reset link.");
+    }
+  }, [access_token, refresh_token]);
 
-     if (password.length < 6) {
-       Alert.alert("Error", "Password must be at least 6 characters");
-       return;
-     }
+  const handleSetPassword = async () => {
+    Keyboard.dismiss();
 
-     if (password !== confirmPassword) {
-       Alert.alert("Error", "Passwords do not match");
-       return;
-     }
+    if (!access_token) {
+      Alert.alert("Error", "Missing reset token!");
+      return;
+    }
 
-     console.log("FINAL TOKEN =>", token);
+    if (password.length < 6) {
+      Alert.alert("Error", "Password must be at least 6 characters");
+      return;
+    }
 
-     try {
-       await axios.put(`${process.env.EXPO_PUBLIC_URL}/users/reset-password`, {
-         newPassword: password,
-         token: token,
-       });
+    if (password !== confirmPassword) {
+      Alert.alert("Error", "Passwords do not match");
+      return;
+    }
 
-       Alert.alert("Success", "Password updated!");
-       router.push("/(signin)");
+    setLoading(true);
+    console.log("🚀 Sending reset request with access token:", access_token);
 
-     } catch (err) {
-       console.log(err);
-       Alert.alert("Error", "Failed to update password");
-     }
-   };
+    try {
+      // ✅ Match backend field names: newPassword, accessToken, refreshToken
+      const response = await axios.put(`${process.env.EXPO_PUBLIC_URL}/users/reset-password`, {
+        newPassword: password,
+        accessToken: access_token,
+        refreshToken: refresh_token || ""
+      });
+
+      console.log("✅ Reset Response:", response.data);
+
+      if (response.data.success) {
+        Alert.alert(
+          "Success",
+          "Password updated successfully!",
+          [
+            {
+              text: "OK",
+              onPress: () => router.push("/signin")
+            }
+          ]
+        );
+      } else {
+        Alert.alert("Error", response.data.message || "Failed to update password");
+      }
+    } catch (err) {
+      console.error("❌ RESET ERROR:", err);
+      console.error("Error response:", err.response?.data);
+
+      const errorMessage = err.response?.data?.message
+        || err.response?.data?.Message
+        || "Failed to update password. Please try again.";
+
+      Alert.alert("Error", errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity onPress={() => router.back()}>
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => router.back()}
+      >
         <Ionicons name="chevron-back" size={24} color="#000" />
       </TouchableOpacity>
 
       <TextBold style={styles.title}>Reset Password</TextBold>
 
-      <Text style={styles.label}>Password</Text>
+      <Text style={styles.label}>New Password</Text>
       <TextInput
         style={styles.input}
-        placeholder="Enter Password"
+        placeholder="Enter new password"
         placeholderTextColor="#A9A9A9"
         secureTextEntry
         value={password}
         onChangeText={setPassword}
+        autoCapitalize="none"
       />
 
       <Text style={styles.label}>Confirm Password</Text>
       <TextInput
         style={styles.input}
-        placeholder="Enter confirm password"
+        placeholder="Re-enter new password"
         placeholderTextColor="#A9A9A9"
         secureTextEntry
         value={confirmPassword}
         onChangeText={setConfirmPassword}
+        autoCapitalize="none"
       />
 
       <View style={styles.buttonContainer}>
         <TouchableOpacity
           style={styles.button}
           onPress={handleSetPassword}
+          disabled={loading}
         >
-          <TextBold style={styles.buttonText}>Reset Password</TextBold>
+          {loading ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <TextBold style={styles.buttonText}>Reset Password</TextBold>
+          )}
         </TouchableOpacity>
       </View>
     </View>
@@ -149,10 +155,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 60,
   },
+  backButton: {
+    position: 'absolute',
+    top: 60,
+    left: isRTL ? undefined : 24,
+    right: isRTL ? 24 : undefined,
+    transform: [{ scaleX: isRTL ? -1 : 1 }],
+  },
   title: {
     fontSize: 22,
     alignSelf: 'center',
-    marginBottom: 20,
+    marginTop: 10,
+    marginBottom: 40,
     textAlign: 'center',
   },
   label: {
