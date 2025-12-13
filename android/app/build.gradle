@@ -21,7 +21,7 @@ react {
     bundleCommand = "export:embed"
 
     /* Folders */
-    //   The root of your project, i.e. where "package.json" lives. Default is '../..'
+     //   The root of your project, i.e. where "package.json" lives. Default is '../..'
     // root = file("../../")
     //   The folder where the react-native NPM package is. Default is ../../node_modules/react-native
     // reactNativeDir = file("../../node_modules/react-native")
@@ -87,13 +87,13 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.zahra28.SafeMum'
+    namespace "com.safemum"
     defaultConfig {
-        applicationId 'com.safemum.app'
+        applicationId "com.safemum"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
-        versionName "1.0.0"
+        versionName "1.0"
     }
     signingConfigs {
         debug {
@@ -148,39 +148,8 @@ android {
 }
 
 dependencies {
-    // Force exclude old Android Support Library to prevent conflicts with AndroidX
-    configurations.all {
-        resolutionStrategy.eachDependency { DependencyResolveDetails details ->
-            def requested = details.requested
-            if (requested.group == "com.android.support") {
-                if (requested.name == "support-compat") {
-                    details.useTarget group: "androidx.core", name: "core", version: "1.13.1"
-                } else if (requested.name == "appcompat-v7") {
-                    details.useTarget group: "androidx.appcompat", name: "appcompat", version: "1.7.0"
-                } else if (requested.name == "support-core-utils") {
-                    details.useTarget group: "androidx.legacy", name: "legacy-support-core-utils", version: "1.0.0"
-                } else if (requested.name == "support-core-ui") {
-                    details.useTarget group: "androidx.legacy", name: "legacy-support-core-ui", version: "1.0.0"
-                } else if (requested.name == "support-fragment") {
-                    details.useTarget group: "androidx.fragment", name: "fragment", version: "1.8.5"
-                } else if (requested.name == "versionedparcelable") {
-                    details.useTarget group: "androidx.versionedparcelable", name: "versionedparcelable", version: "1.1.1"
-                } else if (requested.name == "animated-vector-drawable") {
-                    details.useTarget group: "androidx.vectordrawable", name: "vectordrawable-animated", version: "1.1.0"
-                } else if (requested.name == "support-vector-drawable") {
-                    details.useTarget group: "androidx.vectordrawable", name: "vectordrawable", version: "1.1.0"
-                } else {
-                    // For any other support library, try to exclude it
-                    details.exclude()
-                }
-            }
-        }
-    }
-
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
-    implementation project(':notifee_react-native')
-    implementation 'app.notifee:core:9.1.8'
 
     def isGifEnabled = (findProperty('expo.gif.enabled') ?: "") == "true";
     def isWebpEnabled = (findProperty('expo.webp.enabled') ?: "") == "true";
@@ -206,5 +175,3 @@ dependencies {
         implementation jscFlavor
     }
 }
-
-apply plugin: 'com.google.gms.google-services'
