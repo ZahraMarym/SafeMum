@@ -1,4 +1,4 @@
-package com.zahra28.SafeMum
+package com.safemum.app
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

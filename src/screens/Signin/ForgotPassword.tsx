@@ -25,30 +25,57 @@ const ForgotPasswordScreen = () => {
       return;
     }
 
-
-    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
-    if (!emailRegex.test(email)) {
-      Alert.alert("Error", "Please enter a valid email address");
-      return;
-    }
-
     setLoading(true);
-    try {
-        const url=`${process.env.EXPO_PUBLIC_URL}/users/forgot-password`
-        console.log("url", url)
-      const res = await axios.post(url, {
-        email: email
-      });
 
-      console.log("Response:", res.data);
-      if (res.data.success) {
-        Alert.alert("Success", "A password reset link has been sent to your email.");
+    try {
+      const url = `${process.env.EXPO_PUBLIC_URL}/users/forgot-password`;
+
+      const res = await axios.post(
+        url,
+        { email },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "*/*",
+          },
+        }
+      );
+
+      console.log("res", res.data);
+
+      // Extract the token from the response
+      const resetToken = res.data.message?.split(": ")[1] || "";
+
+      if (resetToken) {
+        Alert.alert(
+          "Success",
+          "Reset token generated. Please reset your password.",
+          [
+            {
+              text: "OK",
+              onPress: () => {
+                // Navigate to reset password screen with the token
+                router.push({
+                  pathname: "/(signin)/reset-password",
+                  params: {
+                    access_token: resetToken,
+                    email: email
+                  }
+                });
+              }
+            }
+          ]
+        );
       } else {
-        Alert.alert("Error", res.data.message || "Unable to send reset link.");
+        Alert.alert("Error", "Failed to generate reset token");
       }
     } catch (err) {
-      console.log(err);
-      Alert.alert("Error", "Unable to send the reset link. Please try again.");
+      console.log("Forgot password error:", err?.response?.data || err.message);
+
+      Alert.alert(
+        "Error",
+        err?.response?.data?.message || "Unable to send reset link"
+      );
     } finally {
       setLoading(false);
     }
@@ -56,7 +83,6 @@ const ForgotPasswordScreen = () => {
 
   return (
     <View style={styles.container}>
-
       <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
         <Ionicons name="chevron-back" size={24} color="black" />
       </TouchableOpacity>

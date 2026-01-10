@@ -1,4 +1,4 @@
-package com.zahra28.SafeMum
+package com.safemum.app
 
 import android.app.Application
 import android.content.res.Configuration

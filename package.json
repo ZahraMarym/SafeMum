@@ -14,7 +14,6 @@
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",
     "@microsoft/signalr": "^8.0.7",
-    "@notifee/react-native": "^9.1.8",
     "@react-native-community/datetimepicker": "8.4.1",
     "@react-native-community/netinfo": "11.4.1",
     "@react-native-firebase/app": "^23.3.1",

@@ -23,21 +23,23 @@ const isRTL = I18nManager.isRTL;
 const ResetPasswordScreen = () => {
   const router = useRouter();
 
-  // 🔥 Get access_token and refresh_token from deep link
-  const { access_token, refresh_token } = useLocalSearchParams();
+  // Get access_token from navigation params
+  const params = useLocalSearchParams();
+  const access_token = params.access_token as string;
+  const email = params.email as string;
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    console.log("🎟️ Access Token received:", access_token);
-    console.log("🔄 Refresh Token received:", refresh_token);
+    console.log("📧 Email:", email);
+    console.log("🔑 Access Token received:", access_token);
 
     if (!access_token) {
       Alert.alert("Error", "Missing reset token! Please request a new reset link.");
     }
-  }, [access_token, refresh_token]);
+  }, [access_token, email]);
 
   const handleSetPassword = async () => {
     Keyboard.dismiss();
@@ -61,12 +63,20 @@ const ResetPasswordScreen = () => {
     console.log("🚀 Sending reset request with access token:", access_token);
 
     try {
-      // ✅ Match backend field names: newPassword, accessToken, refreshToken
-      const response = await axios.put(`${process.env.EXPO_PUBLIC_URL}/users/reset-password`, {
-        newPassword: password,
-        accessToken: access_token,
-        refreshToken: refresh_token || ""
-      });
+      const response = await axios.put(
+        `${process.env.EXPO_PUBLIC_URL}/users/reset-password`,
+        {
+          newPassword: password,
+          accessToken: access_token,
+          refreshToken: "",  // Add if your backend requires it
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "*/*",
+          },
+        }
+      );
 
       console.log("✅ Reset Response:", response.data);
 
@@ -77,7 +87,7 @@ const ResetPasswordScreen = () => {
           [
             {
               text: "OK",
-              onPress: () => router.push("/signin")
+              onPress: () => router.push("/(signin)")
             }
           ]
         );
@@ -108,6 +118,10 @@ const ResetPasswordScreen = () => {
       </TouchableOpacity>
 
       <TextBold style={styles.title}>Reset Password</TextBold>
+
+      {email && (
+        <Text style={styles.emailText}>Resetting password for: {email}</Text>
+      )}
 
       <Text style={styles.label}>New Password</Text>
       <TextInput
@@ -166,8 +180,14 @@ const styles = StyleSheet.create({
     fontSize: 22,
     alignSelf: 'center',
     marginTop: 10,
-    marginBottom: 40,
+    marginBottom: 20,
     textAlign: 'center',
+  },
+  emailText: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 30,
   },
   label: {
     fontSize: 18,

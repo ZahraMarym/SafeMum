@@ -17,6 +17,7 @@ import {
   View,
   StatusBar,
   I18nManager,
+  ActivityIndicator,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { Text } from '../../components/Text';
@@ -45,6 +46,7 @@ export default function SafeMumDashboard() {
   const LOCAL_FILE_PATH = FileSystem.documentDirectory + 'app-data.json';
   const [userName, setUserName] = useState<string>(''); // State to store the user's name
   const [fcmToken, setFcmToken] = useState<string | null>(null);
+  const [initializing, setInitializing] = useState(true);
 
 
   // --------------------- 🔥 FCM TOKEN ---------------------
@@ -160,66 +162,74 @@ export default function SafeMumDashboard() {
   };
 
   // --------------------- 🌐 INIT DATA ---------------------
-  useEffect(() => {
-    const initializeDashboard = async () => {
-      try {
-        setLoading(true);
+ useEffect(() => {
+   const initializeDashboard = async () => {
+     try {
+       setLoading(true);
 
-        const fileInfo = await FileSystem.getInfoAsync(LOCAL_FILE_PATH);
-        const fileExists = fileInfo.exists;
-        const netState = await NetInfo.fetch();
+       const fileInfo = await FileSystem.getInfoAsync(LOCAL_FILE_PATH);
+       const fileExists = fileInfo.exists;
+       const netState = await NetInfo.fetch();
 
-        const token = await SecureStore.getItemAsync("accessToken");
-        const storedUser = await SecureStore.getItemAsync("user");
-        const currentUser = storedUser ? JSON.parse(storedUser) : null;
-        const senderId = currentUser?.userId;
+       const token = await SecureStore.getItemAsync("accessToken");
+       const storedUser = await SecureStore.getItemAsync("user");
+       const currentUser = storedUser ? JSON.parse(storedUser) : null;
+       const senderId = currentUser?.userId;
 
-        // Online Mode
-        if (netState.isConnected && netState.isInternetReachable) {
-          console.log(" Internet available. Fetching latest data...");
+       // Online Mode
+       if (netState.isConnected && netState.isInternetReachable) {
+         console.log(" Internet available. Fetching latest data...");
 
-          if (!token || !senderId) {
-            console.warn(" Missing auth. Loading fallback...");
-            if (fileExists) await loadLocalData();
-            else await copyAssetToFileSystem();
-            return;
-          }
+         if (!token || !senderId) {
+           console.warn(" Missing auth. Loading fallback...");
+           if (fileExists) await loadLocalData();
+           else await copyAssetToFileSystem();
+           return;
+         }
 
-          const [userRes, dashboardRes] = await Promise.all([
-            axios.get(`${EXPO_PUBLIC_URL}/communication/get-user-by-id?Id=${senderId}`, {
-              headers: { Authorization: `Bearer ${token}` },
-            }),
-            axios.get(`${EXPO_PUBLIC_URL}/content/dashboard-content?Id=${senderId}&Language=${language}`, {
-              headers: { Authorization: `Bearer ${token}` },
-            }),
-          ]);
+         const [userRes, dashboardRes] = await Promise.all([
+           axios.get(`${EXPO_PUBLIC_URL}/communication/get-user-by-id?Id=${senderId}`, {
+             headers: { Authorization: `Bearer ${token}` },
+           }),
+           axios.get(`${EXPO_PUBLIC_URL}/content/dashboard-content?Id=${senderId}&Language=${language}`, {
+             headers: { Authorization: `Bearer ${token}` },
+           }),
+         ]);
 
-          const name = userRes.data?.name || "Unknown";
-          setUserName(name);
+         const name = userRes.data?.name || "Unknown";
+         setUserName(name);
 
-          const apiData = dashboardRes.data?.data || dashboardRes.data;
-          setData(apiData);
-          dispatch(setDashboardData(apiData));
+         const apiData = dashboardRes.data?.data || dashboardRes.data;
+         setData(apiData);
+         dispatch(setDashboardData(apiData));
 
-          await FileSystem.writeAsStringAsync(LOCAL_FILE_PATH, JSON.stringify(apiData));
-          console.log(fileExists ? " Updated fallback file" : " Created fallback file");
-        }
-        // Offline Mode
-        else {
-          console.log(" Offline mode: Loading cached fallback data...");
-          if (fileExists) await loadLocalData();
-          else await copyAssetToFileSystem();
-        }
-      } catch (error) {
-        console.error(" Error initializing dashboard:", error);
-        Alert.alert("Error", "Failed to initialize data");
-      } finally {
-        setLoading(false);
-      }
-    };
+         await FileSystem.writeAsStringAsync(LOCAL_FILE_PATH, JSON.stringify(apiData));
+         console.log(fileExists ? " Updated fallback file" : " Created fallback file");
+       }
+       // Offline Mode
+       else {
+         console.log(" Offline mode: Loading cached fallback data...");
+         if (fileExists) await loadLocalData();
+         else await copyAssetToFileSystem();
+       }
+     } catch (error) {
+       console.error(" Error initializing dashboard:", error);
+       Alert.alert("Error", "Failed to initialize data");
+     } finally {
+       setLoading(false);
+       setInitializing(false); // ✅ turn off initializing after dashboard init
+     }
+   };
 
-    initializeDashboard();
-  }, [language]);
+   // ✅ FIX #2 — Delay initialization slightly
+   const timer = setTimeout(() => {
+     initializeDashboard();
+   }, 2000); // 400ms delay for SecureStore to settle
+
+   return () => clearTimeout(timer);
+ }, [language]);
+
+
 
   // --------------------- File Helpers ---------------------
 const copyAssetToFileSystem = async () => {
@@ -483,11 +493,17 @@ return (
   <View style={styles.container}>
     <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
-    {loading ? (
-      <View style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>Loading...</Text>
-      </View>
-    ) : data ? (
+    {initializing ? (
+         <View style={styles.loadingContainer}>
+           <ActivityIndicator size="large" color="#7C3AED" />
+           <Text style={styles.loadingText}>Loading...</Text>
+         </View>
+       ) : loading ? (
+         <View style={styles.loadingContainer}>
+           <ActivityIndicator size="large" color="#7C3AED" />
+           <Text style={styles.loadingText}>Fetching data...</Text>
+         </View>
+       ) : data ? (
       <View style={styles.dashboardContent}>
         <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
           <View style={styles.scrollContainer}>

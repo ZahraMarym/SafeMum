@@ -81,7 +81,7 @@ export default function RootLayout() {
       if (
         parsed.hostname === 'reset-password' ||
         parsed.path === 'reset-password' ||
-        url.includes('reset-password')
+        parsed.path === '/api/users/reset-password-redirect'
       ) {
         console.log('🔑 Reset password link detected!');
 
@@ -102,39 +102,39 @@ export default function RootLayout() {
           console.log('🔍 Extracting tokens from raw URL...');
 
           // Extract access_token
-          const accessMatch = url.match(/[?&]access_token=([^&]+)/);
+          const accessMatch = url.match(/[?#&]access_token=([^&#]+)/);
           if (accessMatch) {
             accessToken = decodeURIComponent(accessMatch[1]);
             console.log('✅ Extracted Access Token:', accessToken.substring(0, 20) + '...');
           }
 
           // Extract refresh_token
-          const refreshMatch = url.match(/[?&]refresh_token=([^&]+)/);
+          const refreshMatch = url.match(/[?#&]refresh_token=([^&#]+)/);
           if (refreshMatch) {
             refreshToken = decodeURIComponent(refreshMatch[1]);
             console.log('✅ Extracted Refresh Token:', refreshToken.substring(0, 15) + '...');
           }
 
           // Extract expires_at
-          const expiresAtMatch = url.match(/[?&]expires_at=([^&]+)/);
+          const expiresAtMatch = url.match(/[?#&]expires_at=([^&#]+)/);
           if (expiresAtMatch) {
             expiresAt = decodeURIComponent(expiresAtMatch[1]);
           }
 
           // Extract expires_in
-          const expiresInMatch = url.match(/[?&]expires_in=([^&]+)/);
+          const expiresInMatch = url.match(/[?#&]expires_in=([^&#]+)/);
           if (expiresInMatch) {
             expiresIn = decodeURIComponent(expiresInMatch[1]);
           }
 
           // Extract token_type
-          const tokenTypeMatch = url.match(/[?&]token_type=([^&]+)/);
+          const tokenTypeMatch = url.match(/[?#&]token_type=([^&#]+)/);
           if (tokenTypeMatch) {
             tokenType = decodeURIComponent(tokenTypeMatch[1]);
           }
 
           // Extract type
-          const typeMatch = url.match(/[?&]type=([^&]+)/);
+          const typeMatch = url.match(/[?#&]type=([^&#]+)/);
           if (typeMatch) {
             type = decodeURIComponent(typeMatch[1]);
           }

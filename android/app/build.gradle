@@ -1,7 +1,13 @@
 apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
-
+configurations.all {
+    exclude group: 'com.android.support', module: 'support-compat'
+    exclude group: 'com.android.support', module: 'support-v4'
+    exclude group: 'com.android.support', module: 'versionedparcelable'
+    exclude group: 'com.android.support', module: 'animated-vector-drawable'
+    exclude group: 'com.android.support', module: 'support-vector-drawable'
+}
 def projectRoot = rootDir.getAbsoluteFile().getParentFile().getAbsolutePath()
 
 /**
@@ -87,9 +93,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.zahra28.SafeMum'
+    namespace 'com.safemum.app'
     defaultConfig {
-        applicationId 'com.zahra28.SafeMum'
+        applicationId 'com.safemum.app'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
@@ -102,6 +108,18 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
+    }
+    packagingOptions {
+        pickFirst 'lib/x86/libc++_shared.so'
+        pickFirst 'lib/x86_64/libc++_shared.so'
+        pickFirst 'lib/armeabi-v7a/libc++_shared.so'
+        pickFirst 'lib/arm64-v8a/libc++_shared.so'
+
+        // Exclude duplicate META-INF files
+        exclude 'META-INF/proguard/androidx-*.pro'
+        exclude 'META-INF/*.kotlin_module'
+        exclude 'META-INF/androidx.*.version'
+        pickFirst 'META-INF/androidx.localbroadcastmanager_localbroadcastmanager.version'
     }
     buildTypes {
         debug {
